@@ -23,6 +23,14 @@ def gen_read_files(paths):
 			exit(0)
 		yield f
 
+def read_file(path):
+	"""opens file, returns file object for reading"""
+	try:
+		f = open(path,'r')
+	except IOError:
+		print 'cannot open', path
+		exit(0)
+	return f
 
 def read_data(f):
 
@@ -45,6 +53,44 @@ def read_data(f):
 
 
 
+def parse_xrs(f):
+	xy = np.array([],dtype=float).reshape(2,0)
+	start = True
+	pre = []
+	post = []
+
+	for line in f:
+		if line.lower().startswith('bgvalu'):
+			start = False
+			x,y = [float(item) for item in line.split()[1:]]
+			xy = np.append(xy,[[x],[y]],axis=1)
+		elif start:
+			pre.append(line)
+		elif not start:
+			post.append(line)
+
+	f.close()
+	xrs = [f.name,pre,post]
+	return xy,xrs
+
+
+def new_stepco_inp(xy,name,pre,post):
+	print 'Writing xy data to file {}'.format(name)
+
+	f = open(name,'w')
+
+	for line in pre:
+		print >> f, line,
+
+	for x,y in xy.transpose():
+		print >> f, 'BGVALU    %15.6f%15.0f' % (x,y)
+
+	for line in post:
+		print >> f, line,
+
+	f.close()
+
+
 class Data(object):
 	"""container class for x,y, err data"""
 	def __init__(self,x,y,err):
@@ -54,12 +100,11 @@ class Data(object):
 
 
 
-
 class Background():
-	sensitivity = 10
+	sensitivity = 8
 
 
-	def __init__(self,fig):
+	def __init__(self,fig,xy=None,outfunc=None):
 		"""Class that captures mouse events when a graph has been drawn, stores the coordinates
 		of these points and draws them as a line on the screen. Can also remove points and print all
 		the stored points to stdout
@@ -68,7 +113,13 @@ class Background():
 		http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.plot"""
 		ax = fig.add_subplot(111)
 		
-		self.xy = np.array([],dtype=float).reshape(2,0)
+		if xy is None:
+			self.xy = np.array([],dtype=float).reshape(2,0)
+		else:
+			self.xy = xy
+			idx = self.xy[0,:].argsort()
+			self.xy = self.xy[:,idx]
+
 
 		self.line, = ax.plot(*self.xy,lw=0.5,marker='s',mec='red',mew=1,mfc='None',markersize=3,picker=self.sensitivity)
 
@@ -87,21 +138,11 @@ class Background():
 		if self.tb.mode!='':
 			return
 		
-		# print "event: x,y,inp", x,y,button
-
 		xdata = event.xdata
 		ydata = event.ydata
 		x,y = event.x, event.y
 
-		#inv = self.ax.transData.inverted()
-
-
-		#event.xdata,event.ydata <-- event.x,event.y
-		#print event.x,event.y,inv.transform_point([event.x,event.y])
-		#print self.ax.transData.transform_point([event.xdata,event.ydata])
-
 		button = event.button
-
 
 		if button == 1:
 			self.add_point(x,y,xdata,ydata)
@@ -135,16 +176,24 @@ class Background():
 		idx = self.xy[0,:].argsort()
 		self.xy = self.xy[:,idx]
 
+
 	
 	def printdata(self):
 		"""Prints stored data points to stdout
 
 		TODO: Fix me!!!"""
-		if len(self.xy) < 1:
+		if not self.xy.any():
 			print 'No stored coordinates.'
+			return None
 
-		for x,y in self.xydata:
-			print '%15.6f%15.0f' % (x,y)
+		print '---'
+		if options.xrs:
+			new_stepco_inp(self.xy,*options.xrs_out)
+
+
+		else:
+			for x,y in self.xy.transpose():
+				print '%15.6f%15.0f' % (x,y)
 
 
 
@@ -178,18 +227,25 @@ class Lines(object):
 
 
 def main(options,args):
-
 	files = gen_read_files(args)
 
 	data = (read_data(f) for f in files) # returns data objects
 
-
 	fig = plt.figure()
-	
+
 	lines = Lines(fig)
 
+	if options.xrs:
+		name = options.xrs[0]
+		from shutil import copyfile
+		copyfile(name,name+'~')
+		f = read_file(name)
+		xy,options.xrs_out = parse_xrs(f)
+	else:
+		xy = None
+
 	if options.backgrounder:
-		bg = Background(fig)
+		bg = Background(fig,xy)
 
 	for d in data:
 		lines.plot(d)
@@ -226,13 +282,14 @@ if __name__ == '__main__':
 #						help="Counts occurances of ARG1 and exits.")
 #	
 #
-#	parser.add_argument("-f", "--files", metavar='FILE',
-#						action="store", type=str, nargs='+', dest="files",
-#						help="Sflog files to open. This should be the last argument. (default: all sflog files in current directory)")
+	parser.add_argument("-x", "--xrs", metavar='FILE',
+						action="store", type=str, nargs=1, dest="xrs",
+						help="xrs file to open and alter")
 
 
 	
-	parser.set_defaults(backgrounder=True)
+	parser.set_defaults(backgrounder=True,
+						xrs = None)
 	
 	options = parser.parse_args()
 	args = options.args
