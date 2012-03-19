@@ -1,16 +1,13 @@
 #!/usr/bin/env python2.7-32
 
 import argparse
-try:
-	import numpypy as np
-except ImportError:
-	import numpy as np
+import numpy as np
 
 
 import matplotlib.pyplot as plt
+import matplotlib.transforms as transforms
 
-
-__version__ = '16-03-2012'
+__version__ = '19-03-2012'
 
 
 def gen_read_files(paths):
@@ -92,17 +89,18 @@ def new_stepco_inp(xy,name,pre,post):
 
 
 class Data(object):
+	total = 0
 	"""container class for x,y, err data"""
 	def __init__(self,x,y,err):
 		self.x = x
 		self.y = y
 		self.err = err		
-
+		self.index = self.total
+		Data.total += 1
 
 
 class Background():
 	sensitivity = 8
-
 
 	def __init__(self,fig,xy=None,outfunc=None):
 		"""Class that captures mouse events when a graph has been drawn, stores the coordinates
@@ -119,7 +117,6 @@ class Background():
 			self.xy = xy
 			idx = self.xy[0,:].argsort()
 			self.xy = self.xy[:,idx]
-
 
 		self.line, = ax.plot(*self.xy,lw=0.5,marker='s',mec='red',mew=1,mfc='None',markersize=3,picker=self.sensitivity)
 
@@ -179,9 +176,7 @@ class Background():
 
 	
 	def printdata(self):
-		"""Prints stored data points to stdout
-
-		TODO: Fix me!!!"""
+		"""Prints stored data points to stdout"""
 		if not self.xy.any():
 			print 'No stored coordinates.'
 			return None
@@ -189,8 +184,6 @@ class Background():
 		print '---'
 		if options.xrs:
 			new_stepco_inp(self.xy,*options.xrs_out)
-
-
 		else:
 			for x,y in self.xy.transpose():
 				print '%15.6f%15.0f' % (x,y)
@@ -205,22 +198,34 @@ class Lines(object):
 		
 		#self.fig.canvas.mpl_connect('pick_event', self.onpick)
 
-
-
-
-
 	def onpick(self):
 		"""General data point picker, should work for all kinds of plots?"""
 		pass
 
 	def plot(self,data):
+		n = data.index
+
+		colour = 'bgrcmyk'[n%7]
+
 		ax = self.fig.add_subplot(111)
-		ax.plot(data.x,data.y,c='r')
+
+		dx, dy = 8/72., 8/72.
+		dx *= data.index
+		dy *= data.index
+		offset = transforms.ScaledTranslation(dx, dy, self.fig.dpi_scale_trans)
+		transform = ax.transData + offset
+
+		ax.plot(data.x,data.y,transform=transform,c=colour)
+		
 
 
 
-
-
+class Ticks(object):
+	"""docstring for Ticks"""
+	def __init__(self, arg):
+		super(Ticks, self).__init__()
+		self.arg = arg
+		
 
 
 
@@ -229,7 +234,7 @@ class Lines(object):
 def main(options,args):
 	files = gen_read_files(args)
 
-	data = (read_data(f) for f in files) # returns data objects
+	data = [read_data(f) for f in files] # returns data objects
 
 	fig = plt.figure()
 
@@ -247,7 +252,7 @@ def main(options,args):
 	if options.backgrounder:
 		bg = Background(fig,xy)
 
-	for d in data:
+	for d in reversed(data):
 		lines.plot(d)
 
 	plt.show()
