@@ -61,11 +61,14 @@ def read_data(f):
 def parse_xrs(f):
 	xy = np.array([],dtype=float).reshape(2,0)
 	start = True
+	finish = False
 	pre = []
 	post = []
 
 	for line in f:
-		if line.lower().startswith('bgvalu'):
+		if 'FINISH' in line:
+			finish = True
+		elif line.lower().startswith('bgvalu') and not finish:
 			start = False
 			x,y = [float(item) for item in line.split()[1:]]
 			xy = np.append(xy,[[x],[y]],axis=1)
@@ -76,6 +79,7 @@ def parse_xrs(f):
 
 	f.close()
 	xrs = [f.name,pre,post]
+
 	return xy,xrs
 
 
@@ -137,12 +141,20 @@ class Background():
 
 		self.keyevent = self.line.figure.canvas.mpl_connect('key_press_event', self.onkeypress)
 
-	
+		self.n = 0
 
 
 		self.tb    = plt.get_current_fig_manager().toolbar
 
 		self.ax = ax
+
+		print
+		print 'Left mouse button: add point'
+		print 'Right mouse button: remove point'
+		print 'Middle mouse button or P: print points to file'
+		print
+		print 'Note: Adding/Removing points disabled while using drag/zoom functions.'
+		print
 
 	def __call__(self,event):
 		"""Handles events (mouse input)"""
@@ -161,10 +173,10 @@ class Background():
 
 		if button == 1:
 			self.add_point(x,y,xdata,ydata)
-		if button == 3:
-			pass
 		if button == 2:
 			self.printdata()
+		if button == 3:
+			pass
 	
 		self.line.set_data(self.xy)
 		self.line.figure.canvas.draw()
@@ -173,7 +185,7 @@ class Background():
 
 	def onpick(self,event):
 		"""General data point picker, should work for all kinds of plots?"""
-		if event.mouseevent.button != 3:
+		if not event.mouseevent.button == 3: # button 3 = right click
 			return
 
 		ind = event.ind
@@ -192,7 +204,8 @@ class Background():
 			print 'y pressed'
 		if event.key == 'z':
 			print 'z pressed'
-		
+
+	
 
 	def add_point(self,x,y,xdata,ydata):
 		"""Store both data points as relative x,y points. The latter are needed to remove points"""
