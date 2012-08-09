@@ -30,16 +30,25 @@ def read_file(path):
 	return f
 
 def read_data(f):
+	ret = []
 
-	lines = (line.split() for line in f if line)
-	lines = ([float(item) for item in line] for line in lines)
-	lists = (np.array(lst) for lst in zip(*lines))
+	for line in f:
+		inp = line.split()
+		if not inp:
+			continue
+		ret.append([float(val) for val in inp])
 
-	x = lists.next()
-	y = lists.next()
+	lists = iter(zip(*ret))
+
+	#lines = (line.split() for line in f if line)
+	#lines = ([float(item) for item in line] for line in lines)
+	#lists = (np.array(lst) for lst in zip(*lines))
+
+	x = np.array(lists.next())
+	y = np.array(lists.next())
 	
 	try:
-		err = lists.next()
+		err = np.array(lists.next())
 	except StopIteration:
 		err = None
 
@@ -47,7 +56,6 @@ def read_data(f):
 	d.filename = f.name
 
 	return d
-
 
 
 def parse_xrs(f):
@@ -108,7 +116,11 @@ class Background():
 		the stored points to stdout
 
 		http://matplotlib.sourceforge.net/users/event_handling.html
-		http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.plot"""
+		http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.plot
+
+		Takes:
+		a figure object
+		optional numpy array with background coordinates, shape = (2,0)"""
 		ax = fig.add_subplot(111)
 		
 		if xy is None:
@@ -122,6 +134,12 @@ class Background():
 
 		self.pick  = self.line.figure.canvas.mpl_connect('pick_event', self.onpick)
 		self.cid   = self.line.figure.canvas.mpl_connect('button_press_event', self)
+
+		self.keyevent = self.line.figure.canvas.mpl_connect('key_press_event', self.onkeypress)
+
+	
+
+
 		self.tb    = plt.get_current_fig_manager().toolbar
 
 		self.ax = ax
@@ -151,6 +169,8 @@ class Background():
 		self.line.set_data(self.xy)
 		self.line.figure.canvas.draw()
 
+
+
 	def onpick(self,event):
 		"""General data point picker, should work for all kinds of plots?"""
 		if event.mouseevent.button != 3:
@@ -164,6 +184,16 @@ class Background():
 		for n in range(len(ind)):
 			print '   --- {} {}'.format(*removed[:,n])
 
+
+	def onkeypress(self,event):
+		if event.key == 'x':
+			print 'x pressed'
+		if event.key == 'y':
+			print 'y pressed'
+		if event.key == 'z':
+			print 'z pressed'
+		
+
 	def add_point(self,x,y,xdata,ydata):
 		"""Store both data points as relative x,y points. The latter are needed to remove points"""
 
@@ -172,8 +202,6 @@ class Background():
 		self.xy = np.append(self.xy,[[xdata],[ydata]],axis=1)
 		idx = self.xy[0,:].argsort()
 		self.xy = self.xy[:,idx]
-
-
 	
 	def printdata(self):
 		"""Prints stored data points to stdout"""
@@ -187,7 +215,6 @@ class Background():
 		else:
 			for x,y in self.xy.transpose():
 				print '%15.6f%15.0f' % (x,y)
-
 
 
 class Lines(object):
@@ -209,7 +236,12 @@ class Lines(object):
 
 		ax = self.fig.add_subplot(111)
 
-		dx, dy = 8/72., 8/72.
+
+		if options.nomove:
+			dx, dy = 0, 0
+		else:
+			dx, dy = 8/72., 8/72.
+
 		dx *= data.index
 		dy *= data.index
 		offset = transforms.ScaledTranslation(dx, dy, self.fig.dpi_scale_trans)
@@ -241,8 +273,9 @@ def main(options,args):
 	lines = Lines(fig)
 
 	if options.xrs:
-		name = options.xrs[0]
 		from shutil import copyfile
+		
+		name = options.xrs
 		copyfile(name,name+'~')
 		f = read_file(name)
 		xy,options.xrs_out = parse_xrs(f)
@@ -262,7 +295,11 @@ def main(options,args):
 
 
 if __name__ == '__main__':
-	
+	#plt.gca().get_frame().set_linewidth(2)
+
+
+
+
 	usage = """"""
 
 	description = """Notes:
@@ -288,13 +325,19 @@ if __name__ == '__main__':
 #	
 #
 	parser.add_argument("-x", "--xrs", metavar='FILE',
-						action="store", type=str, nargs=1, dest="xrs",
+						action="store", type=str, dest="xrs",
 						help="xrs file to open and alter")
+
+	parser.add_argument("-n", "--nomove",
+						action="store_true", dest="nomove",
+						help="doesn't readjust other plots")
+
 
 
 	
 	parser.set_defaults(backgrounder=True,
-						xrs = None)
+						xrs = None,
+						nomove = False)
 	
 	options = parser.parse_args()
 	args = options.args
