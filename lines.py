@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
 
-__version__ = '19-03-2012'
+__version__ = '14-08-2012'
 
 
 def gen_read_files(paths):
