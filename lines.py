@@ -7,7 +7,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
 
+
+
+
+
 __version__ = '15-08-2012'
+
+
+params = {'legend.fontsize': 10,
+          'legend.labelspacing': 0.1}
+plt.rcParams.update(params)
+
+
 
 
 def gen_read_files(paths):
@@ -108,6 +119,7 @@ class Data(object):
 		self.y = y
 		self.err = err		
 		self.index = self.total
+		self.filename = None
 		Data.total += 1
 
 
@@ -260,7 +272,9 @@ class Lines(object):
 		offset = transforms.ScaledTranslation(dx, dy, self.fig.dpi_scale_trans)
 		transform = ax.transData + offset
 
-		ax.plot(data.x,data.y,transform=transform,c=colour)
+		label = data.filename
+
+		ax.plot(data.x,data.y,transform=transform,c=colour,label=label)
 		
 
 
@@ -301,6 +315,7 @@ def main(options,args):
 	for d in reversed(data):
 		lines.plot(d)
 
+	plt.legend()
 	plt.show()
 
 
