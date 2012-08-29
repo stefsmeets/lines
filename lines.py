@@ -3,15 +3,14 @@
 import argparse
 import numpy as np
 
-
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
 
+from scipy.interpolate import interp1d
 
 
 
-
-__version__ = '15-08-2012'
+__version__ = '29-08-2012'
 
 
 params = {'legend.fontsize': 10,
@@ -111,6 +110,32 @@ def new_stepco_inp(xy,name,pre,post):
 	f.close()
 
 
+
+def interpolate(arr,xvals,kind='cubic'):
+	assert arr.ndim == 2, 'Expect a 2-dimentional array'
+
+	try:
+		kind = int(kind)
+	except ValueError:
+		if arr.shape[0] < 4:
+			kind = 'linear'
+	else:
+		if arr.shape[0] < kind+1:
+			kind = 'linear'
+	
+	x = arr[:,0] # create views
+	y = arr[:,1] #
+	res = interp1d(x,y,kind=kind,bounds_error=False)
+
+	return res(xvals)
+
+
+
+
+
+
+
+
 class Data(object):
 	total = 0
 	"""container class for x,y, err data"""
@@ -126,7 +151,7 @@ class Data(object):
 class Background():
 	sensitivity = 8
 
-	def __init__(self,fig,xy=None,outfunc=None):
+	def __init__(self,fig,xy=None,outfunc=None,bg_correct=False):
 		"""Class that captures mouse events when a graph has been drawn, stores the coordinates
 		of these points and draws them as a line on the screen. Can also remove points and print all
 		the stored points to stdout
@@ -168,6 +193,16 @@ class Background():
 		print 'Note: Adding/Removing points disabled while using drag/zoom functions.'
 		print
 
+		self.bg_correct = bg_correct
+		if self.bg_correct:
+			self.bg_range = np.arange(self.xy[0][0],self.xy[0][1],0.1)
+			ax = fig.add_subplot(111)
+			self.bg, = ax.plot(*self.xy,label='background')
+			#print self.bg_range
+
+
+
+
 	def __call__(self,event):
 		"""Handles events (mouse input)"""
 		# Skips events outside of canvas
@@ -182,6 +217,7 @@ class Background():
 		x,y = event.x, event.y
 
 		button = event.button
+		#print event
 
 		if button == 1:
 			self.add_point(x,y,xdata,ydata)
@@ -189,6 +225,9 @@ class Background():
 			self.printdata()
 		if button == 3:
 			pass
+
+		if self.bg_correct and button:
+			self.background_update()
 	
 		self.line.set_data(self.xy)
 		self.line.figure.canvas.draw()
@@ -228,6 +267,17 @@ class Background():
 		idx = self.xy[0,:].argsort()
 		self.xy = self.xy[:,idx]
 	
+	def background_update(self):
+		xy = self.xy.T
+
+		if xy.shape[0] < 2:
+			self.bg.set_data([],[])
+			return
+
+		bg_vals = interpolate(xy,self.bg_range)
+		self.bg.set_data(self.bg_range,bg_vals)
+		
+
 	def printdata(self):
 		"""Prints stored data points to stdout"""
 		if not self.xy.any():
@@ -309,7 +359,28 @@ def main(options,args):
 	else:
 		xy = None
 
-	if options.backgrounder:
+
+	if options.bg_correct:
+		print 'Interpolation mode for background correction\n'
+		print 'The highest and lowest values are added by default for convenience. In the case that they are removed, only the values in the background range will be printed.'
+
+
+		assert len(data) == 1, 'Only works with a single data file'
+		x1 = data[0].x[0]
+		x2 = data[0].x[-1]
+		y1 = data[0].y[0]
+		y2 = data[0].y[-1]
+
+		#print x1,x2,y1,y2
+
+		xy = np.array([[x1,x2],[y1,y2]],dtype=float)
+
+		bg = Background(fig,xy,bg_correct=options.bg_correct)
+
+
+
+
+	elif options.backgrounder:
 		bg = Background(fig,xy)
 
 	for d in reversed(data):
@@ -318,6 +389,34 @@ def main(options,args):
 	plt.legend()
 	plt.show()
 
+
+
+
+
+	if options.bg_correct:
+		d = data[0]
+		fn_bg   = d.filename.replace('.','_bg.')
+		fn_corr = d.filename.replace('.','_corr.')
+		out_bg   = open(fn_bg,'w')
+		out_corr = open(fn_corr,'w')
+
+		bg_xy = bg.xy.T
+		
+		xvals = d.x
+		yvals = d.y
+		
+		bg_yvals = interpolate(bg_xy,xvals)
+
+		offset = raw_input("What offset should I add to the data?\n >> [0] ") or 0
+		offset = int(offset)
+		
+		if len(bg_xy) >= 4:
+			print 'Writing background pattern to %s' % fn_bg
+			for x,y in zip(xvals,bg_yvals):
+				print >> out_bg, '%15.6f%15.0f' % (x,y)
+			print 'Writing corrected pattern to %s' % fn_corr
+			for x,y in zip(xvals,yvals-bg_yvals+offset):
+				print >> out_corr, '%15.6f%15.0f' % (x,y)
 
 
 
@@ -356,16 +455,21 @@ if __name__ == '__main__':
 						action="store", type=str, dest="xrs",
 						help="xrs file to open and alter")
 
-	parser.add_argument("-n", "--nomove",
+	parser.add_argument("-s", "--shift",
 						action="store_true", dest="nomove",
-						help="doesn't readjust other plots")
+						help="Slightly shift different plots to make them more visible.")
+	
+	parser.add_argument("-c", "--correct", metavar='OPTION',
+						action="store", type=str, dest="bg_correct",
+						help="Starts background correction routine. Valid options: 'linear','nearest','zero', 'slinear', 'quadratic, 'cubic') or as an integer specifying the order of the spline interpolator to use. Recommended: 'cubic'.")
 
 
 
 	
 	parser.set_defaults(backgrounder=True,
 						xrs = None,
-						nomove = False)
+						nomove = True,
+						bg_correct = False)
 	
 	options = parser.parse_args()
 	args = options.args
