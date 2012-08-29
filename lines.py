@@ -407,15 +407,20 @@ def main(options,args):
 		
 		bg_yvals = interpolate(bg_xy,xvals)
 
-		offset = raw_input("What offset should I add to the data?\n >> [0] ") or 0
-		offset = int(offset)
-		
+		#offset = raw_input("What offset should I add to the data?\n >> [0] ") or 0
+		#offset = int(offset)
+		offset = 0
+
 		if len(bg_xy) >= 4:
 			print 'Writing background pattern to %s' % fn_bg
 			for x,y in zip(xvals,bg_yvals):
+				if np.isnan(y): 
+					continue
 				print >> out_bg, '%15.6f%15.0f' % (x,y)
 			print 'Writing corrected pattern to %s' % fn_corr
 			for x,y in zip(xvals,yvals-bg_yvals+offset):
+				if np.isnan(y): 
+					continue
 				print >> out_corr, '%15.6f%15.0f' % (x,y)
 
 
