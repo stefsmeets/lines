@@ -111,7 +111,7 @@ def new_stepco_inp(xy,name,pre,post):
 
 
 
-def interpolate(arr,xvals,kind='cubic'):
+def interpolate(arr,xvals,kind=None):
 	assert arr.ndim == 2, 'Expect a 2-dimentional array'
 
 	try:
@@ -274,7 +274,7 @@ class Background():
 			self.bg.set_data([],[])
 			return
 
-		bg_vals = interpolate(xy,self.bg_range)
+		bg_vals = interpolate(xy,self.bg_range,kind=self.bg_correct)
 		self.bg.set_data(self.bg_range,bg_vals)
 		
 
@@ -407,9 +407,8 @@ def main(options,args):
 		
 		bg_yvals = interpolate(bg_xy,xvals)
 
-		#offset = raw_input("What offset should I add to the data?\n >> [0] ") or 0
-		#offset = int(offset)
-		offset = 0
+		offset = raw_input("What offset should I add to the data?\n >> [0] ") or 0
+		offset = int(offset)
 
 		if len(bg_xy) >= 4:
 			print 'Writing background pattern to %s' % fn_bg
