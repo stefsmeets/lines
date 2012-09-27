@@ -460,7 +460,7 @@ if __name__ == '__main__':
 						help="xrs file to open and alter")
 
 	parser.add_argument("-s", "--shift",
-						action="store_true", dest="nomove",
+						action="store_false", dest="nomove",
 						help="Slightly shift different plots to make them more visible.")
 	
 	parser.add_argument("-c", "--correct", metavar='OPTION',
