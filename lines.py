@@ -10,7 +10,7 @@ from scipy.interpolate import interp1d
 
 
 
-__version__ = '29-08-2012'
+__version__ = '07-09-2012'
 
 
 params = {'legend.fontsize': 10,
@@ -76,16 +76,40 @@ def parse_xrs(f):
 	post = []
 
 	for line in f:
-		if 'FINISH' in line:
-			finish = True
-		elif line.lower().startswith('bgvalu') and not finish:
+		# print start,finish
+
+		# if 'finish' in line.lower() or 'end' in line.lower():
+		# 	finish = True
+			
+		# 	# Takes care of new xrs files with no bgvalu commands
+		# 	start = False
+		# 	post.append(line)
+		# elif line.lower().startswith('bgvalu') and not finish:
+		# 	start = False
+		# 	x,y = [float(item) for item in line.split()[1:]]
+		# 	xy = np.append(xy,[[x],[y]],axis=1)
+		# elif start:
+		# 	pre.append(line)
+		# elif finish or not start:
+		# 	post.append(line)
+
+		if 'finish' in line.lower() or 'end' in line.lower():
+			# Takes care of new xrs files with no bgvalu commands
 			start = False
-			x,y = [float(item) for item in line.split()[1:]]
+			post.append(line)
+		elif line.lower().startswith('bgvalu') and start:
+			inp = line.split()
+			x   = float(inp[1])
+			y   = float(inp[2])
+
+			# x,y = [float(item) for item in line.split()[1:]]
+
 			xy = np.append(xy,[[x],[y]],axis=1)
 		elif start:
 			pre.append(line)
 		elif not start:
 			post.append(line)
+
 
 	f.close()
 	xrs = [f.name,pre,post]
@@ -392,7 +416,6 @@ def main(options,args):
 
 
 	elif options.backgrounder:
-		print xy
 		bg = Background(fig,xy)
 
 	for d in reversed(data):
