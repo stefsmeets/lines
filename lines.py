@@ -161,15 +161,23 @@ class Background():
 
 		Takes:
 		a figure object
-		optional numpy array with background coordinates, shape = (2,0)"""
+		optional numpy array with background coordinates, shape = (2,0)
+
+		xy: 2d ndarray, shape(2,0) with x,y data"""
+
 		ax = fig.add_subplot(111)
 		
-		if xy is None:
+		# if xy is None:
+		# 	self.xy = np.array([],dtype=float).reshape(2,0)
+		# else:
+		# 	idx = xy[0,:].argsort()
+		# 	self.xy = xy[:,idx]
+
+		try:
+			idx = xy[0,:].argsort()
+			self.xy = xy[:,idx]
+		except (IndexError, ValueError, TypeError):
 			self.xy = np.array([],dtype=float).reshape(2,0)
-		else:
-			self.xy = xy
-			idx = self.xy[0,:].argsort()
-			self.xy = self.xy[:,idx]
 
 		self.line, = ax.plot(*self.xy,lw=0.5,marker='s',mec='red',mew=1,mfc='None',markersize=3,picker=self.sensitivity)
 
@@ -188,7 +196,7 @@ class Background():
 		print
 		print 'Left mouse button: add point'
 		print 'Right mouse button: remove point'
-		print 'Middle mouse button or P: print points to file'
+		print 'Middle mouse button or press "a": print points to file'
 		print
 		print 'Note: Adding/Removing points disabled while using drag/zoom functions.'
 		print
@@ -255,6 +263,9 @@ class Background():
 			print 'y pressed'
 		if event.key == 'z':
 			print 'z pressed'
+		if event.key == 'a':
+			print '\na pressed'
+			self.printdata()
 
 	
 
@@ -381,6 +392,7 @@ def main(options,args):
 
 
 	elif options.backgrounder:
+		print xy
 		bg = Background(fig,xy)
 
 	for d in reversed(data):
