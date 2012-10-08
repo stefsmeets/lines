@@ -117,6 +117,68 @@ def parse_xrs(f):
 	return xy,xrs
 
 
+def parse_crplot_dat(f):
+	"""Parses crplot.dat file"""
+		
+	# skip first 2 lines
+	f.next()
+	f.next()
+
+	ret = []
+
+	for line in f:
+		inp = line.split()
+		if not f:
+			continue
+		ret.append([float(val) for val in inp])
+
+	return ret
+
+def parse_hkl_dat(f):
+	ret = []
+
+	for line in f:
+		inp = line.split()
+		if not f:
+			continue
+		ret.append([float(val) for val in inp])
+
+	return ret
+
+def f_crplo():
+	crplotdat = 'crplot.dat'
+	fcr = open(crplotdat,'r')
+	
+	hkldat = 'hkl.dat'
+	fhkl = open(hkldat,'r')
+		
+	crdata = np.array(parse_crplot_dat(fcr))
+	hkldata = np.array(parse_hkl_dat(fhkl))
+	
+	tt = crdata[:,0]
+	obs = crdata[:,1] 
+	clc = crdata[:,2]
+	dif = crdata[:,3]
+	
+	tck = hkldata[:,3]
+	
+	mx_dif = max(dif)
+	mx_pat = max(max(obs),max(clc))
+	
+	
+	plt.plot(tt, obs, label = 'observed')
+	plt.plot(tt, clc, label = 'calculated')
+	plt.plot(tt, dif - mx_dif, label = 'difference')
+	
+	plt.plot(tt,np.zeros(tt.size), c='black')
+	plt.plot(tt,np.zeros(tt.size) - mx_dif, c='black')
+	
+	plt.plot(tck,np.zeros(tck.size) - (mx_dif / 4), linestyle='', marker='|', markersize=10, label = 'ticks', c='purple')
+
+
+
+
+
 def new_stepco_inp(xy,name,pre,post):
 	print 'Writing xy data to file {}'.format(name)
 
@@ -136,6 +198,16 @@ def new_stepco_inp(xy,name,pre,post):
 
 
 def interpolate(arr,xvals,kind=None):
+	"""
+	arr is the data set to interpolate
+	
+	xvals are the values it has to be interpolated to
+	
+	kind is the type of correction, Valid options: 'linear','nearest','zero', 
+	'slinear', 'quadratic, 'cubic') or as an integer specifying the order 
+	of the spline interpolator to use.
+	"""
+
 	assert arr.ndim == 2, 'Expect a 2-dimentional array'
 
 	try:
@@ -411,15 +483,21 @@ def main(options,args):
 		xy = np.array([[x1,x2],[y1,y2]],dtype=float)
 
 		bg = Background(fig,xy,bg_correct=options.bg_correct)
-
-
-
-
 	elif options.backgrounder:
 		bg = Background(fig,xy)
 
+	if options.crplo:
+		f_crplo()
+
+
+
+
 	for d in reversed(data):
 		lines.plot(d)
+
+
+
+
 
 	plt.legend()
 	plt.show()
@@ -494,6 +572,10 @@ if __name__ == '__main__':
 						action="store", type=str, dest="xrs",
 						help="xrs file to open and alter")
 
+	parser.add_argument("--crplo",
+						action="store_true", dest="crplo",
+						help="Mimics crplo -- plots observed, calculated and difference pattern and tick marks")
+
 	parser.add_argument("-s", "--shift",
 						action="store_false", dest="nomove",
 						help="Slightly shift different plots to make them more visible.")
@@ -502,13 +584,18 @@ if __name__ == '__main__':
 						action="store", type=str, dest="bg_correct",
 						help="Starts background correction routine. Valid options: 'linear','nearest','zero', 'slinear', 'quadratic, 'cubic') or as an integer specifying the order of the spline interpolator to use. Recommended: 'cubic'.")
 
+	parser.add_argument("--christian",
+						action="store_true", dest="christian",
+						help="Special function for Christian!")
 
 
 	
 	parser.set_defaults(backgrounder=True,
 						xrs = None,
 						nomove = True,
-						bg_correct = False)
+						bg_correct = False,
+						crplo = False,
+						christian = False)
 	
 	options = parser.parse_args()
 	args = options.args
