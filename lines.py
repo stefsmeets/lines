@@ -10,7 +10,7 @@ from scipy.interpolate import interp1d
 
 
 
-__version__ = '07-09-2012'
+__version__ = '08-09-2012'
 
 
 params = {'legend.fontsize': 10,
@@ -39,7 +39,8 @@ def read_file(path):
 		exit(0)
 	return f
 
-def read_data(f):
+def read_data_old(f):
+	"""obsolete"""
 	ret = []
 
 	for line in f:
@@ -67,13 +68,29 @@ def read_data(f):
 
 	return d
 
+def read_data(f):
+	inp = np.loadtxt(f)
+
+	if inp.shape[1] > 3:
+		print 'More than 3 columns read from {}, assuming x,y,esd, ignoring the rest.'.format(f.name)
+
+	d = Data(inp)
+	d.filename = f.name
+
+	return d
+
+
 
 def parse_xrs(f):
-	xy = np.array([],dtype=float).reshape(2,0)
+	xy = np.array([],dtype=float).reshape(0,2)
 	start = True
 	finish = False
 	pre = []
 	post = []
+
+	x = []
+	y = []
+	esd = []
 
 	for line in f:
 		# print start,finish
@@ -99,22 +116,25 @@ def parse_xrs(f):
 			post.append(line)
 		elif line.lower().startswith('bgvalu') and start:
 			inp = line.split()
-			x   = float(inp[1])
-			y   = float(inp[2])
-
-			# x,y = [float(item) for item in line.split()[1:]]
-
-			xy = np.append(xy,[[x],[y]],axis=1)
+			x.append(float(inp[1]))
+			y.append(float(inp[2]))
+			try:
+				esd.append(float(inp[3]))
+			except IndexError:
+				esd.append(-1)
 		elif start:
 			pre.append(line)
 		elif not start:
 			post.append(line)
 
+	xye = np.vstack([x,y,esd]).T
+
+	d = Data(xye,name='stepco')
 
 	f.close()
 	xrs = [f.name,pre,post]
 
-	return xy,xrs
+	return d,xrs
 
 
 def parse_crplot_dat(f):
@@ -170,10 +190,23 @@ def f_crplo():
 	plt.plot(tt, clc, label = 'calculated')
 	plt.plot(tt, dif - mx_dif, label = 'difference')
 	
-	plt.plot(tt,np.zeros(tt.size), c='black')
-	plt.plot(tt,np.zeros(tt.size) - mx_dif, c='black')
+	plt.plot(tt, np.zeros(tt.size), c='black')
+	plt.plot(tt, np.zeros(tt.size) - mx_dif, c='black')
 	
 	plt.plot(tck,np.zeros(tck.size) - (mx_dif / 4), linestyle='', marker='|', markersize=10, label = 'ticks', c='purple')
+
+
+def f_plot_christian(bg_xy):
+	crplotdat = 'crplot.dat'
+	fcr = open(crplotdat,'r')
+
+	crdata = np.array(parse_crplot_dat(fcr))
+	tt = crdata[:,0]
+	dif = crdata[:,3]
+
+	bg_interpolate = interpolate(bg_xy,tt,kind='linear')
+	
+	plt.plot(tt, bg_interpolate + dif, label = 'bg + diff')
 
 
 
@@ -228,19 +261,22 @@ def interpolate(arr,xvals,kind=None):
 
 
 
-
-
-
-
 class Data(object):
 	total = 0
 	"""container class for x,y, err data"""
-	def __init__(self,x,y,err):
-		self.x = x
-		self.y = y
-		self.err = err		
+	def __init__(self,arr,name=None):
+		self.arr = arr
+		self.x = self.arr[:,0]
+		self.y = self.arr[:,1]
+		self.xy = self.arr[:,0:2]
+		
+		try:
+			self.err = self.arr[:,2]
+		except IndexError:
+			self.err = None
+
 		self.index = self.total
-		self.filename = None
+		self.filename = name
 		Data.total += 1
 
 
@@ -459,12 +495,12 @@ def main(options,args):
 	if options.xrs:
 		from shutil import copyfile
 		
-		name = options.xrs
-		copyfile(name,name+'~')
-		f = read_file(name)
-		xy,options.xrs_out = parse_xrs(f)
+		fname = options.xrs
+		copyfile(fname,fname+'~')
+		f = read_file(fname)
+		bg_data,options.xrs_out = parse_xrs(f)
 	else:
-		xy = None
+		bg_data = None
 
 
 	if options.bg_correct:
@@ -480,11 +516,12 @@ def main(options,args):
 
 		#print x1,x2,y1,y2
 
-		xy = np.array([[x1,x2],[y1,y2]],dtype=float)
+		xy = np.array([[x1,x2],[y1,y2]],dtype=float) # Refactor xy to use Data class instead
 
-		bg = Background(fig,xy,bg_correct=options.bg_correct)
+		bg = Background(fig,xy,bg_correct=options.bg_correct) 
+
 	elif options.backgrounder:
-		bg = Background(fig,xy)
+		bg = Background(fig,bg_data.xy.T)
 
 	if options.crplo:
 		f_crplo()
@@ -495,8 +532,10 @@ def main(options,args):
 	for d in reversed(data):
 		lines.plot(d)
 
+	if options.christian:
+		lines.plot(bg_data)
 
-
+		f_plot_christian(bg_data.xy)
 
 
 	plt.legend()
@@ -586,7 +625,7 @@ if __name__ == '__main__':
 
 	parser.add_argument("--christian",
 						action="store_true", dest="christian",
-						help="Special function for Christian!")
+						help="Special function for Christian. Plots the previous background a starting point and the background + the difference plot. Reads difference data from crplot.dat")
 
 
 	
