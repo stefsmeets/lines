@@ -198,15 +198,18 @@ def f_crplo():
 
 def f_plot_christian(bg_xy):
 	crplotdat = 'crplot.dat'
-	fcr = open(crplotdat,'r')
-
-	crdata = np.array(parse_crplot_dat(fcr))
-	tt = crdata[:,0]
-	dif = crdata[:,3]
-
-	bg_interpolate = interpolate(bg_xy,tt,kind='linear')
+	try:
+		fcr = open(crplotdat,'r')
+	except IOError:
+		print '\n{} not found. Skipping difference plot.'.format(crplotdat)
+	else:
+		crdata = np.array(parse_crplot_dat(fcr))
+		tt = crdata[:,0]
+		dif = crdata[:,3]
 	
-	plt.plot(tt, bg_interpolate + dif, label = 'bg + diff')
+		bg_interpolate = interpolate(bg_xy,tt,kind='linear')
+		
+		plt.plot(tt, bg_interpolate + dif, label = 'bg + diff')
 
 
 
@@ -529,6 +532,7 @@ def main(options,args):
 
 
 
+
 	for d in reversed(data):
 		lines.plot(d)
 
@@ -540,7 +544,6 @@ def main(options,args):
 
 	plt.legend()
 	plt.show()
-
 
 
 
@@ -621,7 +624,7 @@ if __name__ == '__main__':
 	
 	parser.add_argument("-c", "--correct", metavar='OPTION',
 						action="store", type=str, dest="bg_correct",
-						help="Starts background correction routine. Valid options: 'linear','nearest','zero', 'slinear', 'quadratic, 'cubic') or as an integer specifying the order of the spline interpolator to use. Recommended: 'cubic'.")
+						help="Starts background correction routine. Only the first pattern listed is corrected. Valid options: 'linear','nearest','zero', 'slinear', 'quadratic, 'cubic') or as an integer specifying the order of the spline interpolator to use. Recommended: 'cubic'.")
 
 	parser.add_argument("--christian",
 						action="store_true", dest="christian",
