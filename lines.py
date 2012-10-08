@@ -233,7 +233,7 @@ def new_stepco_inp(xy,name,pre,post):
 
 
 
-def interpolate(arr,xvals,kind=None):
+def interpolate(arr,xvals,kind='cubic'):
 	"""
 	arr is the data set to interpolate
 	
@@ -258,6 +258,9 @@ def interpolate(arr,xvals,kind=None):
 	x = arr[:,0] # create views
 	y = arr[:,1] #
 	res = interp1d(x,y,kind=kind,bounds_error=False)
+
+	# if the background seems to take shortcuts in linear mode, this is because fixed steps
+	# were set in the Backgrounder class
 
 	return res(xvals)
 
@@ -314,7 +317,7 @@ class Background():
 		except (IndexError, ValueError, TypeError):
 			self.xy = np.array([],dtype=float).reshape(2,0)
 
-		self.line, = ax.plot(*self.xy,lw=0.5,marker='s',mec='red',mew=1,mfc='None',markersize=3,picker=self.sensitivity)
+		self.line, = ax.plot(*self.xy,lw=0.5,marker='s',mec='red',mew=1,mfc='None',markersize=3,picker=self.sensitivity,label='interactive background')
 
 		self.pick  = self.line.figure.canvas.mpl_connect('pick_event', self.onpick)
 		self.cid   = self.line.figure.canvas.mpl_connect('button_press_event', self)
@@ -338,7 +341,7 @@ class Background():
 
 		self.bg_correct = bg_correct
 		if self.bg_correct:
-			self.bg_range = np.arange(self.xy[0][0],self.xy[0][1],0.1)
+			self.bg_range = np.arange(self.xy[0][0],self.xy[0][1],0.01) # Set limited range to speed up calculations
 			ax = fig.add_subplot(111)
 			self.bg, = ax.plot(*self.xy,label='background')
 			#print self.bg_range
@@ -435,7 +438,7 @@ class Background():
 			new_stepco_inp(self.xy,*options.xrs_out)
 		else:
 			for x,y in self.xy.transpose():
-				print '%15.6f%15.0f' % (x,y)
+				print '%15.6f%15.2f' % (x,y)
 
 
 class Lines(object):
@@ -510,7 +513,6 @@ def main(options,args):
 		print 'Interpolation mode for background correction\n'
 		print 'The highest and lowest values are added by default for convenience. In the case that they are removed, only the values in the background range will be printed.'
 
-
 		assert len(data) == 1, 'Only works with a single data file'
 		x1 = data[0].x[0]
 		x2 = data[0].x[-1]
@@ -519,12 +521,18 @@ def main(options,args):
 
 		#print x1,x2,y1,y2
 
-		xy = np.array([[x1,x2],[y1,y2]],dtype=float) # Refactor xy to use Data class instead
+		xy = np.array([[x1,x2],[y1,y2]],dtype=float)
+
+		bg_data = Data(xy)
 
 		bg = Background(fig,xy,bg_correct=options.bg_correct) 
 
 	elif options.backgrounder:
-		bg = Background(fig,bg_data.xy.T)
+		if bg_data:
+			bg = Background(fig,bg_data.xy.T)
+		elif bg_data == None:
+			bg = Background(fig,bg_data)
+
 
 	if options.crplo:
 		f_crplo()
@@ -560,7 +568,7 @@ def main(options,args):
 		xvals = d.x
 		yvals = d.y
 		
-		bg_yvals = interpolate(bg_xy,xvals)
+		bg_yvals = interpolate(bg_xy,xvals,kind=options.bg_correct)
 
 		offset = raw_input("What offset should I add to the data?\n >> [0] ") or 0
 		offset = int(offset)
@@ -570,12 +578,14 @@ def main(options,args):
 			for x,y in zip(xvals,bg_yvals):
 				if np.isnan(y): 
 					continue
-				print >> out_bg, '%15.6f%15.0f' % (x,y)
+				print >> out_bg, '%15.6f%15.2f' % (x,y)
 			print 'Writing corrected pattern to %s' % fn_corr
 			for x,y in zip(xvals,yvals-bg_yvals+offset):
 				if np.isnan(y): 
 					continue
-				print >> out_corr, '%15.6f%15.0f' % (x,y)
+				print >> out_corr, '%15.6f%15.2f' % (x,y)
+		else:
+			raise IndexError, 'Not enough values in array bg_xy.'
 
 
 
