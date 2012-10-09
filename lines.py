@@ -39,34 +39,6 @@ def read_file(path):
 		exit(0)
 	return f
 
-def read_data_old(f):
-	"""obsolete"""
-	ret = []
-
-	for line in f:
-		inp = line.split()
-		if not inp:
-			continue
-		ret.append([float(val) for val in inp])
-
-	lists = iter(zip(*ret))
-
-	#lines = (line.split() for line in f if line)
-	#lines = ([float(item) for item in line] for line in lines)
-	#lists = (np.array(lst) for lst in zip(*lines))
-
-	x = np.array(lists.next())
-	y = np.array(lists.next())
-	
-	try:
-		err = np.array(lists.next())
-	except StopIteration:
-		err = None
-
-	d = Data(x,y,err)
-	d.filename = f.name
-
-	return d
 
 def read_data(f):
 	inp = np.loadtxt(f)
@@ -74,14 +46,13 @@ def read_data(f):
 	if inp.shape[1] > 3:
 		print 'More than 3 columns read from {}, assuming x,y,esd, ignoring the rest.'.format(f.name)
 
-	d = Data(inp)
-	d.filename = f.name
+	d = Data(inp,name=f.name)
 
 	return d
 
 
 
-def parse_xrs(f):
+def parse_xrs(f,return_as='d_xrs'):
 	xy = np.array([],dtype=float).reshape(0,2)
 	start = True
 	finish = False
@@ -121,20 +92,32 @@ def parse_xrs(f):
 			try:
 				esd.append(float(inp[3]))
 			except IndexError:
-				esd.append(-1)
+				esd.append(np.nan)
 		elif start:
 			pre.append(line)
 		elif not start:
 			post.append(line)
 
-	xye = np.vstack([x,y,esd]).T
-
-	d = Data(xye,name='stepco')
-
 	f.close()
-	xrs = [f.name,pre,post]
 
-	return d,xrs
+	if return_as == 'xye':
+		return np.vstack([x,y,esd]).T
+	elif return_as == 'xy':
+		return np.vstack([x,y]).T
+	elif return_as == 'd':
+		xye = np.vstack([x,y,esd]).T
+		d = Data(xye,name='stepco.inp')
+		return d
+	elif return_as == 'd_xrs':
+		xye = np.vstack([x,y,esd]).T
+		d = Data(xye,name='stepco.inp')
+		xrs = [f.name,pre,post]
+		return d,xrs
+	else:
+		raise SyntaxError
+
+
+
 
 
 def parse_crplot_dat(f):
@@ -239,7 +222,9 @@ def f_bg_correct_out(d,bg_xy):
 
 
 
-def new_stepco_inp(xy,name,pre,post):
+def new_stepco_inp(xy,name,pre,post,esds=None):
+	"""Function for writing stepco input files"""
+
 	print 'Writing xy data to file {}'.format(name)
 
 	f = open(name,'w')
@@ -247,8 +232,18 @@ def new_stepco_inp(xy,name,pre,post):
 	for line in pre:
 		print >> f, line,
 
-	for x,y in xy.transpose():
-		print >> f, 'BGVALU    %15.6f%15.0f' % (x,y)
+	if np.any(esds):
+		esds = esds.reshape(1,-1)
+
+		for (x,y,esd) in np.vstack((xy,esds)).T:
+			if np.isnan(esd):
+				esd = ''
+			else:
+				esd = '{:15.2f}'.format(esd)
+			print >> f, 'BGVALU    {:15f}{:15.2f}{}'.format(x,y,esd)
+	else:	
+		for x,y in xy.T:
+			print >> f, 'BGVALU    {:15f}{:15.2f}'.format(x,y)
 
 	for line in post:
 		print >> f, line,
@@ -295,15 +290,24 @@ class Data(object):
 	total = 0
 	"""container class for x,y, err data"""
 	def __init__(self,arr,name=None):
+		print 'Loading data: {}\n       shape: {}\n'.format(name,arr.shape)
+
 		self.arr = arr
-		self.x = self.arr[:,0]
-		self.y = self.arr[:,1]
-		self.xy = self.arr[:,0:2]
-		
+		self.x   = self.arr[:,0]
+		self.y   = self.arr[:,1]
+		self.xy  = self.arr[:,0:2]
+		self.xye = self.arr[:,0:3]
+
 		try:
 			self.err = self.arr[:,2]
 		except IndexError:
 			self.err = None
+
+		if np.all(self.err == np.nan):
+			self.has_esd = False
+			self.err = None
+		else:
+			self.has_esd = True
 
 		self.index = self.total
 		self.filename = name
@@ -313,7 +317,7 @@ class Data(object):
 class Background():
 	sensitivity = 8
 
-	def __init__(self,fig,bg_data=None, xy=None,outfunc=None,bg_correct=False):
+	def __init__(self,fig,d=None, outfunc=None,bg_correct=False):
 		"""Class that captures mouse events when a graph has been drawn, stores the coordinates
 		of these points and draws them as a line on the screen. Can also remove points and print all
 		the stored points to stdout
@@ -335,11 +339,12 @@ class Background():
 		# 	idx = xy[0,:].argsort()
 		# 	self.xy = xy[:,idx]
 
-		if bg_data:
-			self.d  = bg_data
-			self.xy = self.d.xy
+		if d:
+			self.d  = d
+			self.xy = np.array(self.d.xy,copy=True).T
 		else:
-			self.xy = xy
+			self.d  = None
+			self.xy = None
 
 		try:
 			idx = self.xy[0,:].argsort()
@@ -373,7 +378,7 @@ class Background():
 		if self.bg_correct:
 			self.bg_range = np.arange(self.xy[0][0],self.xy[0][1],0.01) # Set limited range to speed up calculations
 			ax = fig.add_subplot(111)
-			self.bg, = ax.plot(*self.xy,label='background')
+			self.bg, = ax.plot(self.d.x,self.d.y,label='background')
 			#print self.bg_range
 
 
@@ -465,7 +470,14 @@ class Background():
 
 		print '---'
 		if options.xrs:
-			new_stepco_inp(self.xy,*options.xrs_out)
+			if self.d.has_esd:
+				print '\nAttempting to interpolate standard deviations... for new stepco.inp\n'
+
+				esds = interpolate(self.d.xye[:,0:3:2], self.xy[0], kind='linear')
+
+				print esds
+
+			new_stepco_inp(self.xy,*options.xrs_out,esds=esds)
 		else:
 			for x,y in self.xy.transpose():
 				print '%15.6f%15.2f' % (x,y)
@@ -551,17 +563,19 @@ def main(options,args):
 
 		#print x1,x2,y1,y2
 
-		xy = np.array([[x1,x2],[y1,y2]],dtype=float)
+		xy = np.array([[x1,y1],[x2,y2]],dtype=float)
 
-		bg_data = Data(xy)
+		bg_data = Data(xy,name=' bg (--correct)')
 
-		bg = Background(fig,bg_data=bg_data,xy=xy,bg_correct=options.bg_correct) 
+		bg_data.xy.shape
+
+		bg = Background(fig,d=bg_data,bg_correct=options.bg_correct) 
 
 	elif options.backgrounder:
 		if bg_data:
-			bg = Background(fig,bg_data=bg_data)
+			bg = Background(fig,d=bg_data)
 		elif bg_data == None:
-			bg = Background(fig,bg_data=bg_data)
+			bg = Background(fig,d=bg_data)
 
 
 	if options.crplo:
