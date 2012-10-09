@@ -586,10 +586,10 @@ def main(options,args):
 		lines.plot(d)
 
 	if options.christian:
+		assert bg_data, 'No background data available, can\'t use option --christian!'
+
 		lines.plot(bg_data)
-
 		f_plot_christian(bg_data.xy)
-
 
 	plt.legend()
 	plt.show()
