@@ -211,7 +211,31 @@ def f_plot_christian(bg_xy):
 		
 		plt.plot(tt, bg_interpolate + dif, label = 'bg + diff')
 
-
+def f_bg_correct_out(d,bg_xy):
+	fn_bg   = d.filename.replace('.','_bg.')
+	fn_corr = d.filename.replace('.','_corr.')
+	out_bg   = open(fn_bg,'w')
+	out_corr = open(fn_corr,'w')
+		
+	xvals = d.x
+	yvals = d.y
+	
+	bg_yvals = interpolate(bg_xy,xvals,kind=options.bg_correct)
+	offset = raw_input("What offset should I add to the data?\n >> [0] ") or 0
+	offset = int(offset)
+	if len(bg_xy) >= 4:
+		print 'Writing background pattern to %s' % fn_bg
+		for x,y in zip(xvals,bg_yvals):
+			if np.isnan(y): 
+				continue
+			print >> out_bg, '%15.6f%15.2f' % (x,y)
+		print 'Writing corrected pattern to %s' % fn_corr
+		for x,y in zip(xvals,yvals-bg_yvals+offset):
+			if np.isnan(y): 
+				continue
+			print >> out_corr, '%15.6f%15.2f' % (x,y)
+	else:
+		raise IndexError, 'Not enough values in array bg_xy.'
 
 
 
@@ -289,7 +313,7 @@ class Data(object):
 class Background():
 	sensitivity = 8
 
-	def __init__(self,fig,xy=None,outfunc=None,bg_correct=False):
+	def __init__(self,fig,bg_data=None, xy=None,outfunc=None,bg_correct=False):
 		"""Class that captures mouse events when a graph has been drawn, stores the coordinates
 		of these points and draws them as a line on the screen. Can also remove points and print all
 		the stored points to stdout
@@ -311,9 +335,15 @@ class Background():
 		# 	idx = xy[0,:].argsort()
 		# 	self.xy = xy[:,idx]
 
+		if bg_data:
+			self.d  = bg_data
+			self.xy = self.d.xy
+		else:
+			self.xy = xy
+
 		try:
-			idx = xy[0,:].argsort()
-			self.xy = xy[:,idx]
+			idx = self.xy[0,:].argsort()
+			self.xy = self.xy[:,idx]
 		except (IndexError, ValueError, TypeError):
 			self.xy = np.array([],dtype=float).reshape(2,0)
 
@@ -327,7 +357,7 @@ class Background():
 		self.n = 0
 
 
-		self.tb    = plt.get_current_fig_manager().toolbar
+		self.tb = plt.get_current_fig_manager().toolbar
 
 		self.ax = ax
 
@@ -525,20 +555,17 @@ def main(options,args):
 
 		bg_data = Data(xy)
 
-		bg = Background(fig,xy,bg_correct=options.bg_correct) 
+		bg = Background(fig,bg_data=bg_data,xy=xy,bg_correct=options.bg_correct) 
 
 	elif options.backgrounder:
 		if bg_data:
-			bg = Background(fig,bg_data.xy.T)
+			bg = Background(fig,bg_data=bg_data)
 		elif bg_data == None:
-			bg = Background(fig,bg_data)
+			bg = Background(fig,bg_data=bg_data)
 
 
 	if options.crplo:
 		f_crplo()
-
-
-
 
 
 	for d in reversed(data):
@@ -553,39 +580,8 @@ def main(options,args):
 	plt.legend()
 	plt.show()
 
-
-
-
 	if options.bg_correct:
-		d = data[0]
-		fn_bg   = d.filename.replace('.','_bg.')
-		fn_corr = d.filename.replace('.','_corr.')
-		out_bg   = open(fn_bg,'w')
-		out_corr = open(fn_corr,'w')
-
-		bg_xy = bg.xy.T
-		
-		xvals = d.x
-		yvals = d.y
-		
-		bg_yvals = interpolate(bg_xy,xvals,kind=options.bg_correct)
-
-		offset = raw_input("What offset should I add to the data?\n >> [0] ") or 0
-		offset = int(offset)
-
-		if len(bg_xy) >= 4:
-			print 'Writing background pattern to %s' % fn_bg
-			for x,y in zip(xvals,bg_yvals):
-				if np.isnan(y): 
-					continue
-				print >> out_bg, '%15.6f%15.2f' % (x,y)
-			print 'Writing corrected pattern to %s' % fn_corr
-			for x,y in zip(xvals,yvals-bg_yvals+offset):
-				if np.isnan(y): 
-					continue
-				print >> out_corr, '%15.6f%15.2f' % (x,y)
-		else:
-			raise IndexError, 'Not enough values in array bg_xy.'
+		f_bg_correct_out(d=data[0],bg_xy=bg.xy.T)
 
 
 
