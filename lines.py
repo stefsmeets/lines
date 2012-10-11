@@ -1,5 +1,7 @@
 #!/usr/bin/env python2.7-32
 
+import sys
+
 import argparse
 import numpy as np
 
@@ -10,11 +12,11 @@ from scipy.interpolate import interp1d
 
 
 
-__version__ = '08-09-2012'
+__version__ = '11-10-2012'
 
 
 params = {'legend.fontsize': 10,
-          'legend.labelspacing': 0.1}
+		  'legend.labelspacing': 0.1}
 plt.rcParams.update(params)
 
 
@@ -148,7 +150,56 @@ def parse_hkl_dat(f):
 
 	return ret
 
+def plot_stdin(update_time=0.2):
+	import time
 
+	def nrange(n=0):
+		while True:
+			yield n
+			n=n+1
+
+	iterator = (n for n in nrange())
+
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+
+	x = []
+	y = []
+	
+	l1, = ax.plot(x,y)
+	fig.show()
+
+	t0 = time.time()
+
+	while True:
+		line = sys.stdin.readline()
+		
+		if line == '':
+			continue
+		
+		inp = line.split()
+
+		try:
+			y.append(float(inp[1]))
+			x.append(float(inp[0]))
+		except IndexError:
+			x.append(iterator.next())
+			y.append(float(inp[0]))
+		
+		if time.time() - t0 > update_time:
+			# drawing is slow, better to refresh ever x seconds
+			
+			t0 = time.time()
+
+			l1.set_xdata(x)
+			l1.set_ydata(y)
+			
+			ax.relim()
+			ax.autoscale()
+			
+			plt.draw()
+			
+			fig.canvas.flush_events()
 
 def f_monitor(fn,f_init,f_update,poll_time=0.05):
 	"""experimental function for live monitoring of plots"""
@@ -645,6 +696,11 @@ class Ticks(object):
 
 
 def main(options,args):
+	if not sys.stdin.isatty():
+		print 'tty'
+		plot_stdin()
+		exit()
+
 
 	if options.monitor:
 		if options.monitor in ('crplot.dat','crplot'):
