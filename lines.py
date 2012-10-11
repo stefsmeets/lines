@@ -148,6 +148,119 @@ def parse_hkl_dat(f):
 
 	return ret
 
+
+
+def f_monitor(fn,f_init,f_update,poll_time=0.05):
+	"""experimental function for live monitoring of plots"""
+	import os
+	import time
+
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+
+	args = f_init(fig,ax)
+
+	fig.show()
+
+	current_lastmod = os.stat(fn).st_mtime
+
+	while True:
+		if os.stat(fn).st_mtime == current_lastmod:
+			# flushing here as well, to prevent locking up of mpl window			
+			fig.canvas.flush_events()
+
+			# low poll time is needed to keep responsiveness
+			time.sleep(poll_time)
+		else:
+			print 'updated', os.stat(fn).st_mtime
+			current_lastmod = os.stat(fn).st_mtime
+
+			args = f_update(*args)
+
+			ax.relim()
+			ax.autoscale()
+			plt.draw()
+			
+			# And this allows you to at least close the window (and crash the program by that ;))
+			fig.canvas.flush_events()
+		
+
+def plot_init(fig,ax):
+	raise NotImplementedError
+
+def plot_update(*args):
+	raise NotImplementedError
+
+
+def crplot_init(fig,ax):
+
+	fcr = open('crplot.dat','r')
+	fhkl = open('hkl.dat','r')
+		
+	crdata = np.array(parse_crplot_dat(fcr))
+	hkldata = np.array(parse_hkl_dat(fhkl))
+	
+	fcr.close()
+	fhkl.close()
+
+	tt = crdata[:,0]
+	obs = crdata[:,1] 
+	clc = crdata[:,2]
+	dif = crdata[:,3]
+	
+	tck = hkldata[:,3]
+	
+	mx_dif = max(dif)
+	mx_pat = max(max(obs),max(clc))
+	
+	pobs, = ax.plot(tt, obs, label = 'observed')
+	pclc, = ax.plot(tt, clc, label = 'calculated')
+	pdif, = ax.plot(tt, dif - mx_dif, label = 'difference')
+	
+	pobs_zero, = ax.plot(tt,np.zeros(tt.size), c='black')
+	pdif_zero, = ax.plot(tt,np.zeros(tt.size) - mx_dif, c='black')
+	
+	ptcks, = ax.plot(tck,np.zeros(tck.size) - (mx_dif / 4), linestyle='', marker='|', markersize=10, label = 'ticks', c='purple')
+	
+	args = [pobs, pclc, pdif, pobs_zero, pdif_zero, ptcks]
+
+	return args
+
+
+def crplot_update(*args):
+	pobs, pclc, pdif, pobs_zero, pdif_zero, ptcks = args
+
+	fcr = open('crplot.dat','r')
+	fhkl = open('hkl.dat','r')
+	
+	crdata = np.array(parse_crplot_dat(fcr))
+	hkldata = np.array(parse_hkl_dat(fhkl))
+	
+	fcr.close()
+	fhkl.close()
+
+	tt = crdata[:,0]
+	obs = crdata[:,1] 
+	clc = crdata[:,2]
+	dif = crdata[:,3]
+	
+	tck = hkldata[:,3]
+	
+	mx_dif = max(dif)
+	mx_pat = max(max(obs),max(clc))
+
+	pobs.set_data(tt,obs)
+	pclc.set_data(tt,clc)
+	pdif.set_data(tt,dif - mx_dif)
+	pobs_zero.set_data(tt,np.zeros(tt.size))
+	pdif_zero.set_data(tt,np.zeros(tt.size) - mx_dif)
+	ptcks.set_data(tck,np.zeros(tck.size) - (mx_dif / 4))
+
+	args = [pobs, pclc, pdif, pobs_zero, pdif_zero, ptcks]
+
+	return args
+
+
 def f_crplo():
 	crplotdat = 'crplot.dat'
 	fcr = open(crplotdat,'r')
@@ -532,6 +645,17 @@ class Ticks(object):
 
 
 def main(options,args):
+
+	if options.monitor:
+		if options.monitor in ('crplot.dat','crplot'):
+			f_monitor('crplot.dat',crplot_init,crplot_update)
+		else:
+			f_monitor(plot_init,plot_update)
+		exit()
+
+
+
+
 	files = gen_read_files(args)
 
 	data = [read_data(f) for f in files] # returns data objects
@@ -650,6 +774,9 @@ if __name__ == '__main__':
 						action="store_true", dest="christian",
 						help="Special function for Christian. Plots the previous background a starting point and the background + the difference plot. Reads difference data from crplot.dat")
 
+	parser.add_argument("-m", "--monitor", metavar='FILE',
+						action="store", type=str, dest="monitor",
+						help="Monitor specified file and replots if the file is updates. First 2 columns are plotted. Special value: crplot.dat")
 
 	
 	parser.set_defaults(backgrounder=True,
@@ -657,7 +784,8 @@ if __name__ == '__main__':
 						nomove = True,
 						bg_correct = False,
 						crplo = False,
-						christian = False)
+						christian = False,
+						monitor = None)
 	
 	options = parser.parse_args()
 	args = options.args
