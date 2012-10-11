@@ -650,7 +650,8 @@ def main(options,args):
 		if options.monitor in ('crplot.dat','crplot'):
 			f_monitor('crplot.dat',crplot_init,crplot_update)
 		else:
-			f_monitor(plot_init,plot_update)
+			fn = options.monitor
+			f_monitor(fn,plot_init,plot_update)
 		exit()
 
 
