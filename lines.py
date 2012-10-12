@@ -12,7 +12,7 @@ from scipy.interpolate import interp1d
 
 
 
-__version__ = '11-10-2012'
+__version__ = '12-10-2012'
 
 
 params = {'legend.fontsize': 10,
@@ -175,6 +175,8 @@ def plot_stdin(update_time=0.2):
 		line = sys.stdin.readline()
 		
 		if line == '':
+			fig.canvas.flush_events() # update figure to prevent slow responsiveness
+			time.sleep(0.05) # prevent high cpu usage
 			continue
 		
 		inp = line.split()
@@ -209,7 +211,7 @@ def f_monitor(fn,f_init,f_update,poll_time=0.05):
 	fig = plt.figure()
 	ax = fig.add_subplot(111)
 
-	args = f_init(fig,ax)
+	args = f_init(fn,fig,ax)
 
 	fig.show()
 
@@ -226,7 +228,7 @@ def f_monitor(fn,f_init,f_update,poll_time=0.05):
 			print 'updated', os.stat(fn).st_mtime
 			current_lastmod = os.stat(fn).st_mtime
 
-			args = f_update(*args)
+			args = f_update(fn,*args)
 
 			ax.relim()
 			ax.autoscale()
@@ -236,14 +238,29 @@ def f_monitor(fn,f_init,f_update,poll_time=0.05):
 			fig.canvas.flush_events()
 		
 
-def plot_init(fig,ax):
-	raise NotImplementedError
+def plot_init(fn,fig,ax):
+	f = read_file(fn)
+	d = read_data(f)
+	f.close()
 
-def plot_update(*args):
-	raise NotImplementedError
+	line, = ax.plot(d.x,d.y,label=fn)
+
+	return [line]
 
 
-def crplot_init(fig,ax):
+def plot_update(fn,*args):
+	[line] = args
+
+	f = read_file(fn)
+	d = read_data(f)
+	f.close()
+
+	line.set_data(d.x,d.y)
+
+	return [line]
+
+
+def crplot_init(fn,fig,ax):
 
 	fcr = open('crplot.dat','r')
 	fhkl = open('hkl.dat','r')
@@ -278,7 +295,7 @@ def crplot_init(fig,ax):
 	return args
 
 
-def crplot_update(*args):
+def crplot_update(fn,*args):
 	pobs, pclc, pdif, pobs_zero, pdif_zero, ptcks = args
 
 	fcr = open('crplot.dat','r')
