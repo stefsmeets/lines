@@ -150,7 +150,7 @@ def parse_hkl_dat(f):
 
 	return ret
 
-def plot_stdin(update_time=0.2):
+def plot_stdin(fig,update_time=0.2):
 	import time
 
 	def nrange(n=0):
@@ -160,7 +160,7 @@ def plot_stdin(update_time=0.2):
 
 	iterator = (n for n in nrange())
 
-	fig = plt.figure()
+	#fig = plt.figure()
 	ax = fig.add_subplot(111)
 
 	x = []
@@ -203,12 +203,15 @@ def plot_stdin(update_time=0.2):
 			
 			fig.canvas.flush_events()
 
-def f_monitor(fn,f_init,f_update,poll_time=0.05):
+
+def f_monitor(fn,f_init,f_update,fig=None,poll_time=0.05):
 	"""experimental function for live monitoring of plots"""
 	import os
 	import time
 
-	fig = plt.figure()
+	if not fig:
+		fig = plt.figure()
+	
 	ax = fig.add_subplot(111)
 
 	args = f_init(fn,fig,ax)
@@ -225,13 +228,13 @@ def f_monitor(fn,f_init,f_update,poll_time=0.05):
 			# low poll time is needed to keep responsiveness
 			time.sleep(poll_time)
 		else:
-			print 'updated', os.stat(fn).st_mtime
+			print 'Updated:', time.ctime(os.stat(fn).st_mtime)
 			current_lastmod = os.stat(fn).st_mtime
 
 			args = f_update(fn,*args)
 
-			ax.relim()
-			ax.autoscale()
+			#ax.relim()
+			#ax.autoscale()	# resets the boundaries -> annoying for a plot that doesn't need rescaling
 			plt.draw()
 			
 			# And this allows you to at least close the window (and crash the program by that ;))
@@ -713,23 +716,6 @@ class Ticks(object):
 
 
 def main(options,args):
-	if not sys.stdin.isatty():
-		print 'tty'
-		plot_stdin()
-		exit()
-
-
-	if options.monitor:
-		if options.monitor in ('crplot.dat','crplot'):
-			f_monitor('crplot.dat',crplot_init,crplot_update)
-		else:
-			fn = options.monitor
-			f_monitor(fn,plot_init,plot_update)
-		exit()
-
-
-
-
 	files = gen_read_files(args)
 
 	data = [read_data(f) for f in files] # returns data objects
@@ -789,6 +775,21 @@ def main(options,args):
 		lines.plot(bg_data)
 		f_plot_christian(bg_data.xy)
 
+	if not sys.stdin.isatty():
+		print 'tty'
+		plot_stdin(fig)
+		exit()
+
+
+	if options.monitor:
+		if options.monitor in ('crplot.dat','crplot'):
+			f_monitor('crplot.dat',crplot_init,crplot_update,fig=fig)
+		else:
+			fn = options.monitor
+			f_monitor(fn,plot_init,plot_update,fig=fig)
+		exit()
+
+
 	plt.legend()
 	plt.show()
 
@@ -846,7 +847,7 @@ if __name__ == '__main__':
 
 	parser.add_argument("--christian",
 						action="store_true", dest="christian",
-						help="Special function for Christian. Plots the previous background a starting point and the background + the difference plot. Reads difference data from crplot.dat")
+						help="Special function for Christian. Plots the previous background and the background + the difference plot. Reads difference data from crplot.dat")
 
 	parser.add_argument("-m", "--monitor", metavar='FILE',
 						action="store", type=str, dest="monitor",
