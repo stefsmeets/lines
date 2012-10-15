@@ -5,6 +5,7 @@ import sys
 import argparse
 import numpy as np
 
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
 
@@ -152,6 +153,9 @@ def parse_hkl_dat(f):
 
 def plot_stdin(fig,update_time=0.2):
 	import time
+	TclError =  matplotlib.backends.backend_tkagg.tkagg.Tk._tkinter.TclError
+
+	print 'Reading stdin.\n'
 
 	def nrange(n=0):
 		while True:
@@ -172,12 +176,26 @@ def plot_stdin(fig,update_time=0.2):
 	t0 = time.time()
 
 	while True:
-		line = sys.stdin.readline()
+		try:
+			line = sys.stdin.readline()
+		except KeyboardInterrupt as e:
+			print e
+			break
 		
 		if line == '':
-			fig.canvas.flush_events() # update figure to prevent slow responsiveness
-			time.sleep(0.05) # prevent high cpu usage
-			continue
+			try:
+				fig.canvas.flush_events() # update figure to prevent slow responsiveness
+			except TclError:
+				print '-- Window closed (TclError).'
+				break
+
+			try:
+				time.sleep(0.05) # prevent high cpu usage
+			except KeyboardInterrupt as e:
+				print e
+				break
+			else:
+				continue
 		
 		inp = line.split()
 
@@ -209,6 +227,8 @@ def f_monitor(fn,f_init,f_update,fig=None,poll_time=0.05):
 	import os
 	import time
 
+	TclError =  matplotlib.backends.backend_tkagg.tkagg.Tk._tkinter.TclError
+
 	if not fig:
 		fig = plt.figure()
 	
@@ -223,10 +243,21 @@ def f_monitor(fn,f_init,f_update,fig=None,poll_time=0.05):
 	while True:
 		if os.stat(fn).st_mtime == current_lastmod:
 			# flushing here as well, to prevent locking up of mpl window			
-			fig.canvas.flush_events()
+			
+			try:
+				fig.canvas.flush_events()
+			except TclError:
+				print '-- Window closed (TclError).'
+				break
 
 			# low poll time is needed to keep responsiveness
-			time.sleep(poll_time)
+			
+			try:
+				time.sleep(poll_time)
+			except KeyboardInterrupt as e:
+				print e
+				break
+
 		else:
 			print 'Updated:', time.ctime(os.stat(fn).st_mtime)
 			current_lastmod = os.stat(fn).st_mtime
@@ -775,23 +806,20 @@ def main(options,args):
 		lines.plot(bg_data)
 		f_plot_christian(bg_data.xy)
 
+
+
+	plt.legend()
+
 	if not sys.stdin.isatty():
-		print 'tty'
 		plot_stdin(fig)
-		exit()
-
-
-	if options.monitor:
+	elif options.monitor:
 		if options.monitor in ('crplot.dat','crplot'):
 			f_monitor('crplot.dat',crplot_init,crplot_update,fig=fig)
 		else:
 			fn = options.monitor
 			f_monitor(fn,plot_init,plot_update,fig=fig)
-		exit()
-
-
-	plt.legend()
-	plt.show()
+	else:
+		plt.show()
 
 	if options.bg_correct:
 		f_bg_correct_out(d=data[0],bg_xy=bg.xy.T)
