@@ -170,7 +170,9 @@ def plot_stdin(fig,update_time=0.2):
 	x = []
 	y = []
 	
-	l1, = ax.plot(x,y)
+	l1, = ax.plot(x,y,label='stdin')
+
+	plt.legend()
 	fig.show()
 
 	t0 = time.time()
@@ -186,7 +188,7 @@ def plot_stdin(fig,update_time=0.2):
 			try:
 				fig.canvas.flush_events() # update figure to prevent slow responsiveness
 			except TclError:
-				print '-- Window closed (TclError).'
+				print '-- Window closed (TclError on readline).'
 				break
 
 			try:
@@ -219,7 +221,11 @@ def plot_stdin(fig,update_time=0.2):
 			
 			plt.draw()
 			
-			fig.canvas.flush_events()
+			try:
+				fig.canvas.flush_events() # update figure to prevent slow responsiveness
+			except TclError:
+				print '-- Window closed (TclError on update).'
+				break
 
 
 def f_monitor(fn,f_init,f_update,fig=None,poll_time=0.05):
@@ -236,6 +242,7 @@ def f_monitor(fn,f_init,f_update,fig=None,poll_time=0.05):
 
 	args = f_init(fn,fig,ax)
 
+	plt.legend()
 	fig.show()
 
 	current_lastmod = os.stat(fn).st_mtime
@@ -807,9 +814,6 @@ def main(options,args):
 		f_plot_christian(bg_data.xy)
 
 
-
-	plt.legend()
-
 	if not sys.stdin.isatty():
 		plot_stdin(fig)
 	elif options.monitor:
@@ -819,6 +823,7 @@ def main(options,args):
 			fn = options.monitor
 			f_monitor(fn,plot_init,plot_update,fig=fig)
 	else:
+		plt.legend()
 		plt.show()
 
 	if options.bg_correct:
