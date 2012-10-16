@@ -13,7 +13,7 @@ from scipy.interpolate import interp1d
 
 
 
-__version__ = '12-10-2012'
+__version__ = '16-10-2012'
 
 
 params = {'legend.fontsize': 10,
@@ -43,8 +43,21 @@ def read_file(path):
 	return f
 
 
-def read_data(f):
-	inp = np.loadtxt(f)
+def read_data(f,usecols=None,append_zeros=False):
+	inp = np.loadtxt(f,usecols=usecols)
+
+	if inp.ndim == 1:
+		(i,) = inp.shape
+		inp.shape = (i,-1)
+
+	assert inp.ndim == 2, 'This should not happen...'
+
+	if append_zeros:
+		(i,j) = inp.shape
+
+
+		inp = np.hstack((inp,np.zeros((i,1))))
+
 
 	if inp.shape[1] > 3:
 		print 'More than 3 columns read from {}, assuming x,y,esd, ignoring the rest.'.format(f.name)
@@ -53,6 +66,17 @@ def read_data(f):
 
 	return d
 
+def load_tick_marks(path):
+	"""Checks if file exists and loads tick mark data as data class"""
+	try:
+		f = open(path,'r')
+	except IOError:
+		print '-- {} not found. (IOError)'.format(path)
+		ticks = None
+	else:
+		ticks = read_data(f,usecols=(3,),append_zeros=True)
+	finally:
+		return ticks
 
 
 def parse_xrs(f,return_as='d_xrs'):
@@ -371,25 +395,19 @@ def crplot_update(fn,*args):
 
 
 def f_crplo():
+	## difference data
 	crplotdat = 'crplot.dat'
 	fcr = open(crplotdat,'r')
 	
-	hkldat = 'hkl.dat'
-	fhkl = open(hkldat,'r')
-		
 	crdata = np.array(parse_crplot_dat(fcr))
-	hkldata = np.array(parse_hkl_dat(fhkl))
 	
 	tt = crdata[:,0]
 	obs = crdata[:,1] 
 	clc = crdata[:,2]
 	dif = crdata[:,3]
 	
-	tck = hkldata[:,3]
-	
 	mx_dif = max(dif)
 	mx_pat = max(max(obs),max(clc))
-	
 	
 	plt.plot(tt, obs, label = 'observed')
 	plt.plot(tt, clc, label = 'calculated')
@@ -397,8 +415,17 @@ def f_crplo():
 	
 	plt.plot(tt, np.zeros(tt.size), c='black')
 	plt.plot(tt, np.zeros(tt.size) - mx_dif, c='black')
-	
-	plt.plot(tck,np.zeros(tck.size) - (mx_dif / 4), linestyle='', marker='|', markersize=10, label = 'ticks', c='purple')
+
+	## tick marks
+	hkldat = 'hkl.dat'
+	try:
+		fhkl = open(hkldat,'r')
+	except IOError:
+		print '-- hkl.dat not found. (IOError)'
+	else:
+		hkldata = np.array(parse_hkl_dat(fhkl))
+		tck = hkldata[:,3]
+		plt.plot(tck,np.zeros(tck.size) - (mx_dif / 4), linestyle='', marker='|', markersize=10, label = 'ticks', c='purple')
 
 
 def f_plot_christian(bg_xy):
@@ -591,7 +618,7 @@ class Background():
 		print
 		print 'Left mouse button: add point'
 		print 'Right mouse button: remove point'
-		print 'Middle mouse button or press "a": print points to file'
+		print 'Middle mouse button or press "a": print points to file/stdout'
 		print
 		print 'Note: Adding/Removing points disabled while using drag/zoom functions.'
 		print
@@ -738,16 +765,29 @@ class Lines(object):
 		label = data.filename
 
 		ax.plot(data.x,data.y,transform=transform,c=colour,label=label)
+
+	def plot_tick_marks(self,data):
+		ax = self.fig.add_subplot(111)
+		
+		dx, dy = 0, -16/72.
+
+		offset = transforms.ScaledTranslation(dx, dy, self.fig.dpi_scale_trans)
+		transform = ax.transData + offset
+
+		label = data.filename
+
+		ax.plot(data.x,data.y,transform=transform,c='black',label=label,linestyle='',marker='|',markersize=10)
+		#plt.plot(tck,np.zeros(tck.size) - (mx_dif / 4), linestyle='', marker='|', markersize=10, label = 'ticks', c='purple')
+
+
 		
 
 
 
-class Ticks(object):
-	"""docstring for Ticks"""
-	def __init__(self, arg):
-		super(Ticks, self).__init__()
-		self.arg = arg
-		
+
+
+
+
 
 
 
@@ -755,11 +795,8 @@ class Ticks(object):
 
 def main(options,args):
 	files = gen_read_files(args)
-
 	data = [read_data(f) for f in files] # returns data objects
-
 	fig = plt.figure()
-
 	lines = Lines(fig)
 
 	if options.xrs:
@@ -813,6 +850,11 @@ def main(options,args):
 		lines.plot(bg_data)
 		f_plot_christian(bg_data.xy)
 
+
+	if options.plot_ticks:
+		ticks = load_tick_marks('hkl.dat')
+		if ticks:
+			lines.plot_tick_marks(ticks)
 
 	if not sys.stdin.isatty():
 		plot_stdin(fig)
@@ -886,6 +928,11 @@ if __name__ == '__main__':
 						action="store", type=str, dest="monitor",
 						help="Monitor specified file and replots if the file is updates. First 2 columns are plotted. Special value: crplot.dat")
 
+	parser.add_argument("-t", "--ticks",
+						action="store_true", dest="plot_ticks",
+						help="Looks for local hkl.dat file and uses this to plot tick marks.")
+
+
 	
 	parser.set_defaults(backgrounder=True,
 						xrs = None,
@@ -893,7 +940,8 @@ if __name__ == '__main__':
 						bg_correct = False,
 						crplo = False,
 						christian = False,
-						monitor = None)
+						monitor = None,
+						plot_ticks = False)
 	
 	options = parser.parse_args()
 	args = options.args
