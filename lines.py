@@ -11,7 +11,7 @@ import matplotlib.transforms as transforms
 
 from scipy.interpolate import interp1d
 
-
+from shutil import copyfile
 
 __version__ = '16-10-2012'
 
@@ -580,7 +580,7 @@ class Background():
 
 		xy: 2d ndarray, shape(2,0) with x,y data"""
 
-		ax = fig.add_subplot(111)
+		self.ax = fig.add_subplot(111)
 		
 		# if xy is None:
 		# 	self.xy = np.array([],dtype=float).reshape(2,0)
@@ -601,7 +601,7 @@ class Background():
 		except (IndexError, ValueError, TypeError):
 			self.xy = np.array([],dtype=float).reshape(2,0)
 
-		self.line, = ax.plot(*self.xy,lw=0.5,marker='s',mec='red',mew=1,mfc='None',markersize=3,picker=self.sensitivity,label='interactive background')
+		self.line, = self.ax.plot(*self.xy,lw=0.5,marker='s',mec='red',mew=1,mfc='None',markersize=3,picker=self.sensitivity,label='interactive background')
 
 		self.pick  = self.line.figure.canvas.mpl_connect('pick_event', self.onpick)
 		self.cid   = self.line.figure.canvas.mpl_connect('button_press_event', self)
@@ -610,10 +610,7 @@ class Background():
 
 		self.n = 0
 
-
 		self.tb = plt.get_current_fig_manager().toolbar
-
-		self.ax = ax
 
 		print
 		print 'Left mouse button: add point'
@@ -626,11 +623,8 @@ class Background():
 		self.bg_correct = bg_correct
 		if self.bg_correct:
 			self.bg_range = np.arange(self.xy[0][0],self.xy[0][1],0.01) # Set limited range to speed up calculations
-			ax = fig.add_subplot(111)
-			self.bg, = ax.plot(self.d.x,self.d.y,label='background')
+			self.bg, = self.ax.plot(self.d.x,self.d.y,label='background')
 			#print self.bg_range
-
-
 
 
 	def __call__(self,event):
@@ -649,11 +643,11 @@ class Background():
 		button = event.button
 		#print event
 
-		if button == 1:
+		if button == 1: #lmb
 			self.add_point(x,y,xdata,ydata)
-		if button == 2:
+		if button == 2: # mmb
 			self.printdata()
-		if button == 3:
+		if button == 3: # rmb
 			pass
 
 		if self.bg_correct and button:
@@ -661,7 +655,6 @@ class Background():
 	
 		self.line.set_data(self.xy)
 		self.line.figure.canvas.draw()
-
 
 
 	def onpick(self,event):
@@ -688,7 +681,6 @@ class Background():
 		if event.key == 'a':
 			print '\na pressed'
 			self.printdata()
-
 	
 
 	def add_point(self,x,y,xdata,ydata):
@@ -700,6 +692,7 @@ class Background():
 		idx = self.xy[0,:].argsort()
 		self.xy = self.xy[:,idx]
 	
+
 	def background_update(self):
 		xy = self.xy.T
 
@@ -712,7 +705,7 @@ class Background():
 		
 
 	def printdata(self):
-		"""Prints stored data points to stdout"""
+		"""Prints stored data points to stdout"""  # TODO: make me a method on class Data()
 		if not self.xy.any():
 			print 'No stored coordinates.'
 			return None
@@ -724,7 +717,7 @@ class Background():
 
 				esds = interpolate(self.d.xye[:,0:3:2], self.xy[0], kind='linear')
 
-				print esds
+				#print esds
 
 			new_stepco_inp(self.xy,*options.xrs_out,esds=esds)
 		else:
@@ -737,6 +730,7 @@ class Lines(object):
 	def __init__(self, fig):
 		super(Lines, self).__init__()
 		self.fig = fig
+		self.ax = self.fig.add_subplot(111)
 		
 		#self.fig.canvas.mpl_connect('pick_event', self.onpick)
 
@@ -749,8 +743,7 @@ class Lines(object):
 
 		colour = 'bgrcmyk'[n%7]
 
-		ax = self.fig.add_subplot(111)
-
+		ax = self.ax
 
 		if options.nomove:
 			dx, dy = 0, 0
@@ -767,7 +760,7 @@ class Lines(object):
 		ax.plot(data.x,data.y,transform=transform,c=colour,label=label)
 
 	def plot_tick_marks(self,data):
-		ax = self.fig.add_subplot(111)
+		ax = self.ax
 		
 		dx, dy = 0, -16/72.
 
@@ -780,28 +773,32 @@ class Lines(object):
 		#plt.plot(tck,np.zeros(tck.size) - (mx_dif / 4), linestyle='', marker='|', markersize=10, label = 'ticks', c='purple')
 
 
-		
+def setup_interpolate_background(d):
+	print 'Interpolation mode for background correction\n'
+	print 'The highest and lowest values are added by default for convenience. In the case that they are removed, only the values in the background range will be printed.'
+	
+	assert len(data) == 1, 'Only works with a single data file'
+	
+	x1 = data[0].x[0]
+	x2 = data[0].x[-1]
+	y1 = data[0].y[0]
+	y2 = data[0].y[-1]
+	
+	#print x1,x2,y1,y2
+	xy = np.array([[x1,y1],[x2,y2]],dtype=float)
 
-
-
-
-
-
-
-
-
-
+	return Data(xy,name=' bg (--correct)')
 
 
 def main(options,args):
 	files = gen_read_files(args)
 	data = [read_data(f) for f in files] # returns data objects
 	fig = plt.figure()
+		
 	lines = Lines(fig)
 
+
 	if options.xrs:
-		from shutil import copyfile
-		
 		fname = options.xrs
 		copyfile(fname,fname+'~')
 		f = read_file(fname)
@@ -811,30 +808,10 @@ def main(options,args):
 
 
 	if options.bg_correct:
-		print 'Interpolation mode for background correction\n'
-		print 'The highest and lowest values are added by default for convenience. In the case that they are removed, only the values in the background range will be printed.'
-
-		assert len(data) == 1, 'Only works with a single data file'
-		x1 = data[0].x[0]
-		x2 = data[0].x[-1]
-		y1 = data[0].y[0]
-		y2 = data[0].y[-1]
-
-		#print x1,x2,y1,y2
-
-		xy = np.array([[x1,y1],[x2,y2]],dtype=float)
-
-		bg_data = Data(xy,name=' bg (--correct)')
-
-		bg_data.xy.shape
-
+		bg_data = setup_interpolate_background(d)
 		bg = Background(fig,d=bg_data,bg_correct=options.bg_correct) 
-
 	elif options.backgrounder:
-		if bg_data:
-			bg = Background(fig,d=bg_data)
-		elif bg_data == None:
-			bg = Background(fig,d=bg_data)
+		bg = Background(fig,d=bg_data)
 
 
 	if options.crplo:
@@ -843,6 +820,7 @@ def main(options,args):
 
 	for d in reversed(data):
 		lines.plot(d)
+
 
 	if options.christian:
 		assert bg_data, 'No background data available, can\'t use option --christian!'
@@ -856,6 +834,7 @@ def main(options,args):
 		if ticks:
 			lines.plot_tick_marks(ticks)
 
+
 	if not sys.stdin.isatty():
 		plot_stdin(fig)
 	elif options.monitor:
@@ -868,6 +847,7 @@ def main(options,args):
 		plt.legend()
 		plt.show()
 
+
 	if options.bg_correct:
 		f_bg_correct_out(d=data[0],bg_xy=bg.xy.T)
 
@@ -875,11 +855,6 @@ def main(options,args):
 
 
 if __name__ == '__main__':
-	#plt.gca().get_frame().set_linewidth(2)
-
-
-
-
 	usage = """"""
 
 	description = """Notes:
@@ -906,7 +881,7 @@ if __name__ == '__main__':
 #
 	parser.add_argument("-x", "--xrs", metavar='FILE',
 						action="store", type=str, dest="xrs",
-						help="xrs file to open and alter")
+						help="xrs stepco file to open and alter")
 
 	parser.add_argument("--crplo",
 						action="store_true", dest="crplo",
@@ -931,6 +906,10 @@ if __name__ == '__main__':
 	parser.add_argument("-t", "--ticks",
 						action="store_true", dest="plot_ticks",
 						help="Looks for local hkl.dat file and uses this to plot tick marks.")
+	
+	parser.add_argument("--stepco",
+						action="store_true", dest="stepco",
+						help="Shortcut for lines stepscan.dat -x stepco.inp")
 
 
 	
@@ -941,10 +920,15 @@ if __name__ == '__main__':
 						crplo = False,
 						christian = False,
 						monitor = None,
-						plot_ticks = False)
+						plot_ticks = False,
+						stepco = False)
 	
 	options = parser.parse_args()
 	args = options.args
+
+	if options.stepco:
+		options.xrs = 'stepco.inp'
+		args = ['stepscan.dat']
 
 
 	main(options,args)
