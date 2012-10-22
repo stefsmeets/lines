@@ -13,7 +13,7 @@ from scipy.interpolate import interp1d
 
 from shutil import copyfile
 
-__version__ = '16-10-2012'
+__version__ = '22-10-2012'
 
 
 params = {'legend.fontsize': 10,
@@ -28,8 +28,9 @@ def gen_read_files(paths):
 	for path in paths:
 		try:
 			f = open(path,'r')
-		except IOError:
-			print 'cannot open', path
+		except IOError,e:
+			print e
+			#print 'Cannot open {} (IOError)'.format(path,e)
 			exit(0)
 		yield f
 
@@ -37,13 +38,18 @@ def read_file(path):
 	"""opens file, returns file object for reading"""
 	try:
 		f = open(path,'r')
-	except IOError:
-		print 'cannot open', path
+	except IOError,e:
+		print e
+		#print 'Cannot open {} (IOError)'.format(path,e)
 		exit(0)
 	return f
 
 
 def read_data(f,usecols=None,append_zeros=False):
+	if f.name == 'stepco.inp':
+		return parse_xrs(f,return_as='d')
+
+
 	inp = np.loadtxt(f,usecols=usecols)
 
 	if inp.ndim == 1:
@@ -803,8 +809,12 @@ def main(options,args):
 		copyfile(fname,fname+'~')
 		f = read_file(fname)
 		bg_data,options.xrs_out = parse_xrs(f)
+	elif options.bg_input:
+		f = read_file(options.bg_input)
+		bg_data = read_data(f)
 	else:
 		bg_data = None
+
 
 
 	if options.bg_correct:
@@ -874,11 +884,6 @@ if __name__ == '__main__':
 						type=str, metavar="FILE",nargs='*',
 						help="Paths to input files.")
 		
-#	parser.add_argument("-c", "--count",
-#						action="store_true", dest="count",
-#						help="Counts occurances of ARG1 and exits.")
-#	
-#
 	parser.add_argument("-x", "--xrs", metavar='FILE',
 						action="store", type=str, dest="xrs",
 						help="xrs stepco file to open and alter")
@@ -891,7 +896,7 @@ if __name__ == '__main__':
 						action="store_false", dest="nomove",
 						help="Slightly shift different plots to make them more visible.")
 	
-	parser.add_argument("-c", "--correct", metavar='OPTION',
+	parser.add_argument("-c", "--bgcorrect", metavar='OPTION',
 						action="store", type=str, dest="bg_correct",
 						help="Starts background correction routine. Only the first pattern listed is corrected. Valid options: 'linear','nearest','zero', 'slinear', 'quadratic, 'cubic') or as an integer specifying the order of the spline interpolator to use. Recommended: 'cubic'.")
 
@@ -911,6 +916,14 @@ if __name__ == '__main__':
 						action="store_true", dest="stepco",
 						help="Shortcut for lines stepscan.dat -x stepco.inp")
 
+	parser.add_argument("-i","--bgin",
+						action="store", type=str, dest="bg_input",
+						help="Initial points for bg correction (2 column list; also works with stepco.inp).")
+	
+#	parser.add_argument("-o,--bgout",
+#						action="store", type=str, dest="bg_input",
+#						help="Filename to output background points to.")
+
 
 	
 	parser.set_defaults(backgrounder=True,
@@ -921,7 +934,8 @@ if __name__ == '__main__':
 						christian = False,
 						monitor = None,
 						plot_ticks = False,
-						stepco = False)
+						stepco = False,
+						bg_input = None)
 	
 	options = parser.parse_args()
 	args = options.args
