@@ -781,14 +781,12 @@ class Lines(object):
 
 def setup_interpolate_background(d):
 	print 'Interpolation mode for background correction\n'
-	print 'The highest and lowest values are added by default for convenience. In the case that they are removed, only the values in the background range will be printed.'
+	print 'The highest and lowest values are added by default for convenience. In the case that they are removed, only the values in the background range will be printed.\n'
 	
-	assert len(data) == 1, 'Only works with a single data file'
-	
-	x1 = data[0].x[0]
-	x2 = data[0].x[-1]
-	y1 = data[0].y[0]
-	y2 = data[0].y[-1]
+	x1 = d.x[0]
+	x2 = d.x[-1]
+	y1 = d.y[0]
+	y2 = d.y[-1]
 	
 	#print x1,x2,y1,y2
 	xy = np.array([[x1,y1],[x2,y2]],dtype=float)
@@ -803,7 +801,6 @@ def main(options,args):
 		
 	lines = Lines(fig)
 
-
 	if options.xrs:
 		fname = options.xrs
 		copyfile(fname,fname+'~')
@@ -816,9 +813,15 @@ def main(options,args):
 		bg_data = None
 
 
+	if options.plot_ticks:
+		ticks = load_tick_marks('hkl.dat')
+		if ticks:
+			lines.plot_tick_marks(ticks)
+
 
 	if options.bg_correct:
-		bg_data = setup_interpolate_background(d)
+		if not bg_data:
+			bg_data = setup_interpolate_background(data[0])
 		bg = Background(fig,d=bg_data,bg_correct=options.bg_correct) 
 	elif options.backgrounder:
 		bg = Background(fig,d=bg_data)
@@ -837,12 +840,6 @@ def main(options,args):
 
 		lines.plot(bg_data)
 		f_plot_christian(bg_data.xy)
-
-
-	if options.plot_ticks:
-		ticks = load_tick_marks('hkl.dat')
-		if ticks:
-			lines.plot_tick_marks(ticks)
 
 
 	if not sys.stdin.isatty():
