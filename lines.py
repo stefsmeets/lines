@@ -12,8 +12,9 @@ import matplotlib.transforms as transforms
 from scipy.interpolate import interp1d
 
 from shutil import copyfile
+import os
 
-__version__ = '22-10-2012'
+__version__ = '28-10-2012'
 
 
 params = {'legend.fontsize': 10,
@@ -49,21 +50,11 @@ def read_data(f,usecols=None,append_zeros=False):
 	if f.name == 'stepco.inp':
 		return parse_xrs(f,return_as='d')
 
-
-	inp = np.loadtxt(f,usecols=usecols)
-
-	if inp.ndim == 1:
-		(i,) = inp.shape
-		inp.shape = (i,-1)
-
-	assert inp.ndim == 2, 'This should not happen...'
+	inp = np.loadtxt(f,usecols=usecols,ndmin=2)
 
 	if append_zeros:
 		(i,j) = inp.shape
-
-
 		inp = np.hstack((inp,np.zeros((i,1))))
-
 
 	if inp.shape[1] > 3:
 		print 'More than 3 columns read from {}, assuming x,y,esd, ignoring the rest.'.format(f.name)
@@ -260,7 +251,6 @@ def plot_stdin(fig,update_time=0.2):
 
 def f_monitor(fn,f_init,f_update,fig=None,poll_time=0.05):
 	"""experimental function for live monitoring of plots"""
-	import os
 	import time
 
 	TclError =  matplotlib.backends.backend_tkagg.tkagg.Tk._tkinter.TclError
@@ -459,7 +449,9 @@ def f_bg_correct_out(d,bg_xy):
 	yvals = d.y
 	
 	bg_yvals = interpolate(bg_xy,xvals,kind=options.bg_correct)
-	offset = raw_input("What offset should I add to the data?\n >> [0] ") or 0
+	offset = raw_input("What y offset should I add to the data? (x=exit)\n >> [0] ") or 0
+	if offset == 'x':
+		return
 	offset = int(offset)
 	if len(bg_xy) >= 4:
 		print 'Writing background pattern to %s' % fn_bg
@@ -509,7 +501,7 @@ def new_stepco_inp(xy,name,pre,post,esds=None):
 
 def interpolate(arr,xvals,kind='cubic'):
 	"""
-	arr is the data set to interpolate
+	arr is the data set to interpolate, can be ndim=2 array, or tuple/list of x/y values
 	
 	xvals are the values it has to be interpolated to
 	
@@ -518,19 +510,24 @@ def interpolate(arr,xvals,kind='cubic'):
 	of the spline interpolator to use.
 	"""
 
-	assert arr.ndim == 2, 'Expect a 2-dimentional array'
+	try:
+		arr.ndim
+	except AttributeError:
+		x,y = arr
+	else:
+		assert arr.ndim == 2, 'Expected 2 dimensional array'
+		x = arr[:,0] # create views
+		y = arr[:,1] #
 
 	try:
 		kind = int(kind)
 	except ValueError:
-		if arr.shape[0] < 4:
+		if x.shape[0] < 4:
 			kind = 'linear'
 	else:
-		if arr.shape[0] < kind+1:
+		if x.shape[0] < kind+1:
 			kind = 'linear'
 	
-	x = arr[:,0] # create views
-	y = arr[:,1] #
 	res = interp1d(x,y,kind=kind,bounds_error=False)
 
 	# if the background seems to take shortcuts in linear mode, this is because fixed steps
@@ -567,6 +564,45 @@ class Data(object):
 		self.index = self.total
 		self.filename = name
 		Data.total += 1
+
+	def bin(self,binsize=0.01):
+		x = self.x
+		y = self.y
+		fn = self.filename
+
+		print 'Binning {} from 2th = {} - {} with a bin size of {}'.format(fn,min(x),max(x),binsize)
+		print
+		print 'N(x) = ', x.shape
+		print 'N(y) = ', y.shape
+		
+		bins = np.arange(min(x),max(x),binsize)
+		
+		print 'N(bins) =', bins.shape
+		print
+		
+		digi = np.digitize(x,bins)
+				
+		xbinned = np.array([x[digi == i].mean() for i in range(1, len(bins))])
+		ybinned = np.array([y[digi == i].mean() for i in range(1, len(bins))])
+		
+		xbinned.shape = (-1,1)
+		ybinned.shape = (-1,1)
+
+		root,ext = os.path.splitext(self.filename)
+		name = root+'_bin_'+str(binsize)+ext
+		
+		if self.has_esd:
+			interpolated_errors = interpolate((self.x,self.err),xbinned, kind='linear')
+			return Data(np.hstack((xbinned,ybinned,interpolated_errors)),name=name)
+		else:
+			return Data(np.hstack((xbinned,ybinned)),name=name)
+	
+	def print_pattern(self,name=None):
+		if not name:
+			name = self.filename
+		np.savetxt(name,self.xye,fmt='%15.5f')
+
+		print 'Pattern written to {}'.format(name)
 
 
 class Background():
@@ -841,8 +877,15 @@ def main(options,args):
 		lines.plot(bg_data)
 		f_plot_christian(bg_data.xy)
 
+	if options.bin:
+		for d in reversed(data):
+			dbinned = d.bin(options.bin)
+			dbinned.print_pattern()
+			lines.plot(dbinned)
 
-	if not sys.stdin.isatty():
+	if not options.show:
+		print "Debugging: not showing plot window"
+	elif not sys.stdin.isatty():
 		plot_stdin(fig)
 	elif options.monitor:
 		if options.monitor in ('crplot.dat','crplot'):
@@ -913,6 +956,10 @@ if __name__ == '__main__':
 						action="store_true", dest="stepco",
 						help="Shortcut for lines stepscan.dat -x stepco.inp")
 
+	parser.add_argument("--bin", metavar='binsize',
+						action="store", type=float, dest="bin",
+						help="Bins the patterns supplied with the supplied bins and prints binned data sets.")
+
 	parser.add_argument("-i","--bgin",
 						action="store", type=str, dest="bg_input",
 						help="Initial points for bg correction (2 column list; also works with stepco.inp).")
@@ -932,7 +979,9 @@ if __name__ == '__main__':
 						monitor = None,
 						plot_ticks = False,
 						stepco = False,
-						bg_input = None)
+						bg_input = None,
+						bin = None,
+						show = True) # for testing purposes
 	
 	options = parser.parse_args()
 	args = options.args
