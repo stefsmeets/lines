@@ -14,7 +14,7 @@ from scipy.interpolate import interp1d
 from shutil import copyfile
 import os
 
-__version__ = '28-10-2012'
+__version__ = '19-11-2012'
 
 
 params = {'legend.fontsize': 10,
@@ -63,15 +63,15 @@ def read_data(f,usecols=None,append_zeros=False):
 
 	return d
 
-def load_tick_marks(path):
-	"""Checks if file exists and loads tick mark data as data class"""
+def load_tick_marks(path,col=3):
+	"""Checks if file exists and loads tick mark data as data class. Use column=3 default for xrs"""
 	try:
 		f = open(path,'r')
 	except IOError:
 		print '-- {} not found. (IOError)'.format(path)
 		ticks = None
 	else:
-		ticks = read_data(f,usecols=(3,),append_zeros=True)
+		ticks = read_data(f,usecols=(col,),append_zeros=True)
 	finally:
 		return ticks
 
@@ -850,7 +850,9 @@ def main(options,args):
 
 
 	if options.plot_ticks:
-		ticks = load_tick_marks('hkl.dat')
+		hkl_file = options.plot_ticks
+		col = options.plot_ticks_col - 1
+		ticks = load_tick_marks(hkl_file,col=col)
 		if ticks:
 			lines.plot_tick_marks(ticks)
 
@@ -925,8 +927,8 @@ if __name__ == '__main__':
 						help="Paths to input files.")
 		
 	parser.add_argument("-x", "--xrs", metavar='FILE',
-						action="store", type=str, dest="xrs",
-						help="xrs stepco file to open and alter")
+						action="store", type=str, nargs='?', dest="xrs", const='stepco.inp',
+						help="xrs stepco file to open and alter. Default = stepco.inp")
 
 	parser.add_argument("--crplo",
 						action="store_true", dest="crplo",
@@ -948,10 +950,18 @@ if __name__ == '__main__':
 						action="store", type=str, dest="monitor",
 						help="Monitor specified file and replots if the file is updates. First 2 columns are plotted. Special value: crplot.dat")
 
+	#parser.add_argument("-t", "--ticks",
+	#					action="store_true", dest="plot_ticks",
+	#					help="Looks for local hkl.dat file and uses this to plot tick marks.")
+
 	parser.add_argument("-t", "--ticks",
-						action="store_true", dest="plot_ticks",
-						help="Looks for local hkl.dat file and uses this to plot tick marks.")
-	
+						action='store', type=str, nargs='?', dest="plot_ticks", const='hkl.dat',
+						help="Specify tick mark file. If no argument is given, lines defaults to hkl.dat")
+
+	parser.add_argument("--tc",
+						action='store', type=int, dest="plot_ticks_col", metavar='col',
+						help="Which column to use for plotting of tick marks. First column = 1. Default = 3, for hkl.dat files")
+
 	parser.add_argument("--stepco",
 						action="store_true", dest="stepco",
 						help="Shortcut for lines stepscan.dat -x stepco.inp")
@@ -978,6 +988,7 @@ if __name__ == '__main__':
 						christian = False,
 						monitor = None,
 						plot_ticks = False,
+						plot_ticks_col = 4,
 						stepco = False,
 						bg_input = None,
 						bin = None,
@@ -989,6 +1000,5 @@ if __name__ == '__main__':
 	if options.stepco:
 		options.xrs = 'stepco.inp'
 		args = ['stepscan.dat']
-
 
 	main(options,args)
