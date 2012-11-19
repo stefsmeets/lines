@@ -424,7 +424,7 @@ def f_crplo():
 		plt.plot(tck,np.zeros(tck.size) - (mx_dif / 4), linestyle='', marker='|', markersize=10, label = 'ticks', c='purple')
 
 
-def f_plot_christian(bg_xy):
+def f_plot_stepco_special(bg_xy):
 	crplotdat = 'crplot.dat'
 	try:
 		fcr = open(crplotdat,'r')
@@ -873,11 +873,11 @@ def main(options,args):
 		lines.plot(d)
 
 
-	if options.christian:
-		assert bg_data, 'No background data available, can\'t use option --christian!'
+	if options.stepco:
+		assert bg_data, "No background data available, can't use option --stepco!"
 
 		lines.plot(bg_data)
-		f_plot_christian(bg_data.xy)
+		f_plot_stepco_special(bg_data.xy)
 
 	if options.bin:
 		for d in reversed(data):
@@ -942,10 +942,6 @@ if __name__ == '__main__':
 						action="store", type=str, dest="bg_correct",
 						help="Starts background correction routine. Only the first pattern listed is corrected. Valid options: 'linear','nearest','zero', 'slinear', 'quadratic, 'cubic') or as an integer specifying the order of the spline interpolator to use. Recommended: 'cubic'.")
 
-	parser.add_argument("--christian",
-						action="store_true", dest="christian",
-						help="Special function for Christian. Plots the previous background and the background + the difference plot. Reads difference data from crplot.dat")
-
 	parser.add_argument("-m", "--monitor", metavar='FILE',
 						action="store", type=str, dest="monitor",
 						help="Monitor specified file and replots if the file is updates. First 2 columns are plotted. Special value: crplot.dat")
@@ -964,7 +960,7 @@ if __name__ == '__main__':
 
 	parser.add_argument("--stepco",
 						action="store_true", dest="stepco",
-						help="Shortcut for lines stepscan.dat -x stepco.inp")
+						help="Shortcut for lines stepscan.dat -x stepco.inp. Additionally, plots the previous background and the background + the difference plot. Reads difference data from crplot.dat")
 
 	parser.add_argument("--bin", metavar='binsize',
 						action="store", type=float, dest="bin",
