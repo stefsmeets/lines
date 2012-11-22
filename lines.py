@@ -14,7 +14,7 @@ from scipy.interpolate import interp1d
 from shutil import copyfile
 import os
 
-__version__ = '19-11-2012'
+__version__ = '22-11-2012'
 
 
 params = {'legend.fontsize': 10,
@@ -22,7 +22,10 @@ params = {'legend.fontsize': 10,
 plt.rcParams.update(params)
 
 
-
+def printer(data):
+	"""Print things to stdout on one line dynamically"""
+	sys.stdout.write("\r\x1b[K"+data.__str__())
+	sys.stdout.flush()
 
 def gen_read_files(paths):
 	"""opens file, returns file object for reading"""
@@ -171,6 +174,7 @@ def parse_hkl_dat(f):
 		ret.append([float(val) for val in inp])
 
 	return ret
+
 
 def plot_stdin(fig,update_time=0.2):
 	import time
@@ -440,6 +444,11 @@ def f_plot_stepco_special(bg_xy):
 		plt.plot(tt, bg_interpolate + dif, label = 'bg + diff')
 
 def f_bg_correct_out(d,bg_xy):
+	root,ext = os.path.splitext(d.filename)
+	fn_bg = root+'_bg'+ext
+	fn_corr = root+'_corr'+ext
+
+
 	fn_bg   = d.filename.replace('.','_bg.')
 	fn_corr = d.filename.replace('.','_corr.')
 	out_bg   = open(fn_bg,'w')
@@ -591,6 +600,8 @@ class Data(object):
 		root,ext = os.path.splitext(self.filename)
 		name = root+'_bin_'+str(binsize)+ext
 		
+		
+
 		if self.has_esd:
 			interpolated_errors = interpolate((self.x,self.err),xbinned, kind='linear')
 			return Data(np.hstack((xbinned,ybinned,interpolated_errors)),name=name)
@@ -608,7 +619,7 @@ class Data(object):
 class Background():
 	sensitivity = 8
 
-	def __init__(self,fig,d=None, outfunc=None,bg_correct=False):
+	def __init__(self,fig,d=None, outfunc=None,bg_correct=False, quiet=False):
 		"""Class that captures mouse events when a graph has been drawn, stores the coordinates
 		of these points and draws them as a line on the screen. Can also remove points and print all
 		the stored points to stdout
@@ -653,6 +664,7 @@ class Background():
 		self.n = 0
 
 		self.tb = plt.get_current_fig_manager().toolbar
+
 
 		print
 		print 'Left mouse button: add point'
@@ -830,6 +842,56 @@ def setup_interpolate_background(d):
 	return Data(xy,name=' bg (--correct)')
 
 
+
+def f_compare(data,kind=0,reference=None):
+	import itertools
+	import scipy.stats
+	import operator
+
+	xvals = np.arange(2,20,0.01)
+	# resample at same step rate as calculated pattern
+	data = [Data(np.vstack((xvals,interpolate(d.xy,xvals,kind='linear'))).T,name=d.filename) for d in data]
+
+	for d in data:
+		print d.xy.shape
+
+	if reference:
+		pairs = ((reference,d) for d in data)
+		l = float(len(data))
+	else:
+		pairs = itertools.combinations(data,2)
+		l = float(len(data)*(len(data)-1)/2)
+	#pairs = itertools.combinations_with_replacement(data,2)
+
+	lst = []
+
+	print "Calculate agreement for {} combinations of {} patterns.".format(int(l),len(data))
+	
+
+	for i,(d1,d2) in enumerate(pairs):
+		printer("{:2.0f}%".format(i/l*100))
+
+		names = "{:<30} - {:<30}".format(d1.filename, d2.filename)
+
+		pearson = scipy.stats.pearsonr(d1.y,d2.y)[0]
+		kendall  = scipy.stats.kendalltau(d1.y,d2.y)[0]
+		spearman = scipy.stats.spearmanr(d1.y,d2.y)[0]
+
+		combined = pearson*kendall*spearman
+
+		lst.append((combined,spearman,kendall,pearson,names))
+
+	printer("")
+	print
+
+	lst = sorted(lst, key=operator.itemgetter(kind))
+
+	print'combined spearman  kendall  pearson -> sorted by {}'.format(['combined', 'spearman', 'kendall', 'pearson'][kind])   
+	for (combined,spearman, kendall,pearson,names) in lst:
+		print "{:8.3f} {:8.3f} {:8.3f} {:8.3f}   ".format(combined, spearman, kendall,pearson) + names
+
+
+
 def main(options,args):
 	files = gen_read_files(args)
 	data = [read_data(f) for f in files] # returns data objects
@@ -860,13 +922,27 @@ def main(options,args):
 	if options.bg_correct:
 		if not bg_data:
 			bg_data = setup_interpolate_background(data[0])
-		bg = Background(fig,d=bg_data,bg_correct=options.bg_correct) 
+		bg = Background(fig,d=bg_data,bg_correct=options.bg_correct,quiet=options.quiet) 
 	elif options.backgrounder:
-		bg = Background(fig,d=bg_data)
+		bg = Background(fig,d=bg_data,quiet=options.quiet)
 
 
 	if options.crplo:
 		f_crplo()
+
+	if options.compare:
+		if options.compare_reference:
+			f = read_file(options.compare_reference)
+			ref = read_data(f)
+			lines.plot(ref)
+		else:
+			ref = None
+
+		kind = options.compare-1
+		f_compare(data,kind=kind,reference=ref)
+
+		
+
 
 
 	for d in reversed(data):
@@ -885,8 +961,8 @@ def main(options,args):
 			dbinned.print_pattern()
 			lines.plot(dbinned)
 
-	if not options.show:
-		print "Debugging: not showing plot window"
+	if options.quiet:
+		pass
 	elif not sys.stdin.isatty():
 		plot_stdin(fig)
 	elif options.monitor:
@@ -929,6 +1005,10 @@ if __name__ == '__main__':
 	parser.add_argument("-x", "--xrs", metavar='FILE',
 						action="store", type=str, nargs='?', dest="xrs", const='stepco.inp',
 						help="xrs stepco file to open and alter. Default = stepco.inp")
+	
+	parser.add_argument("--ref", metavar='FILE',
+						action="store", type=str, dest="compare_reference",
+						help="Reference pattern to check against all patterns for --compare")
 
 	parser.add_argument("--crplo",
 						action="store_true", dest="crplo",
@@ -937,6 +1017,10 @@ if __name__ == '__main__':
 	parser.add_argument("-s", "--shift",
 						action="store_false", dest="nomove",
 						help="Slightly shift different plots to make them more visible.")
+	
+	parser.add_argument("-q", "--quiet",
+						action="store_true", dest="quiet",
+						help="Don't plot anything.")
 	
 	parser.add_argument("-c", "--bgcorrect", metavar='OPTION',
 						action="store", type=str, dest="bg_correct",
@@ -969,6 +1053,10 @@ if __name__ == '__main__':
 	parser.add_argument("-i","--bgin",
 						action="store", type=str, dest="bg_input",
 						help="Initial points for bg correction (2 column list; also works with stepco.inp).")
+
+	parser.add_argument("--compare", metavar='x',
+						action="store", type=int, nargs='?', dest="compare", const=1,
+						help="Calculates similarity between data sets. For now, background needs to be removed manually beforehand. Sort by VAL: 1 = combined, 2 = spearman, 3 = kendall's tau, 4 = pearson.")
 	
 #	parser.add_argument("-o,--bgout",
 #						action="store", type=str, dest="bg_input",
@@ -986,6 +1074,9 @@ if __name__ == '__main__':
 						plot_ticks = False,
 						plot_ticks_col = 4,
 						stepco = False,
+						compare = False,
+						compare_reference = None,
+						quiet = False,
 						bg_input = None,
 						bin = None,
 						show = True) # for testing purposes
