@@ -14,7 +14,7 @@ from scipy.interpolate import interp1d
 from shutil import copyfile
 import os
 
-__version__ = '22-11-2012'
+__version__ = '26-11-2012'
 
 
 params = {'legend.fontsize': 10,
@@ -49,11 +49,25 @@ def read_file(path):
 	return f
 
 
-def read_data(f,usecols=None,append_zeros=False):
-	if f.name == 'stepco.inp':
+def read_data(fn,usecols=None,append_zeros=False,save_npy=False):
+	if fn == 'stepco.inp':
+		f = read_file(fn)
 		return parse_xrs(f,return_as='d')
 
-	inp = np.loadtxt(f,usecols=usecols,ndmin=2)
+	root,ext = os.path.splitext(fn)
+	
+	try:
+		#raise IOError
+		inp = np.load(root+'.npy')
+	except IOError:
+		try:
+			inp = np.loadtxt(fn,usecols=usecols,ndmin=2)
+		except IOError,e:
+			print e
+			exit(0)
+	else:
+		ext = '.npy'
+		fn = root+'.npy'
 
 	if append_zeros:
 		(i,j) = inp.shape
@@ -62,21 +76,26 @@ def read_data(f,usecols=None,append_zeros=False):
 	if inp.shape[1] > 3:
 		print 'More than 3 columns read from {}, assuming x,y,esd, ignoring the rest.'.format(f.name)
 
-	d = Data(inp,name=f.name)
+	d = Data(inp,name=fn)
+
+	if save_npy and ext != '.npy':
+		np.save(root,inp)
 
 	return d
 
 def load_tick_marks(path,col=3):
 	"""Checks if file exists and loads tick mark data as data class. Use column=3 default for xrs"""
+	print path
+
 	try:
 		f = open(path,'r')
+		f.close()
 	except IOError:
 		print '-- {} not found. (IOError)'.format(path)
-		ticks = None
-	else:
-		ticks = read_data(f,usecols=(col,),append_zeros=True)
-	finally:
-		return ticks
+		return None
+		
+	ticks = read_data(path,usecols=(col,),append_zeros=True)
+	return ticks
 
 
 def parse_xrs(f,return_as='d_xrs'):
@@ -550,8 +569,9 @@ def interpolate(arr,xvals,kind='cubic'):
 class Data(object):
 	total = 0
 	"""container class for x,y, err data"""
-	def __init__(self,arr,name=None):
-		print 'Loading data: {}\n       shape: {}\n'.format(name,arr.shape)
+	def __init__(self,arr,name=None,quiet=False):
+		if not quiet:
+			print 'Loading data: {}\n       shape: {}'.format(name,arr.shape)
 
 		self.arr = arr
 		self.x   = self.arr[:,0]
@@ -781,11 +801,16 @@ class Background():
 
 class Lines(object):
 	"""docstring for Lines"""
-	def __init__(self, fig):
+	def __init__(self, fig, hide=False):
 		super(Lines, self).__init__()
-		self.fig = fig
-		self.ax = self.fig.add_subplot(111)
+		if hide:
+			self.plot = self.black_hole
+			self.plot_tick_marks = self.black_hole
+		else:
+			self.fig = fig
+			self.ax = self.fig.add_subplot(111)
 		
+
 		#self.fig.canvas.mpl_connect('pick_event', self.onpick)
 
 	def onpick(self):
@@ -826,6 +851,9 @@ class Lines(object):
 		ax.plot(data.x,data.y,transform=transform,c='black',label=label,linestyle='',marker='|',markersize=10)
 		#plt.plot(tck,np.zeros(tck.size) - (mx_dif / 4), linestyle='', marker='|', markersize=10, label = 'ticks', c='purple')
 
+	def black_hole(*args,**kwargs):
+		pass
+
 
 def setup_interpolate_background(d):
 	print 'Interpolation mode for background correction\n'
@@ -848,17 +876,34 @@ def f_compare(data,kind=0,reference=None):
 	import scipy.stats
 	import operator
 
-	xvals = np.arange(2,20,0.01)
-	# resample at same step rate as calculated pattern
-	data = [Data(np.vstack((xvals,interpolate(d.xy,xvals,kind='linear'))).T,name=d.filename) for d in data]
+	start,stop,step = 2,20.00,0.01 # parameters used for calculated pattern
+	
+	min_tt = 0		# boundary for check
+	max_tt = 1800	# should not excede number of parameters
 
-	for d in data:
-		print d.xy.shape
+	#shuffle = (-100,-80,-60,-40,-20,0,20,40,60,80,100)
+	shuffle = (0,)
+	max_shift = max(shuffle)
+	min_shift = min(shuffle)
+
+
+
+	xvals = np.arange(start,stop,step)
+	# resample at same step rate as calculated pattern
+	data = [Data(np.vstack((xvals,interpolate(d.xy,xvals,kind='linear'))).T,name=d.filename,quiet=True) for d in data]
+
+
+	#for d in data:
+	#	print d.xy.shape
 
 	if reference:
+		reference = Data(np.vstack((xvals,interpolate(reference.xy,xvals,kind='linear'))).T,name=reference.filename)
 		pairs = ((reference,d) for d in data)
 		l = float(len(data))
+		lfill = len(reference.filename.split('/')[-1])
+		rfill = max(len(d.filename.split('/')[-1]) for d in data)
 	else:
+		lfill = rfill = max(len(d.filename.split('/')[-1]) for d in data)
 		pairs = itertools.combinations(data,2)
 		l = float(len(data)*(len(data)-1)/2)
 	#pairs = itertools.combinations_with_replacement(data,2)
@@ -871,33 +916,44 @@ def f_compare(data,kind=0,reference=None):
 	for i,(d1,d2) in enumerate(pairs):
 		printer("{:2.0f}%".format(i/l*100))
 
-		names = "{:<30} - {:<30}".format(d1.filename, d2.filename)
+		names = "{:<{lfill}} - {:<{rfill}}".format(d1.filename.split('/')[-1], d2.filename.split('/')[-1],lfill=lfill,rfill=rfill)
 
-		pearson = scipy.stats.pearsonr(d1.y,d2.y)[0]
-		kendall  = scipy.stats.kendalltau(d1.y,d2.y)[0]
-		spearman = scipy.stats.spearmanr(d1.y,d2.y)[0]
-
-		combined = pearson*kendall*spearman
-
-		lst.append((combined,spearman,kendall,pearson,names))
+		for shift in shuffle:
+			pearsonr,pearsonp = scipy.stats.pearsonr(   d1.y[min_tt-min_shift+shift:max_tt-max_shift+shift],   d2.y[min_tt-min_shift+shift:max_tt-max_shift+shift])
+			kendallr,kendallp  = scipy.stats.kendalltau(d1.y[min_tt-min_shift+shift:max_tt-max_shift+shift:5], d2.y[min_tt-min_shift+shift:max_tt-max_shift+shift:5])
+			spearmanr,spearmanp = scipy.stats.spearmanr(d1.y[min_tt-min_shift+shift:max_tt-max_shift+shift],   d2.y[min_tt-min_shift+shift:max_tt-max_shift+shift])
+			
+			if pearsonr <= 0 or kendallr <= 0 or spearmanr <= 0:
+				continue
+		
+			if pearsonp > 0.01 or kendallp > 0.01 or spearmanp > 0.01:
+				continue
+			
+			combined = pearsonr**(1/3.0)*kendallr**(1/3.0)*spearmanr**(1/3.0)
+	
+			lst.append((combined,spearmanr,kendallr,pearsonr,spearmanp,kendallp,pearsonp,shift*step,names))
 
 	printer("")
 	print
 
 	lst = sorted(lst, key=operator.itemgetter(kind))
 
-	print'combined spearman  kendall  pearson -> sorted by {}'.format(['combined', 'spearman', 'kendall', 'pearson'][kind])   
-	for (combined,spearman, kendall,pearson,names) in lst:
-		print "{:8.3f} {:8.3f} {:8.3f} {:8.3f}   ".format(combined, spearman, kendall,pearson) + names
+	print '2theta range = {:8.3f} {:8.3f}'.format(start+min_tt*step,start+max_tt*step)
+	print 'Shuffle values by {}'.format([shift*step for shift in shuffle])
+
+	print'combined spearman     pval  kendall     pval  pearson     pval    shift -> sorted by {}'.format(['combined', 'spearman', 'kendall', 'pearson'][kind])   
+	for (combined,spearmanr,kendallr,pearsonr,spearmanp,kendallp,pearsonp,shift,names) in lst:
+		print "{:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f}   ".format(combined, spearmanr, spearmanp, kendallr, kendallp, pearsonr, pearsonp, shift) + names
 
 
 
 def main(options,args):
-	files = gen_read_files(args)
-	data = [read_data(f) for f in files] # returns data objects
+	files = args
+	data = [read_data(fn) for fn in args] # returns data objects
+	
 	fig = plt.figure()
 		
-	lines = Lines(fig)
+	lines = Lines(fig,hide=options.quiet)
 
 	if options.xrs:
 		fname = options.xrs
@@ -905,8 +961,7 @@ def main(options,args):
 		f = read_file(fname)
 		bg_data,options.xrs_out = parse_xrs(f)
 	elif options.bg_input:
-		f = read_file(options.bg_input)
-		bg_data = read_data(f)
+		bg_data = read_data(options.bg_input)
 	else:
 		bg_data = None
 
@@ -918,8 +973,9 @@ def main(options,args):
 		if ticks:
 			lines.plot_tick_marks(ticks)
 
-
-	if options.bg_correct:
+	if options.quiet:
+		pass
+	elif options.bg_correct:
 		if not bg_data:
 			bg_data = setup_interpolate_background(data[0])
 		bg = Background(fig,d=bg_data,bg_correct=options.bg_correct,quiet=options.quiet) 
@@ -932,8 +988,7 @@ def main(options,args):
 
 	if options.compare:
 		if options.compare_reference:
-			f = read_file(options.compare_reference)
-			ref = read_data(f)
+			ref = read_data(options.compare_reference)
 			lines.plot(ref)
 		else:
 			ref = None
@@ -944,9 +999,11 @@ def main(options,args):
 		
 
 
-
-	for d in reversed(data):
-		lines.plot(d)
+	if options.quiet:
+		pass
+	else:
+		for d in reversed(data):
+			lines.plot(d)
 
 
 	if options.stepco:
@@ -1020,7 +1077,7 @@ if __name__ == '__main__':
 	
 	parser.add_argument("-q", "--quiet",
 						action="store_true", dest="quiet",
-						help="Don't plot anything.")
+						help="Don't plot anything and reduce verbosity.")
 	
 	parser.add_argument("-c", "--bgcorrect", metavar='OPTION',
 						action="store", type=str, dest="bg_correct",
