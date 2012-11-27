@@ -14,7 +14,7 @@ from scipy.interpolate import interp1d
 from shutil import copyfile
 import os
 
-__version__ = '26-11-2012'
+__version__ = '27-11-2012'
 
 
 params = {'legend.fontsize': 10,
@@ -49,7 +49,7 @@ def read_file(path):
 	return f
 
 
-def read_data(fn,usecols=None,append_zeros=False,save_npy=False):
+def read_data(fn,usecols=None,append_zeros=False,savenpy=False):
 	if fn == 'stepco.inp':
 		f = read_file(fn)
 		return parse_xrs(f,return_as='d')
@@ -78,7 +78,7 @@ def read_data(fn,usecols=None,append_zeros=False,save_npy=False):
 
 	d = Data(inp,name=fn)
 
-	if save_npy and ext != '.npy':
+	if savenpy and ext != '.npy':
 		np.save(root,inp)
 
 	return d
@@ -93,7 +93,7 @@ def load_tick_marks(path,col=3):
 	except IOError:
 		print '-- {} not found. (IOError)'.format(path)
 		return None
-		
+
 	ticks = read_data(path,usecols=(col,),append_zeros=True)
 	return ticks
 
@@ -568,6 +568,7 @@ def interpolate(arr,xvals,kind='cubic'):
 
 class Data(object):
 	total = 0
+
 	"""container class for x,y, err data"""
 	def __init__(self,arr,name=None,quiet=False):
 		if not quiet:
@@ -876,10 +877,10 @@ def f_compare(data,kind=0,reference=None):
 	import scipy.stats
 	import operator
 
-	start,stop,step = 2,20.00,0.01 # parameters used for calculated pattern
+	start,stop,step = 2,30.00,0.01 # parameters used for calculated pattern
 	
 	min_tt = 0		# boundary for check
-	max_tt = 1800	# should not excede number of parameters
+	max_tt = 2800	# should not excede number of parameters
 
 	#shuffle = (-100,-80,-60,-40,-20,0,20,40,60,80,100)
 	shuffle = (0,)
@@ -949,7 +950,7 @@ def f_compare(data,kind=0,reference=None):
 
 def main(options,args):
 	files = args
-	data = [read_data(fn) for fn in args] # returns data objects
+	data = [read_data(fn,savenpy=True) for fn in args] # returns data objects
 	
 	fig = plt.figure()
 		
@@ -1053,43 +1054,20 @@ if __name__ == '__main__':
 									epilog=epilog, 
 									formatter_class=argparse.RawDescriptionHelpFormatter,
 									version=__version__)
-	
-	
+
+	parser = argparse.ArgumentParser()
+
 	parser.add_argument("args", 
 						type=str, metavar="FILE",nargs='*',
 						help="Paths to input files.")
 		
-	parser.add_argument("-x", "--xrs", metavar='FILE',
-						action="store", type=str, nargs='?', dest="xrs", const='stepco.inp',
-						help="xrs stepco file to open and alter. Default = stepco.inp")
-	
-	parser.add_argument("--ref", metavar='FILE',
-						action="store", type=str, dest="compare_reference",
-						help="Reference pattern to check against all patterns for --compare")
-
-	parser.add_argument("--crplo",
-						action="store_true", dest="crplo",
-						help="Mimics crplo -- plots observed, calculated and difference pattern and tick marks")
-
 	parser.add_argument("-s", "--shift",
 						action="store_false", dest="nomove",
 						help="Slightly shift different plots to make them more visible.")
-	
-	parser.add_argument("-q", "--quiet",
-						action="store_true", dest="quiet",
-						help="Don't plot anything and reduce verbosity.")
-	
-	parser.add_argument("-c", "--bgcorrect", metavar='OPTION',
-						action="store", type=str, dest="bg_correct",
-						help="Starts background correction routine. Only the first pattern listed is corrected. Valid options: 'linear','nearest','zero', 'slinear', 'quadratic, 'cubic') or as an integer specifying the order of the spline interpolator to use. Recommended: 'cubic'.")
 
-	parser.add_argument("-m", "--monitor", metavar='FILE',
-						action="store", type=str, dest="monitor",
-						help="Monitor specified file and replots if the file is updates. First 2 columns are plotted. Special value: crplot.dat")
-
-	#parser.add_argument("-t", "--ticks",
-	#					action="store_true", dest="plot_ticks",
-	#					help="Looks for local hkl.dat file and uses this to plot tick marks.")
+	parser.add_argument("-i","--bgin",
+						action="store", type=str, dest="bg_input",
+						help="Initial points for bg correction (2 column list; also works with stepco.inp).")
 
 	parser.add_argument("-t", "--ticks",
 						action='store', type=str, nargs='?', dest="plot_ticks", const='hkl.dat',
@@ -1099,29 +1077,58 @@ if __name__ == '__main__':
 						action='store', type=int, dest="plot_ticks_col", metavar='col',
 						help="Which column to use for plotting of tick marks. First column = 1. Default = 3, for hkl.dat files")
 
-	parser.add_argument("--stepco",
-						action="store_true", dest="stepco",
-						help="Shortcut for lines stepscan.dat -x stepco.inp. Additionally, plots the previous background and the background + the difference plot. Reads difference data from crplot.dat")
+	parser.add_argument("-c", "--bgcorrect", metavar='OPTION',
+						action="store", type=str, dest="bg_correct",
+						help="Starts background correction routine. Only the first pattern listed is corrected. Valid options: 'linear','nearest','zero', 'slinear', 'quadratic, 'cubic') or as an integer specifying the order of the spline interpolator to use. Recommended: 'cubic'.")
 
 	parser.add_argument("--bin", metavar='binsize',
 						action="store", type=float, dest="bin",
 						help="Bins the patterns supplied with the supplied bins and prints binned data sets.")
 
-	parser.add_argument("-i","--bgin",
-						action="store", type=str, dest="bg_input",
-						help="Initial points for bg correction (2 column list; also works with stepco.inp).")
-
 	parser.add_argument("--compare", metavar='x',
 						action="store", type=int, nargs='?', dest="compare", const=1,
 						help="Calculates similarity between data sets. For now, background needs to be removed manually beforehand. Sort by VAL: 1 = combined, 2 = spearman, 3 = kendall's tau, 4 = pearson.")
+
+	parser.add_argument("--ref", metavar='FILE',
+						action="store", type=str, dest="compare_reference",
+						help="Reference pattern to check against all patterns for --compare")
+
+	parser.add_argument("-m", "--monitor", metavar='FILE',
+						action="store", type=str, dest="monitor",
+						help="Monitor specified file and replots if the file is updates. First 2 columns are plotted. Special value: crplot.dat")
+
+	parser.add_argument("-q", "--quiet",
+						action="store_true", dest="quiet",
+						help="Don't plot anything and reduce verbosity.")
 	
 #	parser.add_argument("-o,--bgout",
 #						action="store", type=str, dest="bg_input",
 #						help="Filename to output background points to.")
 
 
+	group_xrs = parser.add_argument_group('XRS',description="Command line options specific to XRS-82")
+
+	group_xrs.add_argument("-x", "--xrs", metavar='FILE',
+						action="store", type=str, nargs='?', dest="xrs", const='stepco.inp',
+						help="xrs stepco file to open and alter. Default = stepco.inp")
+
+	group_xrs.add_argument("--crplo",
+						action="store_true", dest="crplo",
+						help="Mimics crplo -- plots observed, calculated and difference pattern and tick marks")
+
+	group_xrs.add_argument("--stepco",
+						action="store_true", dest="stepco",
+						help="Shortcut for lines stepscan.dat -x stepco.inp. Additionally, plots the previous background and the background + the difference plot. Reads difference data from crplot.dat")
+
+
+	group_adv = parser.add_argument_group('Advanced options')
+		
+	group_adv.add_argument("--savenpy",
+						action="store_true", dest="savenpy",
+						help="Convert input data sets to numpy binary format for faster loading on next run (extension = .npy). Default = False.")
+
 	
-	parser.set_defaults(backgrounder=True,
+	parser.set_defaults(backgrounder = True,
 						xrs = None,
 						nomove = True,
 						bg_correct = False,
@@ -1136,7 +1143,9 @@ if __name__ == '__main__':
 						quiet = False,
 						bg_input = None,
 						bin = None,
-						show = True) # for testing purposes
+						## advanced options
+						show = True,
+						savenpy = False) 
 	
 	options = parser.parse_args()
 	args = options.args
