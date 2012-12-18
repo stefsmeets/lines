@@ -14,7 +14,7 @@ from scipy.interpolate import interp1d
 from shutil import copyfile
 import os
 
-__version__ = '14-12-2012'
+__version__ = '18-12-2012'
 
 
 params = {'legend.fontsize': 10,
@@ -463,7 +463,23 @@ def f_plot_stepco_special(bg_xy):
 		
 		plt.plot(tt, bg_interpolate + dif, label = 'bg + diff')
 
-def f_bg_correct_out(d,bg_xy):
+def f_plot_topas_special(xyobs,xycalc,xydiff,xybg):
+	tt = xyobs.x
+
+	bg_interpolate = interpolate(xybg.xy,tt,kind='linear')
+
+	plt.plot(tt, xycalc.y + bg_interpolate, label='ycalc')
+	#plt.plot(tt, xyobs.y  + bg_interpolate, label='yobs')
+	
+	plt.plot(tt, bg_interpolate + xydiff.y, label='bg + diff')
+	plt.plot(tt, bg_interpolate, label='bg')
+
+
+
+
+
+
+def f_bg_correct_out(d,bg_xy,offset='ask'):
 	root,ext = os.path.splitext(d.filename)
 	fn_bg = root+'_bg'+ext
 	fn_corr = root+'_corr'+ext
@@ -478,10 +494,16 @@ def f_bg_correct_out(d,bg_xy):
 	yvals = d.y
 	
 	bg_yvals = interpolate(bg_xy,xvals,kind=options.bg_correct)
-	offset = raw_input("What y offset should I add to the data? (x=exit)\n >> [0] ") or 0
+	
+	if offset == 'ask':
+		offset = raw_input("What y offset should I add to the data? (x=exit)\n >> [0] ") or 0
+		offset = int(offset)
+	
 	if offset == 'x':
 		return
-	offset = int(offset)
+
+	print '\nOffset = {}'.format(offset)
+		
 	if len(bg_xy) >= 4:
 		print 'Writing background pattern to %s' % fn_bg
 		for x,y in zip(xvals,bg_yvals):
@@ -494,7 +516,7 @@ def f_bg_correct_out(d,bg_xy):
 				continue
 			print >> out_corr, '%15.6f%15.2f' % (x,y)
 	else:
-		raise IndexError, 'Not enough values in array bg_xy.'
+		raise IndexError, 'Not enough values in background array, need at least 4 points.'
 
 
 
@@ -793,7 +815,7 @@ class Data(object):
 class Background():
 	sensitivity = 8
 
-	def __init__(self,fig,d=None, outfunc=None,bg_correct=False, quiet=False):
+	def __init__(self,fig,d=None, outfunc=None,bg_correct=False, quiet=False, out=None):
 		"""Class that captures mouse events when a graph has been drawn, stores the coordinates
 		of these points and draws them as a line on the screen. Can also remove points and print all
 		the stored points to stdout
@@ -807,6 +829,7 @@ class Background():
 
 		xy: 2d ndarray, shape(2,0) with x,y data"""
 
+		self.out = out
 		self.ax = fig.add_subplot(111)
 		
 		# if xy is None:
@@ -948,6 +971,10 @@ class Background():
 				#print esds
 
 			new_stepco_inp(self.xy,*options.xrs_out,esds=esds)
+		elif self.out:
+			out = open(self.out,'w')
+			for x,y in self.xy.transpose():
+				print >> out, '%15.6f%15.2f' % (x,y)
 		else:
 			for x,y in self.xy.transpose():
 				print '%15.6f%15.2f' % (x,y)
@@ -1009,7 +1036,7 @@ class Lines(object):
 		pass
 
 
-def setup_interpolate_background(d):
+def setup_interpolate_background(d,name='bg (--correct)'):
 	print 'Interpolation mode for background correction\n'
 	print 'The highest and lowest values are added by default for convenience. In the case that they are removed, only the values in the background range will be printed.\n'
 	
@@ -1021,7 +1048,7 @@ def setup_interpolate_background(d):
 	#print x1,x2,y1,y2
 	xy = np.array([[x1,y1],[x2,y2]],dtype=float)
 
-	return Data(xy,name=' bg (--correct)')
+	return Data(xy,name=name)
 
 
 def f_peakdetect(d,lookahead=10,noise=5000):
@@ -1260,7 +1287,10 @@ def main(options,args):
 		f = read_file(fname)
 		bg_data,options.xrs_out = parse_xrs(f)
 	elif options.bg_input:
-		bg_data = read_data(options.bg_input)
+		try:
+			bg_data = read_data(options.bg_input)
+		except:
+			bg_data = setup_interpolate_background(data[0],name=options.bg_input)
 	else:
 		bg_data = None
 
@@ -1280,7 +1310,7 @@ def main(options,args):
 	elif options.bg_correct:
 		if not bg_data:
 			bg_data = setup_interpolate_background(data[0])
-		bg = Background(fig,d=bg_data,bg_correct=options.bg_correct,quiet=options.quiet) 
+		bg = Background(fig,d=bg_data,bg_correct=options.bg_correct,quiet=options.quiet,out=options.bg_output) 
 	elif options.backgrounder:
 		bg = Background(fig,d=bg_data,quiet=options.quiet)
 
@@ -1310,6 +1340,14 @@ def main(options,args):
 	else:
 		for d in reversed(data):
 			lines.plot(d)
+
+	if options.topas_bg:
+		xyobs  = read_data('x_yobs.xy')
+		xycalc = read_data('x_ycalc.xy')
+		xydiff = read_data('x_ydiff.xy')
+		#xybg   = read_data('x_ybg.xy')
+
+		f_plot_topas_special(xyobs,xycalc,xydiff,bg_data)
 
 
 	if options.stepco:
@@ -1350,7 +1388,7 @@ def main(options,args):
 
 
 	if options.bg_correct:
-		f_bg_correct_out(d=data[0],bg_xy=bg.xy.T)
+		f_bg_correct_out(d=data[0],bg_xy=bg.xy.T,offset=options.bg_offset)
 
 
 
@@ -1382,7 +1420,7 @@ if __name__ == '__main__':
 
 	parser.add_argument("-i","--bgin",
 						action="store", type=str, dest="bg_input",
-						help="Initial points for bg correction (2 column list; also works with stepco.inp).")
+						help="Initial points for bg correction (2 column list; also works with stepco.inp). Overwrites the file with updated coordinates.")
 
 	parser.add_argument("-t", "--ticks",
 						action='store', type=str, nargs='?', dest="plot_ticks", const='hkl.dat',
@@ -1404,6 +1442,11 @@ if __name__ == '__main__':
 	parser.add_argument("-m", "--monitor", metavar='FILE',
 						action="store", type=str, dest="monitor",
 						help="Monitor specified file and replots if the file is updates. First 2 columns are plotted. Special value: crplot.dat")
+
+	parser.add_argument("--topasbg",
+						action="store_true", dest="topas_bg",
+						help="Generally applicable background correction procedure mainly for use with Topas. Reads x_ycalc.xy, x_ydiff.xy which can be output using macros Out_X_Ycalc(x_ycalc.xy) and Out_X_Difference(x_ydiff.xy). The background is reconstructed using the linear interpolation from --bgin. Recommended usage: lines pattern.xye -c linear --bgin bg_points.xy --topasbg")
+
 
 	
 #	parser.add_argument("-o,--bgout",
@@ -1470,10 +1513,13 @@ if __name__ == '__main__':
 						plot_ticks = False,
 						plot_ticks_col = 4,
 						stepco = False,
+						topas_bg = False,
 						compare = False,
 						compare_reference = None,
 						quiet = False,
 						bg_input = None,
+						bg_output = None,
+						bg_offset = 0,
 						bin = None,
 						## advanced options
 						show = True,
@@ -1487,5 +1533,7 @@ if __name__ == '__main__':
 	if options.stepco:
 		options.xrs = 'stepco.inp'
 		args = ['stepscan.dat']
+	if options.bg_input:
+		options.bg_output = options.bg_input
 
 	main(options,args)
