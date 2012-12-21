@@ -14,7 +14,7 @@ from scipy.interpolate import interp1d
 from shutil import copyfile
 import os
 
-__version__ = '18-12-2012'
+__version__ = '21-12-2012'
 
 
 params = {'legend.fontsize': 10,
@@ -735,12 +735,13 @@ class Data(object):
 			self.err = self.arr[:,2]
 		except IndexError:
 			self.err = None
-
-		if np.all(self.err == np.nan):
 			self.has_esd = False
-			self.err = None
 		else:
-			self.has_esd = True
+			if np.all(self.err == np.nan):
+				self.has_esd = False
+				self.err = None
+			else:
+				self.has_esd = True
 
 		self.index = self.total
 		self.filename = name
