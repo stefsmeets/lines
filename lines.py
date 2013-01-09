@@ -99,9 +99,6 @@ def load_tick_marks(path,col=3):
 	return ticks
 
 def get_correlation_matrix(f,topas=False):
-	if not topas:
-		return np.loadtxt(f)
-
 	names = []
 	def yield_corrmat(f):
 		for line in f:
@@ -116,9 +113,10 @@ def get_correlation_matrix(f,topas=False):
 			f.next()
 			f.next()
 			corr = np.genfromtxt(yield_corrmat(f),delimiter=4)
+			return corr,names
 
-	print corr.shape
-	return corr,names
+	f.seek(0)
+	return np.loadtxt(f), names
 
 
 def parse_xrs(f,return_as='d_xrs'):
@@ -1061,13 +1059,16 @@ class Lines(object):
 def plot_correlation_matrix(arr,labels=[]):
 	def onpick(event):
 		x,y = int(event.mouseevent.xdata), int(event.mouseevent.ydata)
-		print labels[x], labels[y]
+		print arr[x,y], labels[x], labels[y]
 
 	pcolor = plt.pcolor(arr,picker=10)
 	
 	if labels:
 		pick  = pcolor.figure.canvas.mpl_connect('pick_event', onpick)
 	
+
+	plt.xlim(0,arr.shape[0])
+	plt.ylim(0,arr.shape[1])
 	plt.colorbar()
 	plt.show()
 
@@ -1302,16 +1303,11 @@ def main(options,args):
 	
 
 	if options.corrmat:
-		f = options.corrmat
-		corr = get_correlation_matrix(f)
-		plot_correlation_matrix(corr)
+		f = open(options.corrmat)
+		corr,labels = get_correlation_matrix(f)
+		plot_correlation_matrix(corr,labels)
 		exit()
-	if options.tcorrmat:
-		f = open(options.tcorrmat,'r')
-		corr,names = get_correlation_matrix(f,topas=True)
-		plot_correlation_matrix(corr,names)
-		exit()
-		
+	
 
 	if options.identify:
 		if options.peakdetect:
@@ -1544,7 +1540,7 @@ if __name__ == '__main__':
 
 	group_adv.add_argument("--corrmat",
 						action="store", type=str, dest="corrmat",
-						help="Plot given file as correlation matrix.")	
+						help="Plot given file as correlation matrix (expects ascii file with a n*m matrix). Can also take a Topas output file if a matrix has been generated with keyword C_matrix_normalized.")	
 
 	group_adv.add_argument("--tcorrmat",
 						action="store", type=str, dest="tcorrmat",
@@ -1582,8 +1578,7 @@ if __name__ == '__main__':
 						savenpy = False,
 						smooth = False,
 						peakdetect = False,
-						corrmat = None,
-						tcorrmat = None) 
+						corrmat = None) 
 	
 	options = parser.parse_args()
 	args = options.args
