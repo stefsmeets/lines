@@ -14,7 +14,7 @@ from scipy.interpolate import interp1d
 from shutil import copyfile
 import os
 
-__version__ = '21-12-2012'
+__version__ = '09-01-2012'
 
 
 params = {'legend.fontsize': 10,
@@ -97,6 +97,28 @@ def load_tick_marks(path,col=3):
 
 	ticks = read_data(path,usecols=(col,),append_zeros=True)
 	return ticks
+
+def get_correlation_matrix(f,topas=False):
+	if not topas:
+		return np.loadtxt(f)
+
+	names = []
+	def yield_corrmat(f):
+		for line in f:
+			if line.startswith('}'):
+				raise StopIteration
+			else:
+				names.append(line[0:21].strip())
+				yield line[26:]
+
+	for line in f:
+		if line.startswith('C_matrix_normalized'):
+			f.next()
+			f.next()
+			corr = np.genfromtxt(yield_corrmat(f),delimiter=4)
+
+	print corr.shape
+	return corr,names
 
 
 def parse_xrs(f,return_as='d_xrs'):
@@ -1036,6 +1058,19 @@ class Lines(object):
 	def black_hole(*args,**kwargs):
 		pass
 
+def plot_correlation_matrix(arr,labels=[]):
+	def onpick(event):
+		x,y = int(event.mouseevent.xdata), int(event.mouseevent.ydata)
+		print labels[x], labels[y]
+
+	pcolor = plt.pcolor(arr,picker=10)
+	
+	if labels:
+		pick  = pcolor.figure.canvas.mpl_connect('pick_event', onpick)
+	
+	plt.colorbar()
+	plt.show()
+
 
 def setup_interpolate_background(d,name='bg (--correct)'):
 	print 'Interpolation mode for background correction\n'
@@ -1266,6 +1301,18 @@ def main(options,args):
 	data = [read_data(fn,savenpy=False) for fn in args] # returns data objects
 	
 
+	if options.corrmat:
+		f = options.corrmat
+		corr = get_correlation_matrix(f)
+		plot_correlation_matrix(corr)
+		exit()
+	if options.tcorrmat:
+		f = open(options.tcorrmat,'r')
+		corr,names = get_correlation_matrix(f,topas=True)
+		plot_correlation_matrix(corr,names)
+		exit()
+		
+
 	if options.identify:
 		if options.peakdetect:
 			lookahead,noise = options.peakdetect
@@ -1368,8 +1415,6 @@ def main(options,args):
 			dsmooth = d.smooth(options.smooth) # smoothing performed in place
 			dsmooth.print_pattern()
 			lines.plot(dsmooth)
-
-
 
 
 
@@ -1497,11 +1542,21 @@ if __name__ == '__main__':
 						action="store", type=int, nargs=2, dest="peakdetect",
 						help="Use peak detection algorithm")
 
+	group_adv.add_argument("--corrmat",
+						action="store", type=str, dest="corrmat",
+						help="Plot given file as correlation matrix.")	
+
+	group_adv.add_argument("--tcorrmat",
+						action="store", type=str, dest="tcorrmat",
+						help="Takes a Topas output file and plots the correlation matrix if so specified with C_matrix_normalized.")
+
 	group_adv.add_argument("--identify",
 						action="store", type=float, dest="identify",
 						help="Identify given data sets against sets of d-spacings given by --reference")
 
-
+	group_adv.add_argument("--nobg",
+						action="store_false", dest="backgrounder",
+						help="Turns off background module.")
 
 	
 	parser.set_defaults(backgrounder = True,
@@ -1526,7 +1581,9 @@ if __name__ == '__main__':
 						show = True,
 						savenpy = False,
 						smooth = False,
-						peakdetect = False) 
+						peakdetect = False,
+						corrmat = None,
+						tcorrmat = None) 
 	
 	options = parser.parse_args()
 	args = options.args
