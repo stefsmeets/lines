@@ -14,7 +14,7 @@ from scipy.interpolate import interp1d
 from shutil import copyfile
 import os
 
-__version__ = '09-01-2012'
+__version__ = '15-01-2012'
 
 
 params = {'legend.fontsize': 10,
@@ -1025,30 +1025,30 @@ class Lines(object):
 		colour = 'bgrcmyk'[n%7]
 
 		ax = self.ax
-
+		label = data.filename
+		
 		if options.nomove:
-			dx, dy = 0, 0
+			ax.plot(data.x,data.y,label=label)
 		else:
 			dx, dy = 8/72., 8/72.
 
-		dx *= data.index
-		dy *= data.index
-		offset = transforms.ScaledTranslation(dx, dy, self.fig.dpi_scale_trans)
-		transform = ax.transData + offset
-
-		label = data.filename
-
-		ax.plot(data.x,data.y,transform=transform,label=label)
+			dx *= data.index
+			dy *= data.index
+			offset = transforms.ScaledTranslation(dx, dy, self.fig.dpi_scale_trans)
+			transform = ax.transData + offset
+	
+			# transform broken as of matplotlib 1.2.0, because it doesn't rescale the view
+			ax.plot(data.x,data.y,transform=transform,label=label)
 
 	def plot_tick_marks(self,data):
 		ax = self.ax
-		
+
+		label = data.filename
+
 		dx, dy = 0, -16/72.
 
 		offset = transforms.ScaledTranslation(dx, dy, self.fig.dpi_scale_trans)
 		transform = ax.transData + offset
-
-		label = data.filename
 
 		ax.plot(data.x,data.y,transform=transform,c='black',label=label,linestyle='',marker='|',markersize=10)
 		#plt.plot(tck,np.zeros(tck.size) - (mx_dif / 4), linestyle='', marker='|', markersize=10, label = 'ticks', c='purple')
@@ -1057,15 +1057,26 @@ class Lines(object):
 		pass
 
 def plot_correlation_matrix(arr,labels=[]):
+	def formatter(arr,x,y,labels):
+		if labels:
+			print '{:4}{:4}{:8} {} {}'.format(x,y, arr[x,y], labels[x], labels[y])
+		else:
+			print '{:4}{:4}{:8}'.format(x,y, arr[x,y])
+
 	def onpick(event):
 		x,y = int(event.mouseevent.xdata), int(event.mouseevent.ydata)
-		print arr[x,y], labels[x], labels[y]
+		formatter(arr,x,y,labels)
+
+	threshold = np.max(abs(arr)) * 0.9
+
+	for x,y in np.argwhere(abs(arr) > threshold):
+		if y > x or x == y:
+			continue
+		formatter(arr,x,y,labels)
 
 	pcolor = plt.pcolor(arr,picker=10)
 	
-	if labels:
-		pick  = pcolor.figure.canvas.mpl_connect('pick_event', onpick)
-	
+	pick  = pcolor.figure.canvas.mpl_connect('pick_event', onpick)
 
 	plt.xlim(0,arr.shape[0])
 	plt.ylim(0,arr.shape[1])
@@ -1296,7 +1307,6 @@ def f_compare(data,kind=0,reference=None):
 		print "{:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f}   ".format(combined, spearmanr, spearmanp, kendallr, kendallp, pearsonr, pearsonp, shift) + names
 
 
-
 def main(options,args):
 	files = args
 	data = [read_data(fn,savenpy=False) for fn in args] # returns data objects
@@ -1458,7 +1468,7 @@ if __name__ == '__main__':
 		
 	parser.add_argument("-s", "--shift",
 						action="store_false", dest="nomove",
-						help="Slightly shift different plots to make them more visible.")
+						help="Slightly shift different plots to make them more visible. **Broken with matplotlib 1.2.0+")
 
 	parser.add_argument("-i","--bgin",
 						action="store", type=str, dest="bg_input",
