@@ -1,8 +1,11 @@
 #!/usr/bin/env python2.7-32
 
 import sys
-
+import os
 import argparse
+
+from shutil import copyfile
+
 import numpy as np
 
 import matplotlib
@@ -11,10 +14,9 @@ import matplotlib.transforms as transforms
 
 from scipy.interpolate import interp1d
 
-from shutil import copyfile
-import os
+import math
 
-__version__ = '15-01-2012'
+__version__ = '21-01-2012'
 
 
 params = {'legend.fontsize': 10,
@@ -101,12 +103,13 @@ def load_tick_marks(path,col=3):
 def get_correlation_matrix(f,topas=False):
 	names = []
 	def yield_corrmat(f):
-		for line in f:
+		for i,line in enumerate(f):
+			shift = max(0,int(math.log10(i+1))-1) # calculate shift to correct for topas formatting
 			if line.startswith('}'):
 				raise StopIteration
 			else:
 				names.append(line[0:21].strip())
-				yield line[26:]
+				yield line[26+shift:]
 
 	for line in f:
 		if line.startswith('C_matrix_normalized'):
@@ -1068,10 +1071,14 @@ def plot_correlation_matrix(arr,labels=[]):
 		formatter(arr,x,y,labels)
 
 	threshold = np.max(abs(arr)) * 0.9
+	first = True
 
 	for x,y in np.argwhere(abs(arr) > threshold):
 		if y > x or x == y:
 			continue
+		if first:
+			print '\n Highly correlated parameters (>{}):'.format(threshold)
+			first = False
 		formatter(arr,x,y,labels)
 
 	pcolor = plt.pcolor(arr,picker=10)
