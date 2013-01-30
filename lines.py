@@ -16,7 +16,7 @@ from scipy.interpolate import interp1d
 
 import math
 
-__version__ = '21-01-2012'
+__version__ = '30-01-2012'
 
 
 params = {'legend.fontsize': 10,
@@ -802,10 +802,10 @@ class Data(object):
 		else:
 			return Data(np.hstack((xbinned,ybinned)),name=name)
 
-	def smooth(self,window='savitsky_golay',window_len=7,order=3):
+	def smooth(self,window='savitzky_golay',window_len=7,order=3):
 		assert window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman','savitzky_golay', 'moving_avg']
 
-		if window == 'savitsky_golay':
+		if window == 'savitzky_golay':
 			y = savitzky_golay(self.y,window_size=window_len,order=order)
 		else:
 			y = smooth(self.y,window_len=window_len,window=window)
@@ -825,9 +825,12 @@ class Data(object):
 		"""print self (x,y,e) to 3 column file. If no name is given, original file is overwritten.
 		A tag can be added to modify the original filename instead (ie. data.xye -> data_binned.xye)"""
 
+		if tag:
+			tag = "_" + tag
+
 		if not name:
 			root,ext = os.path.splitext(self.filename)
-			name = root + '_' + tag + ext
+			name = root + tag + ext
 		np.savetxt(name,self.xye,fmt='%15.5f')
 
 		print 'Pattern written to {}'.format(name)
