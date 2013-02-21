@@ -16,7 +16,7 @@ from scipy.interpolate import interp1d
 
 import math
 
-__version__ = '30-01-2012'
+__version__ = '21-02-2013'
 
 
 params = {'legend.fontsize': 10,
@@ -1059,6 +1059,13 @@ class Lines(object):
 		ax.plot(data.x,data.y,transform=transform,c='black',label=label,linestyle='',marker='|',markersize=10)
 		#plt.plot(tck,np.zeros(tck.size) - (mx_dif / 4), linestyle='', marker='|', markersize=10, label = 'ticks', c='purple')
 
+	def plot_ticks_scaled(self,data):
+		ax = self.ax
+		label = data.filename
+		ax.vlines(data.x,-100,data.y)
+
+			
+
 	def black_hole(*args,**kwargs):
 		pass
 
@@ -1397,6 +1404,9 @@ def main(options,args):
 	#plt.plot(range(5),range(5,10))
 	#plt.show()
 
+	for fn in options.plot_ticks_scaled:
+		d = read_data(fn,savenpy=False)
+		lines.plot_ticks_scaled(d)
 
 
 	if options.quiet:
@@ -1541,6 +1551,10 @@ if __name__ == '__main__':
 	group_adv.add_argument("--tc",
 						action='store', type=int, dest="plot_ticks_col", metavar='col',
 						help="Which column to use for plotting of tick marks. First column = 1. Default = 3, for hkl.dat files")
+
+	parser.add_argument("-T", "--Ticks",
+						action='store', type=str, nargs='+', dest="plot_ticks_scaled",
+						help="Plots ticks scaled to the intensity.")
 
 	group_adv.add_argument("--ref", metavar='FILE',
 						action="store", type=str, nargs='*', dest="compare_reference",
