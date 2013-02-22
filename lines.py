@@ -1404,9 +1404,10 @@ def main(options,args):
 	#plt.plot(range(5),range(5,10))
 	#plt.show()
 
-	for fn in options.plot_ticks_scaled:
-		d = read_data(fn,savenpy=False)
-		lines.plot_ticks_scaled(d)
+	if options.plot_ticks_scaled:
+		for fn in options.plot_ticks_scaled:
+			d = read_data(fn,savenpy=False)
+			lines.plot_ticks_scaled(d)
 
 
 	if options.quiet:
@@ -1554,7 +1555,7 @@ if __name__ == '__main__':
 
 	parser.add_argument("-T", "--Ticks",
 						action='store', type=str, nargs='+', dest="plot_ticks_scaled",
-						help="Plots ticks scaled to the intensity.")
+						help="Plots ticks scaled to the intensity. Expects .xy files with 2 columns, 2th/I")
 
 	group_adv.add_argument("--ref", metavar='FILE',
 						action="store", type=str, nargs='*', dest="compare_reference",
