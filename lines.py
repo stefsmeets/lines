@@ -16,7 +16,7 @@ from scipy.interpolate import interp1d
 
 import math
 
-__version__ = '21-02-2013'
+__version__ = '04-03-2013'
 
 
 params = {'legend.fontsize': 10,
@@ -1017,6 +1017,9 @@ class Lines(object):
 		else:
 			self.fig = fig
 			self.ax = self.fig.add_subplot(111)
+
+		self.normalize = False
+		self.nomove = False
 		
 
 		#self.fig.canvas.mpl_connect('pick_event', self.onpick)
@@ -1032,8 +1035,13 @@ class Lines(object):
 
 		ax = self.ax
 		label = data.filename
+
+		if self.normalize:
+			scale = np.trapz(data.y,data.x)
+			data.y = data.y / scale
+			# print scale
 		
-		if options.nomove:
+		if self.nomove:
 			ax.plot(data.x,data.y,label=label)
 		else:
 			dx, dy = 8/72., 8/72.
@@ -1368,6 +1376,8 @@ def main(options,args):
 
 	fig = plt.figure()
 	lines = Lines(fig,hide=options.quiet)
+	lines.nomove = options.nomove
+	lines.normalize = options.normalize_all
 
 	if options.plot_ticks:
 		hkl_file = options.plot_ticks
@@ -1520,6 +1530,9 @@ if __name__ == '__main__':
 						action="store_true", dest="topas_bg",
 						help="Generally applicable background correction procedure mainly for use with Topas. Reads x_ycalc.xy, x_ydiff.xy which can be output using macros Out_X_Ycalc(x_ycalc.xy) and Out_X_Difference(x_ydiff.xy). The background is reconstructed using the linear interpolation from --bgin. Recommended usage: lines pattern.xye -c linear --bgin bg_points.xy --topasbg")
 
+	parser.add_argument("-n", "--normalize",
+						action="store_true", dest="normalize_all",
+						help="Normalize the values of all data sets by dividing by their integrated intensity")
 
 	
 #	parser.add_argument("-o,--bgout",
@@ -1593,6 +1606,7 @@ if __name__ == '__main__':
 	parser.set_defaults(backgrounder = True,
 						xrs = None,
 						nomove = True,
+						normalize_all = False,
 						bg_correct = False,
 						crplo = False,
 						christian = False,
