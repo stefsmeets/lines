@@ -16,7 +16,15 @@ from scipy.interpolate import interp1d
 
 import math
 
-__version__ = '04-03-2013'
+try:
+	from IPython.frontend.terminal.embed import InteractiveShellEmbed
+	ipshell = InteractiveShellEmbed(banner1='')
+except ImportError:
+	pass
+
+
+
+__version__ = '13-03-2013'
 
 
 params = {'legend.fontsize': 10,
@@ -63,11 +71,7 @@ def read_data(fn,usecols=None,append_zeros=False,savenpy=False):
 		#raise IOError
 		inp = np.load(root+'.npy')
 	except (IOError, AssertionError):
-		try:
-			inp = np.loadtxt(fn,usecols=usecols,ndmin=2)
-		except IOError,e:
-			print e
-			exit(0)
+		inp = np.loadtxt(fn,usecols=usecols,ndmin=2)
 	else:
 		ext = '.npy'
 		fn = root+'.npy'
@@ -611,36 +615,36 @@ def interpolate(arr,xvals,kind='cubic'):
 
 def smooth(x,window_len=11,window='hanning'):
 	"""smooth the data using a window with requested size.
-    
-    This method is based on the convolution of a scaled window with the signal.
-    The signal is prepared by introducing reflected copies of the signal 
-    (with the window size) in both ends so that transient parts are minimized
-    in the begining and end part of the output signal.
-    
-    input:
-        x: the input signal 
-        window_len: the dimension of the smoothing window; should be an odd integer
-        window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
-            flat window will produce a moving average smoothing.
+	
+	This method is based on the convolution of a scaled window with the signal.
+	The signal is prepared by introducing reflected copies of the signal 
+	(with the window size) in both ends so that transient parts are minimized
+	in the begining and end part of the output signal.
+	
+	input:
+		x: the input signal 
+		window_len: the dimension of the smoothing window; should be an odd integer
+		window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
+			flat window will produce a moving average smoothing.
 
-    output:
-        the smoothed signal
-        
-    example:
+	output:
+		the smoothed signal
+		
+	example:
 
-    t=linspace(-2,2,0.1)
-    x=sin(t)+randn(len(t))*0.1
-    y=smooth(x)
-    
-    see also: 
-    
-    numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
-    scipy.signal.lfilter
+	t=linspace(-2,2,0.1)
+	x=sin(t)+randn(len(t))*0.1
+	y=smooth(x)
+	
+	see also: 
+	
+	numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
+	scipy.signal.lfilter
  
-    TODO: the window parameter could be the window itself if an array instead of a string  
+	TODO: the window parameter could be the window itself if an array instead of a string  
 
-    FROM: http://www.scipy.org/Cookbook/SignalSmooth
-    """
+	FROM: http://www.scipy.org/Cookbook/SignalSmooth
+	"""
 
 	if x.ndim != 1:
 		raise ValueError, "smooth only accepts 1 dimension arrays."
@@ -667,77 +671,77 @@ def smooth(x,window_len=11,window='hanning'):
 
 
 def savitzky_golay(y, window_size=11, order=2, deriv=0):
-    r"""Smooth (and optionally differentiate) data with a Savitzky-Golay filter.
-    The Savitzky-Golay filter removes high frequency noise from data.
-    It has the advantage of preserving the original shape and
-    features of the signal better than other types of filtering
-    approaches, such as moving averages techhniques.
-    Parameters
-    ----------
-    y : array_like, shape (N,)
-        the values of the time history of the signal.
-    window_size : int
-        the length of the window. Must be an odd integer number.
-    order : int
-        the order of the polynomial used in the filtering.
-        Must be less then `window_size` - 1.
-    deriv: int
-        the order of the derivative to compute (default = 0 means only smoothing)
-    Returns
-    -------
-    ys : ndarray, shape (N)
-        the smoothed signal (or it's n-th derivative).
-    Notes
-    -----
-    The Savitzky-Golay is a type of low-pass filter, particularly
-    suited for smoothing noisy data. The main idea behind this
-    approach is to make for each point a least-square fit with a
-    polynomial of high order over a odd-sized window centered at
-    the point.
-    Examples
-    --------
-    t = np.linspace(-4, 4, 500)
-    y = np.exp( -t**2 ) + np.random.normal(0, 0.05, t.shape)
-    ysg = savitzky_golay(y, window_size=31, order=4)
-    import matplotlib.pyplot as plt
-    plt.plot(t, y, label='Noisy signal')
-    plt.plot(t, np.exp(-t**2), 'k', lw=1.5, label='Original signal')
-    plt.plot(t, ysg, 'r', label='Filtered signal')
-    plt.legend()
-    plt.show()
-    References
-    ----------
-    .. [1] A. Savitzky, M. J. E. Golay, Smoothing and Differentiation of
-       Data by Simplified Least Squares Procedures. Analytical
-       Chemistry, 1964, 36 (8), pp 1627-1639.
-    .. [2] Numerical Recipes 3rd Edition: The Art of Scientific Computing
-       W.H. Press, S.A. Teukolsky, W.T. Vetterling, B.P. Flannery
-       Cambridge University Press ISBN-13: 9780521880688
+	r"""Smooth (and optionally differentiate) data with a Savitzky-Golay filter.
+	The Savitzky-Golay filter removes high frequency noise from data.
+	It has the advantage of preserving the original shape and
+	features of the signal better than other types of filtering
+	approaches, such as moving averages techhniques.
+	Parameters
+	----------
+	y : array_like, shape (N,)
+		the values of the time history of the signal.
+	window_size : int
+		the length of the window. Must be an odd integer number.
+	order : int
+		the order of the polynomial used in the filtering.
+		Must be less then `window_size` - 1.
+	deriv: int
+		the order of the derivative to compute (default = 0 means only smoothing)
+	Returns
+	-------
+	ys : ndarray, shape (N)
+		the smoothed signal (or it's n-th derivative).
+	Notes
+	-----
+	The Savitzky-Golay is a type of low-pass filter, particularly
+	suited for smoothing noisy data. The main idea behind this
+	approach is to make for each point a least-square fit with a
+	polynomial of high order over a odd-sized window centered at
+	the point.
+	Examples
+	--------
+	t = np.linspace(-4, 4, 500)
+	y = np.exp( -t**2 ) + np.random.normal(0, 0.05, t.shape)
+	ysg = savitzky_golay(y, window_size=31, order=4)
+	import matplotlib.pyplot as plt
+	plt.plot(t, y, label='Noisy signal')
+	plt.plot(t, np.exp(-t**2), 'k', lw=1.5, label='Original signal')
+	plt.plot(t, ysg, 'r', label='Filtered signal')
+	plt.legend()
+	plt.show()
+	References
+	----------
+	.. [1] A. Savitzky, M. J. E. Golay, Smoothing and Differentiation of
+	   Data by Simplified Least Squares Procedures. Analytical
+	   Chemistry, 1964, 36 (8), pp 1627-1639.
+	.. [2] Numerical Recipes 3rd Edition: The Art of Scientific Computing
+	   W.H. Press, S.A. Teukolsky, W.T. Vetterling, B.P. Flannery
+	   Cambridge University Press ISBN-13: 9780521880688
 
-    FROM: http://www.scipy.org/Cookbook/SavitzkyGolay
-    """
-    try:
-        window_size = np.abs(np.int(window_size))
-        order = np.abs(np.int(order))
-    except ValueError, msg:
-        raise ValueError("window_size and order have to be of type int")
-    if window_size % 2 != 1 or window_size < 1:
-        raise TypeError("window_size size must be a positive odd number")
-    if window_size < order + 2:
-        raise TypeError("window_size is too small for the polynomials order")
-    order_range = range(order+1)
+	FROM: http://www.scipy.org/Cookbook/SavitzkyGolay
+	"""
+	try:
+		window_size = np.abs(np.int(window_size))
+		order = np.abs(np.int(order))
+	except ValueError, msg:
+		raise ValueError("window_size and order have to be of type int")
+	if window_size % 2 != 1 or window_size < 1:
+		raise TypeError("window_size size must be a positive odd number")
+	if window_size < order + 2:
+		raise TypeError("window_size is too small for the polynomials order")
+	order_range = range(order+1)
 
-    half_window = (window_size -1) // 2
-    # precompute coefficients
-    b = np.mat([[k**i for i in order_range] for k in range(-half_window, half_window+1)])
-    m = np.linalg.pinv(b).A[deriv] # coefficients
+	half_window = (window_size -1) // 2
+	# precompute coefficients
+	b = np.mat([[k**i for i in order_range] for k in range(-half_window, half_window+1)])
+	m = np.linalg.pinv(b).A[deriv] # coefficients
 
-    # pad the signal at the extremes with
-    # values taken from the signal itself
-    firstvals = y[0] - np.abs( y[1:half_window+1][::-1] - y[0] )
-    lastvals = y[-1] + np.abs(y[-half_window-1:-1][::-1] - y[-1])
-    y = np.concatenate((firstvals, y, lastvals))
-    return np.convolve( m, y, mode='valid')
+	# pad the signal at the extremes with
+	# values taken from the signal itself
+	firstvals = y[0] - np.abs( y[1:half_window+1][::-1] - y[0] )
+	lastvals = y[-1] + np.abs(y[-half_window-1:-1][::-1] - y[-1])
+	y = np.concatenate((firstvals, y, lastvals))
+	return np.convolve( m, y, mode='valid')
 
 
 class Data(object):
@@ -1020,6 +1024,7 @@ class Lines(object):
 
 		self.normalize = False
 		self.nomove = False
+		self.linewidth = 1.0
 		
 
 		#self.fig.canvas.mpl_connect('pick_event', self.onpick)
@@ -1030,6 +1035,8 @@ class Lines(object):
 
 	def plot(self,data):
 		n = data.index
+		lw = self.linewidth
+
 
 		colour = 'bgrcmyk'[n%7]
 
@@ -1042,7 +1049,7 @@ class Lines(object):
 			# print scale
 		
 		if self.nomove:
-			ax.plot(data.x,data.y,label=label)
+			ax.plot(data.x,data.y,label=label,lw=lw)
 		else:
 			dx, dy = 8/72., 8/72.
 
@@ -1052,7 +1059,7 @@ class Lines(object):
 			transform = ax.transData + offset
 	
 			# transform broken as of matplotlib 1.2.0, because it doesn't rescale the view
-			ax.plot(data.x,data.y,transform=transform,label=label)
+			ax.plot(data.x,data.y,transform=transform,label=label,lw=lw)
 
 	def plot_tick_marks(self,data):
 		ax = self.ax
@@ -1072,7 +1079,24 @@ class Lines(object):
 		label = data.filename
 		ax.vlines(data.x,-100,data.y)
 
-			
+	def plot_boxes(self,fname):
+		"""http://stackoverflow.com/questions/6895935/data-plotting-in-boxes-with-python
+		http://matplotlib.org/api/artist_api.html#matplotlib.patches.Rectangle"""
+		from matplotlib import patches
+		
+		ax = self.ax
+		lw = self.linewidth
+		alpha = 0.6
+	
+		boxes = np.loadtxt(fname,unpack=True)
+		print 'Loading boxes: {}\n        shape: {}'.format(fname,boxes.shape)
+
+		y1 = 0
+	
+		for x1,x2,y2 in boxes.T:
+			# Class matplotlib.patches.Rectangle(xy, width, height, **kwargs)
+			rect = patches.Rectangle((x1,y1), x2-x1, y2,edgecolor='red',facecolor='none',lw=lw,alpha=alpha)
+			ax.add_patch(rect)
 
 	def black_hole(*args,**kwargs):
 		pass
@@ -1332,6 +1356,11 @@ def f_compare(data,kind=0,reference=None):
 		print "{:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f}   ".format(combined, spearmanr, spearmanp, kendallr, kendallp, pearsonr, pearsonp, shift) + names
 
 
+
+
+
+
+
 def main(options,args):
 	files = args
 	data = [read_data(fn,savenpy=False) for fn in args] # returns data objects
@@ -1378,6 +1407,8 @@ def main(options,args):
 	lines = Lines(fig,hide=options.quiet)
 	lines.nomove = options.nomove
 	lines.normalize = options.normalize_all
+	lines.linewidth = options.linewidth
+	lines.savefig = options.savefig
 
 	if options.plot_ticks:
 		hkl_file = options.plot_ticks
@@ -1427,10 +1458,20 @@ def main(options,args):
 			lines.plot(d)
 
 	if options.topas_bg:
-		xyobs  = read_data('x_yobs.xy')
-		xycalc = read_data('x_ycalc.xy')
-		xydiff = read_data('x_ydiff.xy')
-		#xybg   = read_data('x_ybg.xy')
+		try:
+			xyobs  = read_data('x_yobs.xy')
+			xycalc = read_data('x_ycalc.xy')
+			xydiff = read_data('x_ydiff.xy')
+			#xybg   = read_data('x_ybg.xy')
+		except IOError,e:
+			print e
+			print
+			print """Please add the following lines to the TOPAS input file to generate the needed files:
+ 	Out_X_Yobs(x_yobs.xy)          
+	Out_X_Ycalc(x_ycalc.xy)       
+	Out_X_Difference(x_ydiff.xy)   
+			"""
+			exit(0)
 
 		f_plot_topas_special(xyobs,xycalc,xydiff,bg_data)
 
@@ -1453,6 +1494,9 @@ def main(options,args):
 			dsmooth.print_pattern()
 			lines.plot(dsmooth)
 
+	if options.boxes:
+		lines.plot_boxes(options.boxes)
+
 
 
 	if options.quiet or not options.show:
@@ -1465,6 +1509,10 @@ def main(options,args):
 		else:
 			fn = options.monitor
 			f_monitor(fn,plot_init,plot_update,fig=fig)
+	elif options.savefig:
+		plt.legend()
+		out = options.savefig
+		plt.savefig(out, bbox_inches=0)
 	else:
 		plt.legend()
 		plt.show()
@@ -1573,6 +1621,10 @@ if __name__ == '__main__':
 	group_adv.add_argument("--ref", metavar='FILE',
 						action="store", type=str, nargs='*', dest="compare_reference",
 						help="Reference pattern to check against all patterns for --compare")
+
+	group_adv.add_argument("--boxes", metavar='FILE',
+						action="store", type=str, dest="boxes",
+						help="Plots boxes from data in given file. Format should be: 2theta_min, 2theta_max,intensity")
 		
 	group_adv.add_argument("--savenpy",
 						action="store_true", dest="savenpy",
@@ -1585,6 +1637,10 @@ if __name__ == '__main__':
 	group_adv.add_argument("--peakdetect",
 						action="store", type=int, nargs=2, dest="peakdetect",
 						help="Use peak detection algorithm")
+
+	group_adv.add_argument("--lw","--linewidth",
+						action="store", type=float, dest="linewidth",
+						help="Set linewidth of the plot")
 
 	group_adv.add_argument("--corrmat",
 						action="store", type=str, dest="corrmat",
@@ -1601,6 +1657,11 @@ if __name__ == '__main__':
 	group_adv.add_argument("--nobg",
 						action="store_false", dest="backgrounder",
 						help="Turns off background module.")
+
+	group_adv.add_argument("--savefig",
+						action="store", type=str, nargs='?', dest="savefig", const='figure1.png',
+						help="Saves figure as png instead of displaying it")
+
 
 	
 	parser.set_defaults(backgrounder = True,
@@ -1621,13 +1682,16 @@ if __name__ == '__main__':
 						bg_input = None,
 						bg_output = None,
 						bg_offset = 0,
+						boxes = None,
 						bin = None,
 						## advanced options
 						show = True,
+						linewidth = 1.0,
 						savenpy = False,
 						smooth = False,
 						peakdetect = False,
-						corrmat = None) 
+						corrmat = None,
+						savefig = False) 
 	
 	options = parser.parse_args()
 	args = options.args
