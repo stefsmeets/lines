@@ -23,8 +23,7 @@ except ImportError:
 	pass
 
 
-
-__version__ = '13-03-2013'
+__version__ = '20-03-2013'
 
 
 params = {'legend.fontsize': 10,
@@ -106,20 +105,27 @@ def load_tick_marks(path,col=3):
 
 def get_correlation_matrix(f,topas=False):
 	names = []
+	lst_not_iprm = []
 	def yield_corrmat(f):
 		for i,line in enumerate(f):
 			shift = max(0,int(math.log10(i+1))-1) # calculate shift to correct for topas formatting
 			if line.startswith('}'):
 				raise StopIteration
 			else:
-				names.append(line[0:21].strip())
+				if not line.startswith('iprm'):
+					lst_not_iprm.append(i)
+					names.append(line[0:21].strip())
 				yield line[26+shift:]
 
 	for line in f:
 		if line.startswith('C_matrix_normalized'):
 			f.next()
 			f.next()
+
+			print 'Ignoring reflection intensities (iprm***), because they are always correlated.'
 			corr = np.genfromtxt(yield_corrmat(f),delimiter=4)
+			corr = corr[lst_not_iprm,:][:,lst_not_iprm]
+
 			return corr,names
 
 	f.seek(0)
@@ -1371,7 +1377,6 @@ def main(options,args):
 		corr,labels = get_correlation_matrix(f)
 		plot_correlation_matrix(corr,labels)
 		exit()
-	
 
 	if options.identify:
 		if options.peakdetect:
@@ -1645,10 +1650,6 @@ if __name__ == '__main__':
 	group_adv.add_argument("--corrmat",
 						action="store", type=str, dest="corrmat",
 						help="Plot given file as correlation matrix (expects ascii file with a n*m matrix). Can also take a Topas output file if a matrix has been generated with keyword C_matrix_normalized.")	
-
-	group_adv.add_argument("--tcorrmat",
-						action="store", type=str, dest="tcorrmat",
-						help="Takes a Topas output file and plots the correlation matrix if so specified with C_matrix_normalized.")
 
 	group_adv.add_argument("--identify",
 						action="store", type=float, dest="identify",
