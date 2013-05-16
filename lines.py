@@ -23,7 +23,7 @@ except ImportError:
 	pass
 
 
-__version__ = '20-03-2013'
+__version__ = '16-05-2013'
 
 
 params = {'legend.fontsize': 10,
@@ -224,7 +224,10 @@ def parse_hkl_dat(f):
 		inp = line.split()
 		if not f:
 			continue
-		ret.append([float(val) for val in inp])
+		if len(inp) < 4:
+			inp = (line[0:3],line[3:6],line[6:9],line[9:])
+		else:
+			ret.append([float(val) for val in inp])
 
 	return ret
 
@@ -399,9 +402,9 @@ def crplot_init(fn,fig,ax):
 	mx_dif = max(dif)
 	mx_pat = max(max(obs),max(clc))
 	
-	pobs, = ax.plot(tt, obs, label = 'observed')
-	pclc, = ax.plot(tt, clc, label = 'calculated')
-	pdif, = ax.plot(tt, dif - mx_dif, label = 'difference')
+	pobs, = ax.plot(tt, obs, label = 'observed',c='green')
+	pclc, = ax.plot(tt, clc, label = 'calculated',c='red')
+	pdif, = ax.plot(tt, dif - mx_dif, label = 'difference',c='blue')
 	
 	pobs_zero, = ax.plot(tt,np.zeros(tt.size), c='black')
 	pdif_zero, = ax.plot(tt,np.zeros(tt.size) - mx_dif, c='black')
@@ -1006,7 +1009,9 @@ class Background():
 				esds = interpolate(self.d.xye[:,0:3:2], self.xy[0], kind='linear')
 
 				#print esds
-
+			else:
+				esds = None
+				
 			new_stepco_inp(self.xy,*options.xrs_out,esds=esds)
 		elif self.out:
 			out = open(self.out,'w')
@@ -1057,7 +1062,7 @@ class Lines(object):
 		if self.nomove:
 			ax.plot(data.x,data.y,label=label,lw=lw)
 		else:
-			dx, dy = 8/72., 8/72.
+			dx, dy = 2/72., 2/72.
 
 			dx *= data.index
 			dy *= data.index
@@ -1066,6 +1071,8 @@ class Lines(object):
 	
 			# transform broken as of matplotlib 1.2.0, because it doesn't rescale the view
 			ax.plot(data.x,data.y,transform=transform,label=label,lw=lw)
+
+			ax.axis([data.x.min(),data.x.max()*1.2,data.y.min(),data.y.max()*1.2])
 
 	def plot_tick_marks(self,data):
 		ax = self.ax
@@ -1118,7 +1125,7 @@ def plot_correlation_matrix(arr,labels=[]):
 		x,y = int(event.mouseevent.xdata), int(event.mouseevent.ydata)
 		formatter(arr,x,y,labels)
 
-	threshold = np.max(abs(arr)) * 0.9
+	threshold = np.max(abs(arr)) * 0.8
 	first = True
 
 	for x,y in np.argwhere(abs(arr) > threshold):
@@ -1369,7 +1376,7 @@ def f_compare(data,kind=0,reference=None):
 
 def main(options,args):
 	files = args
-	data = [read_data(fn,savenpy=False) for fn in args] # returns data objects
+	data = [read_data(fn,savenpy=options.savenpy) for fn in args] # returns data objects
 	
 
 	if options.corrmat:
@@ -1552,7 +1559,7 @@ if __name__ == '__main__':
 		
 	parser.add_argument("-s", "--shift",
 						action="store_false", dest="nomove",
-						help="Slightly shift different plots to make them more visible. **Broken with matplotlib 1.2.0+")
+						help="Slightly shift different plots to make them more visible.")
 
 	parser.add_argument("-i","--bgin",
 						action="store", type=str, dest="bg_input",
