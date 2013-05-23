@@ -23,7 +23,7 @@ except ImportError:
 	pass
 
 
-__version__ = '16-05-2013'
+__version__ = '23-05-2013'
 
 
 params = {'legend.fontsize': 10,
@@ -995,7 +995,7 @@ class Background():
 		self.bg.set_data(self.bg_range,bg_vals)
 		
 
-	def printdata(self):
+	def printdata(self, fout=None):
 		"""Prints stored data points to stdout"""  # TODO: make me a method on class Data()
 		if not self.xy.any():
 			print 'No stored coordinates.'
@@ -1019,7 +1019,7 @@ class Background():
 				print >> out, '%15.6f%15.2f' % (x,y)
 		else:
 			for x,y in self.xy.transpose():
-				print '%15.6f%15.2f' % (x,y)
+				print >> fout, '%15.6f%15.2f' % (x,y)
 
 
 class Lines(object):
@@ -1532,8 +1532,12 @@ def main(options,args):
 
 	if options.bg_correct:
 		f_bg_correct_out(d=data[0],bg_xy=bg.xy.T,offset=options.bg_offset)
-
-
+	
+	try:
+		if bg.xy.any():
+			bg.printdata(fout=open('lines.out','w'))
+	except UnboundLocalError:
+		pass
 
 
 if __name__ == '__main__':
