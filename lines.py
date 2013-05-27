@@ -23,7 +23,7 @@ except ImportError:
 	pass
 
 
-__version__ = '23-05-2013'
+__version__ = '27-05-2013'
 
 
 params = {'legend.fontsize': 10,
@@ -59,7 +59,7 @@ def read_file(path):
 
 
 
-def read_data(fn,usecols=None,append_zeros=False,savenpy=False):
+def read_data(fn,usecols=None,append_zeros=False,savenpy=False,suffix=''):
 	if fn == 'stepco.inp':
 		f = read_file(fn)
 		return parse_xrs(f,return_as='d')
@@ -82,7 +82,7 @@ def read_data(fn,usecols=None,append_zeros=False,savenpy=False):
 	if inp.shape[1] > 3:
 		print 'More than 3 columns read from {}, assuming x,y,esd, ignoring the rest.'.format(f.name)
 
-	d = Data(inp,name=fn)
+	d = Data(inp,name=fn+suffix)
 
 	if savenpy and ext != '.npy':
 		np.save(root,inp)
@@ -783,6 +783,14 @@ class Data(object):
 		self.filename = name
 		Data.total += 1
 
+		if not quiet:
+			n = len(self.x)			# observations
+			if self.has_esd:
+				w = 1/self.err**2   # weights
+			else:
+				w = 1/self.y		# weights = y^-1 if no esds
+			print '       R_exp: {:.3f}%'.format(100 * ((n) / np.sum(w*self.y**2))**0.5)
+
 	def bin(self,binsize=0.01):
 		x = self.x
 		y = self.y
@@ -855,7 +863,7 @@ class Data(object):
 class Background():
 	sensitivity = 8
 
-	def __init__(self,fig,d=None, outfunc=None,bg_correct=False, quiet=False, out=None):
+	def __init__(self,fig,d=None, outfunc=None,bg_correct=False, quiet=False, out=None, npick=-1):
 		"""Class that captures mouse events when a graph has been drawn, stores the coordinates
 		of these points and draws them as a line on the screen. Can also remove points and print all
 		the stored points to stdout
@@ -868,6 +876,8 @@ class Background():
 		optional numpy array with background coordinates, shape = (2,0)
 
 		xy: 2d ndarray, shape(2,0) with x,y data"""
+
+		self.npick = npick
 
 		self.out = out
 		self.ax = fig.add_subplot(111)
@@ -946,6 +956,15 @@ class Background():
 	
 		self.line.set_data(self.xy)
 		self.line.figure.canvas.draw()
+
+
+		print self.npick, len(self.xy.T)
+		if len(self.xy.T) == self.npick:
+			print '\nClosing window...'
+			import time
+			time.sleep(1)
+			plt.close()
+
 
 
 	def onpick(self,event):
@@ -1048,8 +1067,7 @@ class Lines(object):
 		n = data.index
 		lw = self.linewidth
 
-
-		colour = 'bgrcmyk'[n%7]
+		#colour = 'bgrcmyk'[n%7]
 
 		ax = self.ax
 		label = data.filename
@@ -1059,6 +1077,10 @@ class Lines(object):
 			data.y = data.y / scale
 			# print scale
 		
+		#scl = 1
+		#if 'esd' in data.filename:
+		#	scl = 20
+
 		if self.nomove:
 			ax.plot(data.x,data.y,label=label,lw=lw)
 		else:
@@ -1369,15 +1391,99 @@ def f_compare(data,kind=0,reference=None):
 		print "{:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f}   ".format(combined, spearmanr, spearmanp, kendallr, kendallp, pearsonr, pearsonp, shift) + names
 
 
+def fix_sls_data(data):	
+	"""Input list of Data objects, all of them will be processed and written to:
+	filename_fixed.xye"""
+		
+	print
+	print '------------'
+	print 'FIX SLS DATA'
+	print '------------'
+	print
+	print 'esds are calculated as:'
+	print 'esd = sqrt(Yobs/scale) * sqrt(1/N) * scale'
+	print
+	print 'Yobs:  input pattern'
+	print 'scale: scale factor between raw counts (.raw) and corrected data (.dat)'
+	print 'N:     number of raw patterns merged'
+	print 
+	print 'Estimated scale by rearranging above formula:'
+	print '(assuming background is correct)'
+	print
+	print 'scale = (N/Yobs) * esd^2'
 
+	if not isinstance(data,list):
+		data = list((data,))
 
+	scl = raw_input('\nScale (leave blank for picking procedure) \n >> ')
+	npats = raw_input('\nNumber of raw patterns \n >> [16]') or 16
+	#scl = 1.3
+	npats = float(npats)**0.5
 
+	for i in range(len(data)):
+		d = data[i]
+		i += 1
+		if 'esd' in d.filename: continue
+
+		assert d.has_esd, '\n *** Data file {} contains no standard deviations!!'.format(d.filename)
+			
+		if not scl:
+			print '\nPick 3 background points'
+			print 'These will be used to estimate the scale factor'
+			print
+	
+			fig = plt.figure()
+			bg = Background(fig,d=None,quiet=options.quiet,npick=3)
+			lines = Lines(fig,hide=options.quiet)
+			lines.plot(d)
+			plt.legend()
+			plt.show()
+	
+			points = bg.xy.T
+	
+			avg = []
+			for x,v in points:
+				idx = find_nearest(d.x,x)
+				scl1 = d.err[idx]**2 * (npats**2 / d.y[idx])
+				avg.append(scl1)
+				print '{:10.4f}**2 * ({:d} / {:10.4f}) = {:10.4f}'.format(d.err[idx],int(npats**2),d.y[idx],scl1)
+			scl = np.mean(avg)
+		else:
+			scl = float(scl)
+			
+		print
+		print 'Npats =', int(npats**2)
+		print 'Scale =', scl
+		print
+
+		err = scl*(1/npats)*(d.y/scl)**0.5
+		d2 = np.copy(d.xye)
+		d2 = Data(np.vstack((d.x,d.y,err)).T,name=d.filename)
+		d2.print_pattern(tag='fixed')
+		data.append(d2)
+
+def find_nearest(array,value):
+	"""Find index of nearest value"""
+	idx = (np.abs(array-value)).argmin()
+	return idx
 
 
 def main(options,args):
 	files = args
 	data = [read_data(fn,savenpy=options.savenpy) for fn in args] # returns data objects
 	
+	if options.ipython:
+		from IPython.frontend.terminal.embed import InteractiveShellEmbed
+		ipshell = InteractiveShellEmbed(banner1='')
+	else:
+		ipshell = lambda x:None
+
+	if options.plot_esd:
+		data.extend([read_data(fn,usecols=(0,2),suffix=' esd') for fn in args])
+
+	if options.fixsls:
+		fix_sls_data(data)
+		exit()
 
 	if options.corrmat:
 		f = open(options.corrmat)
@@ -1422,6 +1528,7 @@ def main(options,args):
 	lines.linewidth = options.linewidth
 	lines.savefig = options.savefig
 
+
 	if options.plot_ticks:
 		hkl_file = options.plot_ticks
 		col = options.plot_ticks_col - 1
@@ -1429,7 +1536,7 @@ def main(options,args):
 		if ticks:
 			lines.plot_tick_marks(ticks)
 
-	if options.quiet:
+	if options.quiet or options.fixsls:
 		pass
 	elif options.bg_correct:
 		if not bg_data:
@@ -1437,6 +1544,8 @@ def main(options,args):
 		bg = Background(fig,d=bg_data,bg_correct=options.bg_correct,quiet=options.quiet,out=options.bg_output) 
 	elif options.backgrounder:
 		bg = Background(fig,d=bg_data,quiet=options.quiet)
+
+
 
 
 	if options.crplo:
@@ -1469,6 +1578,7 @@ def main(options,args):
 		for d in reversed(data):
 			lines.plot(d)
 
+
 	if options.topas_bg:
 		try:
 			xyobs  = read_data('x_yobs.xy')
@@ -1479,7 +1589,7 @@ def main(options,args):
 			print e
 			print
 			print """Please add the following lines to the TOPAS input file to generate the needed files:
- 	Out_X_Yobs(x_yobs.xy)          
+	Out_X_Yobs(x_yobs.xy)          
 	Out_X_Ycalc(x_ycalc.xy)       
 	Out_X_Difference(x_ydiff.xy)   
 			"""
@@ -1668,11 +1778,19 @@ if __name__ == '__main__':
 
 	group_adv.add_argument("--nobg",
 						action="store_false", dest="backgrounder",
-						help="Turns off background module.")
+						help="Turns off background module."	)
+
+	group_adv.add_argument("--plot_esd",
+						action="store_true", dest="plot_esd",
+						help="Plots observed intensities and esds for given xye file (exepcts 3 column data).")
 
 	group_adv.add_argument("--savefig",
 						action="store", type=str, nargs='?', dest="savefig", const='figure1.png',
 						help="Saves figure as png instead of displaying it")
+
+	group_adv.add_argument("--fixsls",
+						action="store_true", dest='fixsls',
+						help="Fix SLS data sets and exit")
 
 
 	
@@ -1703,7 +1821,10 @@ if __name__ == '__main__':
 						smooth = False,
 						peakdetect = False,
 						corrmat = None,
-						savefig = False) 
+						savefig = False,
+						plot_esd = False,
+						fixsls = False,
+						ipython = True) 
 	
 	options = parser.parse_args()
 	args = options.args
