@@ -12,7 +12,12 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
 
-from scipy.interpolate import interp1d
+try:
+	from scipy.interpolate import interp1d
+except ImportError:
+	print 'Scipy not found, interpolation will crash the program.'
+	print 'www.scipy.org'
+	print
 
 import math
 
@@ -23,7 +28,7 @@ except ImportError:
 	pass
 
 
-__version__ = '27-05-2013'
+__version__ = '30-05-2013'
 
 
 params = {'legend.fontsize': 10,
@@ -309,7 +314,7 @@ def plot_stdin(fig,update_time=0.2):
 				break
 
 
-def f_monitor(fn,f_init,f_update,fig=None,poll_time=0.05):
+def f_monitor(fin,f_init,f_update,fig=None,poll_time=0.05):
 	"""experimental function for live monitoring of plots"""
 	import time
 
@@ -320,15 +325,15 @@ def f_monitor(fn,f_init,f_update,fig=None,poll_time=0.05):
 	
 	ax = fig.add_subplot(111)
 
-	args = f_init(fn,fig,ax)
+	args = f_init(fin,fig,ax)
 
 	plt.legend()
 	fig.show()
 
-	current_lastmod = os.stat(fn).st_mtime
+	current_lastmod = os.stat(fin).st_mtime
 
 	while True:
-		if os.stat(fn).st_mtime == current_lastmod:
+		if os.stat(fin).st_mtime == current_lastmod:
 			# flushing here as well, to prevent locking up of mpl window			
 			
 			try:
@@ -346,10 +351,10 @@ def f_monitor(fn,f_init,f_update,fig=None,poll_time=0.05):
 				break
 
 		else:
-			print 'Updated:', time.ctime(os.stat(fn).st_mtime)
-			current_lastmod = os.stat(fn).st_mtime
+			print 'Updated: {} -'.format(fin), time.ctime(os.stat(fin).st_mtime)
+			current_lastmod = os.stat(fin).st_mtime
 
-			args = f_update(fn,*args)
+			args = f_update(fin,*args)
 
 			#ax.relim()
 			#ax.autoscale()	# resets the boundaries -> annoying for a plot that doesn't need rescaling
@@ -359,20 +364,20 @@ def f_monitor(fn,f_init,f_update,fig=None,poll_time=0.05):
 			fig.canvas.flush_events()
 		
 
-def plot_init(fn,fig,ax):
-	f = read_file(fn)
+def plot_init(fin,fig,ax):
+	f = read_file(fin)
 	d = read_data(f)
 	f.close()
 
-	line, = ax.plot(d.x,d.y,label=fn)
+	line, = ax.plot(d.x,d.y,label=fin)
 
 	return [line]
 
 
-def plot_update(fn,*args):
+def plot_update(fin,*args):
 	[line] = args
 
-	f = read_file(fn)
+	f = read_file(fin)
 	d = read_data(f)
 	f.close()
 
@@ -381,7 +386,7 @@ def plot_update(fn,*args):
 	return [line]
 
 
-def crplot_init(fn,fig,ax):
+def crplot_init(fin,fig,ax):
 
 	fcr = open('crplot.dat','r')
 	fhkl = open('hkl.dat','r')
@@ -416,7 +421,7 @@ def crplot_init(fn,fig,ax):
 	return args
 
 
-def crplot_update(fn,*args):
+def crplot_update(fin,*args):
 	pobs, pclc, pdif, pobs_zero, pdif_zero, ptcks = args
 
 	fcr = open('crplot.dat','r')
@@ -482,6 +487,71 @@ def f_crplo():
 		hkldata = np.array(parse_hkl_dat(fhkl))
 		tck = hkldata[:,3]
 		plt.plot(tck,np.zeros(tck.size) - (mx_dif / 4), linestyle='', marker='|', markersize=10, label = 'ticks', c='purple')
+
+
+
+def f_prf(fin):
+	fin = open(fin,'r')
+
+	for i in range(6):
+		fin.next()
+
+	tt,fobs,fcal,diff = np.genfromtxt(fin,usecols=(0,1,2,3),unpack=True)
+
+	mx_diff = max(diff)
+	mx_pat  = max(max(fobs),max(fcal))
+	
+	plt.plot(tt, fobs, label = 'observed')
+	plt.plot(tt, fcal, label = 'calculated')
+	plt.plot(tt, diff-mx_diff, label = 'difference')
+
+	plt.plot(tt, np.zeros(tt.size), c='black')
+	plt.plot(tt, np.zeros(tt.size) + (diff[0] - mx_diff), c='black')
+
+def f_prf_init(fin,fig,ax):
+	fin = open(fin,'r')
+
+	for i in range(6):
+		fin.next()
+
+	tt,fobs,fcal,diff = np.genfromtxt(fin,usecols=(0,1,2,3),unpack=True)
+
+	mx_diff = max(diff)
+	mx_pat  = max(max(fobs),max(fcal))
+	
+	pfobs, = ax.plot(tt, fobs, label = 'observed')
+	pfcal, = ax.plot(tt, fcal, label = 'calculated')
+	pdiff, = ax.plot(tt, diff-mx_diff, label = 'difference')
+
+	pzero_fobs, = ax.plot(tt, np.zeros(tt.size), c='black')
+	pzero_diff, = ax.plot(tt, np.zeros(tt.size) + (diff[0] - mx_diff), c='black')
+	
+	args = [pfobs,pfcal,pdiff,pzero_fobs,pzero_diff]
+	return args
+
+def f_prf_update(fin,*args):
+	pfobs,pfcal,pdiff,pzero_fobs,pzero_diff = args
+
+	fin = open(fin,'r')
+
+	for i in range(6):
+		fin.next()
+	
+	tt,fobs,fcal,diff = np.genfromtxt(fin,usecols=(0,1,2,3),unpack=True)
+
+	mx_diff = max(diff)
+	mx_pat  = max(max(fobs),max(fcal))
+
+	pfobs.set_data(tt, fobs)
+	pfcal.set_data(tt, fcal)
+	pdiff.set_data(tt, diff-mx_diff)
+	pzero_fobs.set_data(tt, np.zeros(tt.size))
+	pzero_diff.set_data(tt, np.zeros(tt.size) + (diff[0] - mx_diff))
+
+	args = [pfobs,pfcal,pdiff,pzero_fobs,pzero_diff]
+	return args
+
+
 
 
 def f_plot_stepco_special(bg_xy):
@@ -1469,15 +1539,13 @@ def find_nearest(array,value):
 
 
 def main(options,args):
-	files = args
+
+	prf = [arg for arg in args if arg.endswith('.prf')]
+	for fn in prf:
+		args.remove(fn)
+		
 	data = [read_data(fn,savenpy=options.savenpy) for fn in args] # returns data objects
 	
-	if options.ipython:
-		from IPython.frontend.terminal.embed import InteractiveShellEmbed
-		ipshell = InteractiveShellEmbed(banner1='')
-	else:
-		ipshell = lambda x:None
-
 	if options.plot_esd:
 		data.extend([read_data(fn,usecols=(0,2),suffix=' esd') for fn in args])
 
@@ -1547,9 +1615,12 @@ def main(options,args):
 
 
 
-
 	if options.crplo:
 		f_crplo()
+
+	if prf:	# fullprof profile files
+		for fn in prf:
+			f_prf(fn)
 
 	if options.compare:
 		if options.compare_reference:
@@ -1628,6 +1699,9 @@ def main(options,args):
 	elif options.monitor:
 		if options.monitor in ('crplot.dat','crplot'):
 			f_monitor('crplot.dat',crplot_init,crplot_update,fig=fig)
+		elif options.monitor.endswith('.prf'):
+			f_monitor(options.monitor,f_prf_init,f_prf_update,fig=fig)
+
 		else:
 			fn = options.monitor
 			f_monitor(fn,plot_init,plot_update,fig=fig)
@@ -1824,7 +1898,7 @@ if __name__ == '__main__':
 						savefig = False,
 						plot_esd = False,
 						fixsls = False,
-						ipython = True) 
+						ipython = False) 
 	
 	options = parser.parse_args()
 	args = options.args
