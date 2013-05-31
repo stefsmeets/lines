@@ -28,7 +28,7 @@ except ImportError:
 	pass
 
 
-__version__ = '30-05-2013'
+__version__ = '31-05-2013'
 
 
 params = {'legend.fontsize': 10,
@@ -325,7 +325,13 @@ def f_monitor(fin,f_init,f_update,fig=None,poll_time=0.05):
 	
 	ax = fig.add_subplot(111)
 
-	args = f_init(fin,fig,ax)
+	while True:
+		try:
+			args = f_init(fin,fig,ax)
+		except IOError:
+			time.sleep(1)
+		else:
+			break
 
 	plt.legend()
 	fig.show()
@@ -333,7 +339,13 @@ def f_monitor(fin,f_init,f_update,fig=None,poll_time=0.05):
 	current_lastmod = os.stat(fin).st_mtime
 
 	while True:
-		if os.stat(fin).st_mtime == current_lastmod:
+		try:
+			mtime = os.stat(fin).st_mtime
+		except OSError:
+			time.sleep(1)
+			continue
+
+		if mtime == current_lastmod:
 			# flushing here as well, to prevent locking up of mpl window			
 			
 			try:
@@ -353,7 +365,7 @@ def f_monitor(fin,f_init,f_update,fig=None,poll_time=0.05):
 		else:
 			print 'Updated: {} -'.format(fin), time.ctime(os.stat(fin).st_mtime)
 			current_lastmod = os.stat(fin).st_mtime
-
+			time.sleep(0.2)
 			args = f_update(fin,*args)
 
 			#ax.relim()
@@ -365,25 +377,38 @@ def f_monitor(fin,f_init,f_update,fig=None,poll_time=0.05):
 		
 
 def plot_init(fin,fig,ax):
-	f = read_file(fin)
-	d = read_data(f)
-	f.close()
+	#f = read_file(fin)
+	d = read_data(fin)
 
-	line, = ax.plot(d.x,d.y,label=fin)
-
-	return [line]
+	if fin == 'fcfo.out':
+		ipshell()
+		line,  = ax.plot(d.x,d.y,'o',label='Fcalc vs Fobs',color='r',linestyle='')
+		diag, =  ax.plot([0, max(d.x)], [0, max(d.y)], color='b', linestyle='-', linewidth=2)
+		return [line,diag]
+	else:
+		line, = ax.plot(d.x,d.y,label=fin)
+		return [line]
 
 
 def plot_update(fin,*args):
-	[line] = args
+	#f = read_file(fin)
+	d = read_data(fin)
 
-	f = read_file(fin)
-	d = read_data(f)
-	f.close()
+	if fin == 'fcfo.out':
+		ax.set_xlabel('Fobs')
+		ax.set_ylabel('Fcalc')
+		[line,diag] = args
+		line.set_data(d.x,d.y)
+		diag.set_data([0, max(d.x)], [0, max(d.y)])
+		return [line,diag]
+	else:
+		[line] = args
+		line.set_data(d.x,d.y)
+		return [line]
 
-	line.set_data(d.x,d.y)
 
-	return [line]
+
+
 
 
 def crplot_init(fin,fig,ax):
@@ -1772,7 +1797,7 @@ if __name__ == '__main__':
 
 	parser.add_argument("-m", "--monitor", metavar='FILE',
 						action="store", type=str, dest="monitor",
-						help="Monitor specified file and replots if the file is updates. First 2 columns are plotted. Special value: crplot.dat")
+						help="Monitor specified file and replots if the file is updates. First 2 columns are plotted. Supports .prf files from FullProf. Special value: crplot.dat")
 
 	parser.add_argument("--topasbg",
 						action="store_true", dest="topas_bg",
