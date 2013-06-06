@@ -28,7 +28,7 @@ except ImportError:
 	pass
 
 
-__version__ = '31-05-2013'
+__version__ = '06-06-2013'
 
 
 params = {'legend.fontsize': 10,
@@ -381,9 +381,10 @@ def plot_init(fin,fig,ax):
 	d = read_data(fin)
 
 	if fin == 'fcfo.out':
-		ipshell()
+		ax.set_xlabel('Fobs')
+		ax.set_ylabel('Fcalc')
 		line,  = ax.plot(d.x,d.y,'o',label='Fcalc vs Fobs',color='r',linestyle='')
-		diag, =  ax.plot([0, max(d.x)], [0, max(d.y)], color='b', linestyle='-', linewidth=2)
+		diag, =  ax.plot([0, 25], [0, 25], color='b', linestyle='-', linewidth=2)
 		return [line,diag]
 	else:
 		line, = ax.plot(d.x,d.y,label=fin)
@@ -395,11 +396,9 @@ def plot_update(fin,*args):
 	d = read_data(fin)
 
 	if fin == 'fcfo.out':
-		ax.set_xlabel('Fobs')
-		ax.set_ylabel('Fcalc')
 		[line,diag] = args
 		line.set_data(d.x,d.y)
-		diag.set_data([0, max(d.x)], [0, max(d.y)])
+		diag.set_data([0, 25], [0, 25])
 		return [line,diag]
 	else:
 		[line] = args
@@ -623,6 +622,8 @@ def f_bg_correct_out(d,bg_xy,offset='ask'):
 		
 	xvals = d.x
 	yvals = d.y
+	if d.has_esd:
+		esds = d.err
 	
 	bg_yvals = interpolate(bg_xy,xvals,kind=options.bg_correct)
 	
@@ -645,7 +646,10 @@ def f_bg_correct_out(d,bg_xy,offset='ask'):
 		for x,y in zip(xvals,yvals-bg_yvals+offset):
 			if np.isnan(y): 
 				continue
-			print >> out_corr, '%15.6f%15.2f' % (x,y)
+			if d.has_esds:
+				print >> out_corr, '%15.6f%15.2f%15.6f' % (x,y,err)
+			else:
+				print >> out_corr, '%15.6f%15.2f' % (x,y)
 	else:
 		raise IndexError, 'Not enough values in background array, need at least 4 points.'
 
@@ -1053,7 +1057,6 @@ class Background():
 		self.line.figure.canvas.draw()
 
 
-		print self.npick, len(self.xy.T)
 		if len(self.xy.T) == self.npick:
 			print '\nClosing window...'
 			import time
@@ -1629,7 +1632,7 @@ def main(options,args):
 		if ticks:
 			lines.plot_tick_marks(ticks)
 
-	if options.quiet or options.fixsls:
+	if options.quiet or options.fixsls or options.monitor:
 		pass
 	elif options.bg_correct:
 		if not bg_data:
@@ -1740,8 +1743,8 @@ def main(options,args):
 
 
 	if options.bg_correct:
-		f_bg_correct_out(d=data[0],bg_xy=bg.xy.T,offset=options.bg_offset)
-	
+		for d in data:
+			f_bg_correct_out(d=d,bg_xy=bg.xy.T,offset=options.bg_offset)
 	try:
 		if bg.xy.any():
 			bg.printdata(fout=open('lines.out','w'))
