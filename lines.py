@@ -28,7 +28,7 @@ except ImportError:
 	pass
 
 
-__version__ = '06-06-2013'
+__version__ = '07-06-2013'
 
 
 params = {'legend.fontsize': 10,
@@ -622,8 +622,6 @@ def f_bg_correct_out(d,bg_xy,offset='ask'):
 		
 	xvals = d.x
 	yvals = d.y
-	if d.has_esd:
-		esds = d.err
 	
 	bg_yvals = interpolate(bg_xy,xvals,kind=options.bg_correct)
 	
@@ -643,12 +641,18 @@ def f_bg_correct_out(d,bg_xy,offset='ask'):
 				continue
 			print >> out_bg, '%15.6f%15.2f' % (x,y)
 		print 'Writing corrected pattern to %s' % fn_corr
-		for x,y in zip(xvals,yvals-bg_yvals+offset):
-			if np.isnan(y): 
-				continue
-			if d.has_esds:
-				print >> out_corr, '%15.6f%15.2f%15.6f' % (x,y,err)
-			else:
+				
+		if d.has_esd:
+			err = d.err
+
+			for x,y,e in zip(xvals,yvals-bg_yvals+offset,err):
+				if np.isnan(y): 
+					continue
+				print >> out_corr, '%15.6f%15.2f%15.6f' % (x,y,e)
+		else:
+			for x,y in zip(xvals,yvals-bg_yvals+offset):
+				if np.isnan(y): 
+					continue
 				print >> out_corr, '%15.6f%15.2f' % (x,y)
 	else:
 		raise IndexError, 'Not enough values in background array, need at least 4 points.'
@@ -1757,6 +1761,7 @@ if __name__ == '__main__':
 
 	description = """Notes:
 - Requires numpy and matplotlib for plotting.
+- Scipy is needed for some interpolation functions.
 """	
 	
 	epilog = 'Updated: {}'.format(__version__)
