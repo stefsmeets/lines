@@ -28,7 +28,7 @@ except ImportError:
 	pass
 
 
-__version__ = '07-06-2013'
+__version__ = '21-06-2013'
 
 
 params = {'legend.fontsize': 10,
@@ -376,26 +376,34 @@ def f_monitor(fin,f_init,f_update,fig=None,poll_time=0.05):
 			fig.canvas.flush_events()
 		
 
-def plot_init(fin,fig,ax):
-	#f = read_file(fin)
-	d = read_data(fin)
+def plot_init(fn,fig,ax):
+	#f = read_file(fn)
+	d = read_data(fn)
 
-	if fin == 'fcfo.out':
-		ax.set_xlabel('Fobs')
-		ax.set_ylabel('Fcalc')
-		line,  = ax.plot(d.x,d.y,'o',label='Fcalc vs Fobs',color='r',linestyle='')
+	if fn in ('fcalc_fou.xy', 'fobs_fou.xy','fcfo.out'):
+		try:
+			root,ext = os.path.splitext(fn)
+			xl,yl = root.split('_')
+		except ValueError:
+			xl = 'Fobs'
+			yl = 'Fcalc'
+
+		ax.set_xlabel(xl)
+		ax.set_ylabel(yl)
+		ax.set_title(fn)
+		line,  = ax.plot(d.x,d.y,'o',label='{} vs {}'.format(xl,yl),color='r',linestyle='')
 		diag, =  ax.plot([0, 25], [0, 25], color='b', linestyle='-', linewidth=2)
 		return [line,diag]
 	else:
-		line, = ax.plot(d.x,d.y,label=fin)
+		line, = ax.plot(d.x,d.y,label=fn)
 		return [line]
 
 
-def plot_update(fin,*args):
-	#f = read_file(fin)
-	d = read_data(fin)
+def plot_update(fn,*args):
+	#f = read_file(fn)
+	d = read_data(fn)
 
-	if fin == 'fcfo.out':
+	if fn in ('fcalc_fou.xy', 'fobs_fou.xy','fcfo.out'):
 		[line,diag] = args
 		line.set_data(d.x,d.y)
 		diag.set_data([0, 25], [0, 25])
@@ -593,16 +601,16 @@ def f_plot_stepco_special(bg_xy):
 		
 		plt.plot(tt, bg_interpolate + dif, label = 'bg + diff')
 
-def f_plot_topas_special(xyobs,xycalc,xydiff,xybg):
+def f_plot_topas_special(xyobs,xycalc,xydiff,xybg,lw=1.0):
 	tt = xyobs.x
 
 	bg_interpolate = interpolate(xybg.xy,tt,kind='linear')
 
-	plt.plot(tt, xycalc.y + bg_interpolate, label='ycalc')
+	plt.plot(tt, xycalc.y + bg_interpolate, label='ycalc',lw=lw)
 	#plt.plot(tt, xyobs.y  + bg_interpolate, label='yobs')
 	
-	plt.plot(tt, bg_interpolate + xydiff.y, label='bg + diff')
-	plt.plot(tt, bg_interpolate, label='bg')
+	plt.plot(tt, bg_interpolate + xydiff.y, label='bg + diff',lw=lw)
+	plt.plot(tt, bg_interpolate, label='bg',lw=lw)
 
 
 
@@ -891,7 +899,7 @@ class Data(object):
 			if self.has_esd:
 				w = 1/self.err**2   # weights
 			else:
-				w = 1/self.y		# weights = y^-1 if no esds
+				w = 1/(self.y+1)		# weights = y^-1 if no esds
 			print '       R_exp: {:.3f}%'.format(100 * ((n) / np.sum(w*self.y**2))**0.5)
 
 	def bin(self,binsize=0.01):
@@ -1698,7 +1706,7 @@ def main(options,args):
 			"""
 			exit(0)
 
-		f_plot_topas_special(xyobs,xycalc,xydiff,bg_data)
+		f_plot_topas_special(xyobs,xycalc,xydiff,bg_data,lw=options.linewidth)
 
 
 	if options.stepco:
@@ -1747,8 +1755,11 @@ def main(options,args):
 
 
 	if options.bg_correct:
-		for d in data:
-			f_bg_correct_out(d=d,bg_xy=bg.xy.T,offset=options.bg_offset)
+		#for d in data:
+		#	f_bg_correct_out(d=d,bg_xy=bg.xy.T,offset=options.bg_offset)
+	
+		f_bg_correct_out(d=data[0],bg_xy=bg.xy.T,offset=options.bg_offset)
+	
 	try:
 		if bg.xy.any():
 			bg.printdata(fout=open('lines.out','w'))
