@@ -28,7 +28,7 @@ except ImportError:
 	pass
 
 
-__version__ = '21-06-2013'
+__version__ = '30-07-2013'
 
 
 params = {'legend.fontsize': 10,
@@ -1578,12 +1578,135 @@ def find_nearest(array,value):
 	return idx
 
 
+
+
+def plot_reciprocal_space(fnobs, fncalc=None, orthogonal_view=True):
+	from mpl_toolkits.mplot3d import Axes3D
+
+	if orthogonal_view == True:
+		from mpl_toolkits.mplot3d import proj3d
+	
+		def orthogonal_proj(zfront, zback):
+			a = (zfront+zback)/(zfront-zback)
+			b = -2*(zfront*zback)/(zfront-zback)
+			return np.array([[1,0,0,0],
+							[0,1,0,0],
+							[0,0,a,b],
+							[0,0,0,zback]])
+	
+		print " >> Orthogonal view at least breaks automatic placement of axis labels."
+		proj3d.persp_transformation = orthogonal_proj
+
+	def onkeypress(event):
+		if event.key == 'x':
+			ax.view_init(0,0)
+			plt.draw()
+		if event.key == 'y':
+			ax.view_init(0,-90)
+			plt.draw()
+		if event.key == 'z':
+			ax.view_init(90,-90)
+			plt.draw()
+
+	if fncalc:
+		if not isinstance(fncalc,str):
+			raise TypeError
+		calc = np.loadtxt(fncalc)
+		calc = set([tuple(map(int,row[0:3])) for row in calc])
+	
+	if isinstance(fnobs,str):
+		fnobs = [fnobs]
+	
+	try:
+		obs = [np.loadtxt(fn) for fn in fnobs] 
+	except ValueError:
+		obs = [np.genfromtxt(fn,delimiter=[4,4,4,8,8]) for fn in fnobs]
+	obs  = [set([tuple(map(int,row[0:3])) for row in data]) for data in obs]
+
+
+	fig = plt.figure()
+	ax = fig.add_subplot(111, projection='3d')
+	ax.set_xlabel('h')
+	ax.set_ylabel('k')
+	ax.set_zlabel('l')
+	fig.canvas.mpl_connect('key_press_event', onkeypress)
+	print ' >> Press x,y,z to align view along specified axis.'
+
+	for i,data in enumerate(obs):
+		if fncalc:
+			diff = calc - data
+			absent = data - calc
+			data = data & calc
+
+		label = fnobs[i]
+
+		h,k,l = zip(*data)
+		ax.plot(h,k,l,'b.',label = label+' observed', ms=2.50)
+
+		# # Feeble attempt at getting heatmaps to work
+		# hhm,hxe,hye = np.histogram2d(k,l,bins=50)
+		# khm,kxe,kye = np.histogram2d(l,h,bins=50)
+		# lhm,lxe,lye = np.histogram2d(h,k,bins=50)
+
+		# hm = np.meshgrid(hxe,hye)
+		# km = np.meshgrid(kxe,kye)
+		# lm = np.meshgrid(lxe,lye)
+
+		# ax.contour(hm[0],hm[1],hhm, zdir='x',offset=min(h))
+		# ax.contour(km[0],km[1],khm, zdir='y',offset=min(k))
+		# ax.contour(lm[0],lm[1],lhm, zdir='z',offset=min(l))
+
+		if fncalc:
+			h,k,l = zip(*diff)
+			ax.plot(h,k,l,'ro',label = label+' missing',mfc='None',mec='red')
+			if len(absent) > 0:
+				h,k,l = zip(*absent) 
+				ax.plot(h,k,l,'r+',label = label+' sys. absent')
+				# ax.plot(h,k,l,'b.',label = label+' observed', ms=2.50)
+			else:
+				print ' >> 0 systematic absences'
+	plt.legend()
+	plt.show()
+
+
+# fig = plt.figure(figsize=(8,6))
+
+# ax = fig.add_subplot(1,1,1, projection='3d')
+
+# ax.plot_surface(X, Y, Z, rstride=4, cstride=4, alpha=0.25)
+# cset = ax.contour(X, Y, Z, zdir='z', offset=-pi, cmap=cm.coolwarm)
+# cset = ax.contour(X, Y, Z, zdir='x', offset=-pi, cmap=cm.coolwarm)
+# cset = ax.contour(X, Y, Z, zdir='y', offset=3*pi, cmap=cm.coolwarm)
+
+# ax.set_xlim3d(-pi, 2*pi);
+# ax.set_ylim3d(0, 3*pi);
+# ax.set_zlim3d(-pi, 2*pi);
+
+
 def main(options,args):
 
 	prf = [arg for arg in args if arg.endswith('.prf')]
 	for fn in prf:
 		args.remove(fn)
+	
+
+
+	if options.rec3d:
+		print options.rec3d, type(options.rec3d)
+		if options.rec3d == 'args':
+			plot_reciprocal_space(fnobs = args, fncalc = None)
+		elif len(options.rec3d) == 1:
+			plot_reciprocal_space(fnobs = options.rec3d[0], fncalc = None)
+		elif len(options.rec3d) == 2:
+			plot_reciprocal_space(fnobs = options.rec3d[0], fncalc = options.rec3d[1])
+
+		else:
+			raise ValueError
+		exit()
 		
+		
+	
+
 	data = [read_data(fn,savenpy=options.savenpy) for fn in args] # returns data objects
 	
 	if options.plot_esd:
@@ -1910,6 +2033,10 @@ if __name__ == '__main__':
 						action="store_true", dest='fixsls',
 						help="Fix SLS data sets and exit")
 
+	group_adv.add_argument("--rec3d",
+						action="store", type=str, nargs='*', dest='rec3d',
+						help="Plot the first 3 columns (h k l) of given file in 3d. If no filenames are given, 'args' are taken. If 2 files are given, the first should be the observed ones and the second should be the calculated ones.")
+
 
 	
 	parser.set_defaults(backgrounder = True,
@@ -1942,6 +2069,7 @@ if __name__ == '__main__':
 						savefig = False,
 						plot_esd = False,
 						fixsls = False,
+						rec3d = None,
 						ipython = False) 
 	
 	options = parser.parse_args()
