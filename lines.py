@@ -22,13 +22,13 @@ except ImportError:
 import math
 
 try:
-	from IPython.frontend.terminal.embed import InteractiveShellEmbed
+	from IPython.terminal.embed import InteractiveShellEmbed
 	ipshell = InteractiveShellEmbed(banner1='')
 except ImportError:
 	pass
 
 
-__version__ = '30-07-2013'
+__version__ = '16-09-2013'
 
 
 params = {'legend.fontsize': 10,
@@ -937,6 +937,8 @@ class Data(object):
 	def smooth(self,window='savitzky_golay',window_len=7,order=3):
 		assert window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman','savitzky_golay', 'moving_avg']
 
+		print ' >> Applying filter: {}, window: {}, order {} (SG only) to {}'.format(window,window_len,order,self.filename)
+
 		if window == 'savitzky_golay':
 			y = savitzky_golay(self.y,window_size=window_len,order=order)
 		else:
@@ -1184,6 +1186,7 @@ class Lines(object):
 
 		if self.normalize:
 			scale = np.trapz(data.y,data.x)
+			print ' >> Scaling {} by 1/{:.5f}'.format(data.filename,scale)
 			data.y = data.y / scale
 			# print scale
 		
@@ -1704,11 +1707,16 @@ def main(options,args):
 			raise ValueError
 		exit()
 		
-		
-	
-
 	data = [read_data(fn,savenpy=options.savenpy) for fn in args] # returns data objects
-	
+
+	if options.capillary:
+		capillary = read_data(options.capillary)
+		smoothed = capillary.smooth(window='hanning',window_len=101)
+		for d in data:
+			print ' >> Removing contribution of {} from {}'.format(options.capillary,d.filename)
+			f_bg_correct_out(d,smoothed.xy,offset=0)
+		exit()
+
 	if options.plot_esd:
 		data.extend([read_data(fn,usecols=(0,2),suffix=' esd') for fn in args])
 
@@ -2037,6 +2045,10 @@ if __name__ == '__main__':
 						action="store", type=str, nargs='*', dest='rec3d',
 						help="Plot the first 3 columns (h k l) of given file in 3d. If no filenames are given, 'args' are taken. If 2 files are given, the first should be the observed ones and the second should be the calculated ones.")
 
+	group_adv.add_argument("--capillary",
+						action="store", type=str, dest='capillary',
+						help="Give capillary file to be subsstracted from the pattern.")
+
 
 	
 	parser.set_defaults(backgrounder = True,
@@ -2070,7 +2082,8 @@ if __name__ == '__main__':
 						plot_esd = False,
 						fixsls = False,
 						rec3d = None,
-						ipython = False) 
+						ipython = False,
+						capillary = None) 
 	
 	options = parser.parse_args()
 	args = options.args
