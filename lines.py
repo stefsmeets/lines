@@ -617,14 +617,14 @@ def f_plot_topas_special(xyobs,xycalc,xydiff,xybg,lw=1.0):
 
 
 
-def f_bg_correct_out(d,bg_xy,offset='ask'):
+def f_bg_correct_out(d,bg_xy,offset='ask',suffix_bg='_bg',suffix_corr='_corr'):
 	root,ext = os.path.splitext(d.filename)
-	fn_bg = root+'_bg'+ext
-	fn_corr = root+'_corr'+ext
+	fn_bg   = root+suffix_bg+ext
+	fn_corr = root+suffix_corr+ext
 
+	#fn_bg   = d.filename.replace('.','_bg.')
+	#fn_corr = d.filename.replace('.','_corr.')
 
-	fn_bg   = d.filename.replace('.','_bg.')
-	fn_corr = d.filename.replace('.','_corr.')
 	out_bg   = open(fn_bg,'w')
 	out_corr = open(fn_corr,'w')
 		
@@ -934,7 +934,7 @@ class Data(object):
 		else:
 			return Data(np.hstack((xbinned,ybinned)),name=name)
 
-	def smooth(self,window='savitzky_golay',window_len=7,order=3):
+	def smooth(self,window='savitzky_golay',window_len=7,order=3,suffix='_smooth'):
 		assert window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman','savitzky_golay', 'moving_avg']
 
 		print ' >> Applying filter: {}, window: {}, order {} (SG only) to {}'.format(window,window_len,order,self.filename)
@@ -945,7 +945,7 @@ class Data(object):
 			y = smooth(self.y,window_len=window_len,window=window)
 
 		root,ext = os.path.splitext(self.filename)
-		name = root+'_smooth'+ext
+		name = root+suffix+ext
 		
 		x = np.copy(self.x)
 
@@ -1714,7 +1714,7 @@ def main(options,args):
 		smoothed = capillary.smooth(window='hanning',window_len=101)
 		for d in data:
 			print ' >> Removing contribution of {} from {}'.format(options.capillary,d.filename)
-			f_bg_correct_out(d,smoothed.xy,offset=0)
+			f_bg_correct_out(d,smoothed.xy,offset=0,suffix_corr='_rem_cap')
 		exit()
 
 	if options.plot_esd:
@@ -1922,7 +1922,7 @@ if __name__ == '__main__':
 		
 	parser.add_argument("-s", "--shift",
 						action="store_false", dest="nomove",
-						help="Slightly shift different plots to make them more visible.")
+						help="Slightly shift different plots to make them more visible (useful to make a waterfall plot).")
 
 	parser.add_argument("-i","--bgin",
 						action="store", type=str, dest="bg_input",
