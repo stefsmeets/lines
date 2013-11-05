@@ -28,13 +28,24 @@ except ImportError:
 	pass
 
 
-__version__ = '16-09-2013'
+__version__ = '05-11-2013'
 
 
 params = {'legend.fontsize': 10,
 		  'legend.labelspacing': 0.1}
 plt.rcParams.update(params)
 
+
+planck_constant   = 6.62606957E-34
+elementary_charge = 1.60217656E-19
+speed_of_light    = 2.99792458E8
+
+
+
+def lineno():
+	"""Returns the current line number in our program."""
+	import inspect
+	return inspect.currentframe().f_back.f_lineno
 
 def printer(data):
 	"""Print things to stdout on one line dynamically"""
@@ -954,6 +965,17 @@ class Data(object):
 
 		return Data(np.hstack((x,y)),name=name)
 
+	def convert_wavelength(self,wavelength_in,wavelength_out):
+		"""Converts 2theta values to a different wavelength"""
+		print
+		print " ** Convert {} from {:.4f} ANG ({:.2f} keV) to {:.4f} ANG ({:.2f} keV)".format(self.filename, wavelength_in, wavelength2energy(wavelength_in), wavelength_out, wavelength2energy(wavelength_out))
+		print
+		d = twotheta2d(self.x,wavelength_in)
+		theta2 = d2twotheta(d,wavelength_out)
+		arr = self.arr
+		arr[:,0] = theta2
+		return Data(arr,name=self.filename)
+
 
 	def print_pattern(self,name=None,tag=""):
 		"""print self (x,y,e) to 3 column file. If no name is given, original file is overwritten.
@@ -1175,9 +1197,11 @@ class Lines(object):
 		"""General data point picker, should work for all kinds of plots?"""
 		pass
 
-	def plot(self,data):
+	def plot(self,data,lw=None):
 		n = data.index
-		lw = self.linewidth
+
+		if not lw:
+			lw = self.linewidth
 
 		#colour = 'bgrcmyk'[n%7]
 
@@ -1189,7 +1213,11 @@ class Lines(object):
 			print ' >> Scaling {} by 1/{:.5f}'.format(data.filename,scale)
 			data.y = data.y / scale
 			# print scale
-		
+		#elif 'x_ycalc_no_sda.xy' in data.filename or 'ssz61_am_corr.xye' in data.filename:
+		#	scale = 500
+		#	print ' >> Arbitrarily scaling {} {:.5f}  [ hardcoded, line {}: lines.plot() ]'.format(data.filename,scale,lineno())
+		#	data.y = data.y * scale
+
 		#scl = 1
 		#if 'esd' in data.filename:
 		#	scl = 20
@@ -1209,17 +1237,17 @@ class Lines(object):
 
 			ax.axis([data.x.min(),data.x.max()*1.2,data.y.min(),data.y.max()*1.2])
 
-	def plot_tick_marks(self,data):
+	def plot_tick_marks(self,data,i=0):
 		ax = self.ax
 
 		label = data.filename
 
-		dx, dy = 0, -16/72.
+		dx, dy = 0, -16*(i+1)/72.0
 
 		offset = transforms.ScaledTranslation(dx, dy, self.fig.dpi_scale_trans)
 		transform = ax.transData + offset
 
-		ax.plot(data.x,data.y,transform=transform,c='black',label=label,linestyle='',marker='|',markersize=10)
+		ax.plot(data.x,data.y,transform=transform,c='black',label=label,linestyle='',marker='|',markersize=15)
 		#plt.plot(tck,np.zeros(tck.size) - (mx_dif / 4), linestyle='', marker='|', markersize=10, label = 'ticks', c='purple')
 
 	def plot_ticks_scaled(self,data):
@@ -1434,6 +1462,16 @@ def f_compare(data,kind=0,reference=None):
 	import scipy.stats
 	import operator
 
+	def calc_combined_value(spearmanr,kendallr,pearsonr):
+		spearmanr = spearmanr if not np.isnan(spearmanr) else 1.0
+		kendallr  = kendallr  if not np.isnan(kendallr ) else 1.0
+		pearsonr  = pearsonr  if not np.isnan(pearsonr ) else 1.0
+
+		return pearsonr**(1/3.0)*kendallr**(1/3.0)*spearmanr**(1/3.0)
+
+
+
+
 	start,stop,step = 2,25.00,0.01 # parameters used for calculated pattern
 	
 	min_tt = 0		# boundary for check
@@ -1487,7 +1525,7 @@ def f_compare(data,kind=0,reference=None):
 			#if pearsonp > 0.01 or kendallp > 0.01 or spearmanp > 0.01:
 			#	continue
 			
-			combined = pearsonr**(1/3.0)*kendallr**(1/3.0)*spearmanr**(1/3.0)
+			combined = calc_combined_value(pearsonr,kendallr,spearmanr)
 	
 			lst.append((combined,spearmanr,kendallr,pearsonr,spearmanp,kendallp,pearsonp,shift*step,names))
 
@@ -1580,8 +1618,24 @@ def find_nearest(array,value):
 	idx = (np.abs(array-value)).argmin()
 	return idx
 
+def twotheta2d(twotheta,wavelength):
+	theta = np.radians(twotheta / 2)
+	d = wavelength / (2*np.sin(theta))
+	return d
 
+def d2twotheta(d,wavelength):
+	theta = np.degrees(np.arcsin((wavelength) / (2*d)))
+	return 2*theta
 
+def wavelength2energy(wl):
+	"""Takes wavelength in Angstrom, returns energy in keV"""
+	# 1E3 from ev to kev, divide by 1E10 from angstrom to meter
+	return 1E10*planck_constant*speed_of_light/(wl*1E3*elementary_charge)
+
+def energy2wavelength(E):
+	"""Takes wavelength in keV, returns energy in Angstrom"""
+	# 1E3 from ev to kev, divide by 1E10 from angstrom to meter
+	return 1E10*planck_constant*speed_of_light/(E*1E3*elementary_charge)
 
 def plot_reciprocal_space(fnobs, fncalc=None, orthogonal_view=True):
 	from mpl_toolkits.mplot3d import Axes3D
@@ -1687,12 +1741,15 @@ def plot_reciprocal_space(fnobs, fncalc=None, orthogonal_view=True):
 
 
 def main(options,args):
-
-	prf = [arg for arg in args if arg.endswith('.prf')]
-	for fn in prf:
-		args.remove(fn)
-	
-
+	if options.guess_filetype:
+		prf = [arg for arg in args if arg.endswith('.prf')]
+		for fn in prf:
+			args.remove(fn)
+		spc = [arg for arg in args if '.spc' in arg]
+		for fn in spc:
+			args.remove(fn)
+	else:
+		prf,spc = None,None
 
 	if options.rec3d:
 		print options.rec3d, type(options.rec3d)
@@ -1706,8 +1763,17 @@ def main(options,args):
 		else:
 			raise ValueError
 		exit()
-		
+	
 	data = [read_data(fn,savenpy=options.savenpy) for fn in args] # returns data objects
+
+	if options.convert_2theta:
+		wl_in,wl_out = options.convert_2theta
+		print wl_in, wl_out
+		data = [d.convert_wavelength(wl_in,wl_out) for d in data]
+		for d in data:
+			d.print_pattern(tag='{:.2f}'.format(wl_out))
+
+
 
 	if options.capillary:
 		capillary = read_data(options.capillary)
@@ -1719,6 +1785,9 @@ def main(options,args):
 
 	if options.plot_esd:
 		data.extend([read_data(fn,usecols=(0,2),suffix=' esd') for fn in args])
+	if spc:
+		data.extend([read_data(fn,usecols=(0,2),suffix=' -DIFFaX',savenpy=options.savenpy) for fn in spc])
+
 
 	if options.fixsls:
 		fix_sls_data(data)
@@ -1769,11 +1838,11 @@ def main(options,args):
 
 
 	if options.plot_ticks:
-		hkl_file = options.plot_ticks
-		col = options.plot_ticks_col - 1
-		ticks = load_tick_marks(hkl_file,col=col)
-		if ticks:
-			lines.plot_tick_marks(ticks)
+		for i,hkl_file in enumerate(options.plot_ticks):
+			col = 4 if options.plot_ticks == 'hkl.dat' else options.plot_ticks_col -1
+			ticks = load_tick_marks(hkl_file,col=col)
+			if ticks:
+				lines.plot_tick_marks(ticks,i=i)
 
 	if options.quiet or options.fixsls or options.monitor:
 		pass
@@ -1796,7 +1865,7 @@ def main(options,args):
 	if options.compare:
 		if options.compare_reference:
 			ref = read_data(options.compare_reference)
-			lines.plot(ref)
+			lines.plot(ref,lw=lines.linewidth*2)
 		else:
 			ref = None
 
@@ -1914,6 +1983,19 @@ if __name__ == '__main__':
 									formatter_class=argparse.RawDescriptionHelpFormatter,
 									version=__version__)
 
+	def parse_wl(string):
+		wavelengths = { "cra1" : 2.28970 ,  "cra2" : 2.29361 ,  "cr" : 2.2909 ,
+                        "fea1" : 1.93604 ,  "fea2" : 1.93998 ,  "fe" : 1.9373 ,
+                        "cua1" : 1.54056 ,  "cua2" : 1.54439 ,  "cu" : 1.5418 ,
+                        "moa1" : 0.70930 ,  "moa2" : 0.71359 ,  "mo" : 0.7107 ,
+                        "aga1" : 0.55941 ,  "aga2" : 0.56380 ,  "ag" : 0.5608 , "sls": 1.0000 }
+		if string.lower().endswith('kev'):
+			return energy2wavelength(float(string.lower().replace('kev',"")))
+		elif string.lower() in wavelengths:
+			return wavelengths[string.lower()]
+		else:
+			return float(string)
+
 	parser = argparse.ArgumentParser()
 
 	parser.add_argument("args", 
@@ -1928,9 +2010,13 @@ if __name__ == '__main__':
 						action="store", type=str, dest="bg_input",
 						help="Initial points for bg correction (2 column list; also works with stepco.inp). Overwrites the file with updated coordinates.")
 
+	# parser.add_argument("-t", "--ticks",
+						# action='store', type=str, nargs='?', dest="plot_ticks", const='hkl.dat',
+						# help="Specify tick mark file. If no argument is given, lines defaults to hkl.dat")
+
 	parser.add_argument("-t", "--ticks",
-						action='store', type=str, nargs='?', dest="plot_ticks", const='hkl.dat',
-						help="Specify tick mark file. If no argument is given, lines defaults to hkl.dat")
+						action='store', type=str, nargs='*', dest="plot_ticks",
+						help="Specify tick mark file. Assuming list of 2 theta values. Special value => hkl.dat. Specify column with --tc")
 
 
 	parser.add_argument("-c", "--bgcorrect", metavar='OPTION',
@@ -1992,9 +2078,14 @@ if __name__ == '__main__':
 	parser.add_argument("-T", "--Ticks",
 						action='store', type=str, nargs='+', dest="plot_ticks_scaled",
 						help="Plots ticks scaled to the intensity. Expects .xy files with 2 columns, 2th/I")
+	
+	parser.add_argument("--convert",
+						action='store', type=parse_wl, nargs=2, dest="convert_2theta",metavar="WL",
+						help="Convert powder pattern to a different wavelength [wavelength_in wavelength_out]")
 
 	group_adv.add_argument("--ref", metavar='FILE',
-						action="store", type=str, nargs='*', dest="compare_reference",
+						# action="store", type=str, nargs='*', dest="compare_reference",
+						action="store", type=str, dest="compare_reference",
 						help="Reference pattern to check against all patterns for --compare")
 
 	group_adv.add_argument("--boxes", metavar='FILE',
@@ -2060,7 +2151,7 @@ if __name__ == '__main__':
 						christian = False,
 						monitor = None,
 						plot_ticks = False,
-						plot_ticks_col = 4,
+						plot_ticks_col = 1,
 						stepco = False,
 						topas_bg = False,
 						compare = False,
@@ -2073,6 +2164,7 @@ if __name__ == '__main__':
 						bin = None,
 						## advanced options
 						show = True,
+						convert_2theta = None,
 						linewidth = 1.0,
 						savenpy = False,
 						smooth = False,
@@ -2083,7 +2175,9 @@ if __name__ == '__main__':
 						fixsls = False,
 						rec3d = None,
 						ipython = False,
-						capillary = None) 
+						capillary = None,
+						#special
+						guess_filetype=True) 
 	
 	options = parser.parse_args()
 	args = options.args
