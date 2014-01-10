@@ -28,7 +28,7 @@ except ImportError:
 	pass
 
 
-__version__ = '05-11-2013'
+__version__ = '10-01-2014'
 
 
 params = {'legend.fontsize': 10,
@@ -598,6 +598,9 @@ def f_prf_update(fin,*args):
 
 
 def f_plot_stepco_special(bg_xy):
+	"""Specialised function for plotting XRS output, that takes an XRS data file (crplo.dat)
+	and adds the background to the difference in order to make fine adjustments to the background"""
+
 	crplotdat = 'crplot.dat'
 	try:
 		fcr = open(crplotdat,'r')
@@ -613,6 +616,13 @@ def f_plot_stepco_special(bg_xy):
 		plt.plot(tt, bg_interpolate + dif, label = 'bg + diff')
 
 def f_plot_topas_special(xyobs,xycalc,xydiff,xybg,lw=1.0):
+	"""Special function that takes observed, calculated and difference plot and adds it to the background.
+	This is useful to compare the difference and adjust the background accordingly"""
+
+	if not xybg:
+		raise IOError, " ** Background data not found. Please specify with --bgin"
+
+
 	tt = xyobs.x
 
 	bg_interpolate = interpolate(xybg.xy,tt,kind='linear')
@@ -629,6 +639,8 @@ def f_plot_topas_special(xyobs,xycalc,xydiff,xybg,lw=1.0):
 
 
 def f_bg_correct_out(d,bg_xy,offset='ask',suffix_bg='_bg',suffix_corr='_corr'):
+	"""Function that removes the background from a data set and prints it to a new file"""
+
 	root,ext = os.path.splitext(d.filename)
 	fn_bg   = root+suffix_bg+ext
 	fn_corr = root+suffix_corr+ext
@@ -1225,7 +1237,7 @@ class Lines(object):
 		if self.nomove:
 			ax.plot(data.x,data.y,label=label,lw=lw)
 		else:
-			dx, dy = 2/72., 2/72.
+			dx, dy = 0/72., 64/72.
 
 			dx *= data.index
 			dy *= data.index
@@ -1835,14 +1847,10 @@ def main(options,args):
 	lines.normalize = options.normalize_all
 	lines.linewidth = options.linewidth
 	lines.savefig = options.savefig
+	fig.tight_layout(rect=(0,0,1,1))  ## tight layout, smaller gray border
 
 
-	if options.plot_ticks:
-		for i,hkl_file in enumerate(options.plot_ticks):
-			col = 4 if options.plot_ticks == 'hkl.dat' else options.plot_ticks_col -1
-			ticks = load_tick_marks(hkl_file,col=col)
-			if ticks:
-				lines.plot_tick_marks(ticks,i=i)
+
 
 	if options.quiet or options.fixsls or options.monitor:
 		pass
@@ -1852,8 +1860,6 @@ def main(options,args):
 		bg = Background(fig,d=bg_data,bg_correct=options.bg_correct,quiet=options.quiet,out=options.bg_output) 
 	elif options.backgrounder:
 		bg = Background(fig,d=bg_data,quiet=options.quiet)
-
-
 
 	if options.crplo:
 		f_crplo()
@@ -1889,6 +1895,12 @@ def main(options,args):
 		for d in reversed(data):
 			lines.plot(d)
 
+	if options.plot_ticks:
+		for i,hkl_file in enumerate(options.plot_ticks):
+			col = 4 if options.plot_ticks == 'hkl.dat' else options.plot_ticks_col -1
+			ticks = load_tick_marks(hkl_file,col=col)
+			if ticks:
+				lines.plot_tick_marks(ticks,i=i)
 
 	if options.topas_bg:
 		try:
