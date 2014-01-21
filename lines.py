@@ -28,7 +28,7 @@ except ImportError:
 	pass
 
 
-__version__ = '10-01-2014'
+__version__ = '21-01-2014'
 
 
 params = {'legend.fontsize': 10,
@@ -889,13 +889,19 @@ def savitzky_golay(y, window_size=11, order=2, deriv=0):
 
 class Data(object):
 	total = 0
+	plot_range = None
 
 	"""container class for x,y, err data"""
 	def __init__(self,arr,name=None,quiet=False):
 		if not quiet:
 			print 'Loading data: {}\n       shape: {}'.format(name,arr.shape)
 
-		self.arr = arr
+		if self.plot_range:
+			r0, r1 = self.plot_range
+			self.arr = arr[np.logical_and(arr[:,0]>=r0, arr[:,0]<=r1)]
+		else:
+			self.arr = arr
+
 		self.x   = self.arr[:,0]
 		self.y   = self.arr[:,1]
 		self.xy  = self.arr[:,0:2]
@@ -1753,6 +1759,8 @@ def plot_reciprocal_space(fnobs, fncalc=None, orthogonal_view=True):
 
 
 def main(options,args):
+	Data.plot_range = options.plot_range
+
 	if options.guess_filetype:
 		prf = [arg for arg in args if arg.endswith('.prf')]
 		for fn in prf:
@@ -1776,6 +1784,7 @@ def main(options,args):
 			raise ValueError
 		exit()
 	
+
 	data = [read_data(fn,savenpy=options.savenpy) for fn in args] # returns data objects
 
 	if options.convert_2theta:
@@ -2030,6 +2039,9 @@ if __name__ == '__main__':
 						action='store', type=str, nargs='*', dest="plot_ticks",
 						help="Specify tick mark file. Assuming list of 2 theta values. Special value => hkl.dat. Specify column with --tc")
 
+	parser.add_argument("-r", "--range",
+						action='store', type=float, nargs=2, dest="plot_range",
+						help="Specify plot range for data files.")
 
 	parser.add_argument("-c", "--bgcorrect", metavar='OPTION',
 						action="store", type=str, dest="bg_correct",
