@@ -27,9 +27,7 @@ try:
 except ImportError:
 	pass
 
-
-__version__ = '21-01-2014'
-
+__version__ = '21-08-2014'
 
 params = {'legend.fontsize': 10,
 		  'legend.labelspacing': 0.1}
@@ -40,7 +38,7 @@ planck_constant   = 6.62606957E-34
 elementary_charge = 1.60217656E-19
 speed_of_light    = 2.99792458E8
 
-
+# print plt.get_backend()
 
 def lineno():
 	"""Returns the current line number in our program."""
@@ -81,6 +79,9 @@ def read_data(fn,usecols=None,append_zeros=False,savenpy=False,suffix=''):
 		return parse_xrs(f,return_as='d')
 
 	root,ext = os.path.splitext(fn)
+
+	if ext.lower() == '.xrdml':
+		return parse_xrdml(fn)
 	
 	try:
 		#raise IOError
@@ -146,6 +147,36 @@ def get_correlation_matrix(f,topas=False):
 
 	f.seek(0)
 	return np.loadtxt(f), names
+
+
+def parse_xrdml(fn):
+	"""Very basic function to read panalytical XPERT PRO files (XML)
+	Only parses file to get intensities and data range"""
+
+	from xml.dom import minidom
+	xmldoc = minidom.parse(fn)
+
+	counts = xmldoc.getElementsByTagName('intensities')[0]  # grab element
+	counts = map(float, counts.firstChild.wholeText.split())     # get first node + convert to float
+
+	for rangenode in xmldoc.getElementsByTagName('positions'):
+		if rangenode.getAttribute('axis') == '2Theta':
+			break
+		else:
+			rangenode = None
+	if not rangenode:
+		raise IOError, "Cannot find range node in xrdml file."
+
+	r_min = float(rangenode.getElementsByTagName('startPosition')[0].firstChild.wholeText)
+	r_max = float(rangenode.getElementsByTagName('endPosition')[0].firstChild.wholeText)
+	steps = len(counts)
+
+	th2 = np.linspace(r_min,r_max, steps)
+
+	xy = np.vstack([th2,counts]).T
+
+	return Data(xy,name=fn)
+
 
 
 def parse_xrs(f,return_as='d_xrs'):
@@ -902,10 +933,13 @@ class Data(object):
 		else:
 			self.arr = arr
 
-		self.x   = self.arr[:,0]
-		self.y   = self.arr[:,1]
-		self.xy  = self.arr[:,0:2]
-		self.xye = self.arr[:,0:3]
+		try:
+			self.x   = self.arr[:,0]
+			self.y   = self.arr[:,1]
+			self.xy  = self.arr[:,0:2]
+			self.xye = self.arr[:,0:3]
+		except IndexError:
+			raise IOError, "Could not load file/data: {}".format(name)
 
 		try:
 			self.err = self.arr[:,2]
@@ -1173,6 +1207,7 @@ class Background():
 			return None
 
 		print '---'
+
 		if options.xrs:
 			if self.d.has_esd:
 				print '\nAttempting to interpolate standard deviations... for new stepco.inp\n'
@@ -1185,10 +1220,11 @@ class Background():
 				
 			new_stepco_inp(self.xy,*options.xrs_out,esds=esds)
 		elif self.out:
-			out = open(self.out,'w')
+			fout = open(self.out,'w')
 			for x,y in self.xy.transpose():
-				print >> out, '%15.6f%15.2f' % (x,y)
+				print >> fout, '%15.6f%15.2f' % (x,y)
 		else:
+			fout = open(fout,'w')
 			for x,y in self.xy.transpose():
 				print >> fout, '%15.6f%15.2f' % (x,y)
 
@@ -1856,10 +1892,9 @@ def main(options,args):
 	lines.normalize = options.normalize_all
 	lines.linewidth = options.linewidth
 	lines.savefig = options.savefig
-	fig.tight_layout(rect=(0,0,1,1))  ## tight layout, smaller gray border
-
-
-
+	
+	if plt.get_backend() == 'TkAgg':
+		fig.tight_layout(rect=(0,0,1,1))  ## tight layout, smaller gray border
 
 	if options.quiet or options.fixsls or options.monitor:
 		pass
@@ -1983,7 +2018,7 @@ def main(options,args):
 	
 	try:
 		if bg.xy.any():
-			bg.printdata(fout=open('lines.out','w'))
+			bg.printdata(fout='lines.out')
 	except UnboundLocalError:
 		pass
 
@@ -2162,7 +2197,7 @@ if __name__ == '__main__':
 
 	group_adv.add_argument("--capillary",
 						action="store", type=str, dest='capillary',
-						help="Give capillary file to be subsstracted from the pattern.")
+						help="Give capillary file to be subtracted from the pattern.")
 
 
 	
@@ -2210,6 +2245,7 @@ if __name__ == '__main__':
 		options.xrs = 'stepco.inp'
 		args = ['stepscan.dat']
 	if options.bg_input:
+		copyfile(options.bg_input, options.bg_input+'~')
 		options.bg_output = options.bg_input
 
 	main(options,args)
