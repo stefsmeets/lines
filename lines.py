@@ -1596,6 +1596,19 @@ def f_compare(data,kind=0,reference=None):
 		print "{:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f}   ".format(combined, spearmanr, spearmanp, kendallr, kendallp, pearsonr, pearsonp, shift) + names
 
 
+def calc_fwhm(uvw):
+	u,v,w = uvw
+	th2      = np.linspace(0,70,70*50)
+	th_rad   = np.radians(th2 / 2)
+
+	fwhm = (u*np.tan(th_rad)**2 + v*np.tan(th_rad) + w)**0.5
+
+	xy = np.vstack([th2,fwhm]).T
+
+	return Data(xy, 'UVW')
+
+
+
 def fix_sls_data(data):	
 	"""Input list of Data objects, all of them will be processed and written to:
 	filename_fixed.xye"""
@@ -1939,6 +1952,10 @@ def main(options,args):
 		for d in reversed(data):
 			lines.plot(d)
 
+	if options.plot_uvw:
+		d = calc_fwhm(options.plot_uvw)
+		lines.plot(d)
+
 	if options.plot_ticks:
 		for i,hkl_file in enumerate(options.plot_ticks):
 			col = 4 if options.plot_ticks == 'hkl.dat' else options.plot_ticks_col -1
@@ -2199,6 +2216,10 @@ if __name__ == '__main__':
 						action="store", type=str, dest='capillary',
 						help="Give capillary file to be subtracted from the pattern.")
 
+	group_adv.add_argument("--uvw",
+						action="store", type=float, nargs=3, dest='plot_uvw',
+						help="Plot FWHM = (U.tan(theta)^2 + V.tan(theta) + W)^0.5")
+
 
 	
 	parser.set_defaults(backgrounder = True,
@@ -2235,6 +2256,7 @@ if __name__ == '__main__':
 						rec3d = None,
 						ipython = False,
 						capillary = None,
+						uvw = None,
 						#special
 						guess_filetype=True) 
 	
