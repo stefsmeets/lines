@@ -27,7 +27,7 @@ try:
 except ImportError:
 	pass
 
-__version__ = '21-08-2014'
+__version__ = '03-09-2014'
 
 params = {'legend.fontsize': 10,
 		  'legend.labelspacing': 0.1}
@@ -175,7 +175,14 @@ def parse_xrdml(fn):
 
 	xy = np.vstack([th2,counts]).T
 
-	return Data(xy,name=fn)
+	d = Data(xy,name=fn)
+
+	root,ext = os.path.splitext(fn)
+	new = root+'.xy'
+	if not os.path.isfile(new):
+		d.print_pattern(name=new)
+
+	return d
 
 
 
@@ -916,6 +923,25 @@ def savitzky_golay(y, window_size=11, order=2, deriv=0):
 	lastvals = y[-1] + np.abs(y[-half_window-1:-1][::-1] - y[-1])
 	y = np.concatenate((firstvals, y, lastvals))
 	return np.convolve( m, y, mode='valid')
+
+
+def wavelength_info(wl):
+	"""Little summary for given wavelength"""
+
+	energy = wavelength2energy(wl)
+
+	print "wavelength: {:.5f} angstrom".format(wl)
+	print "energy:     {:.5f} kev".format(energy)
+
+	dvals = 10/np.linspace(1,10,10)
+
+	theta2 = d2twotheta(dvals,wl)
+	qvals  = 4*(np.pi/wl) * np.sin(np.radians(theta2/2))
+
+	print "\n         d        th2          q"
+	for d,th2,q in zip(dvals,theta2,qvals):
+		print "{:10.3f} {:10.3f} {:10.3f}".format(d,th2,q)
+	print
 
 
 class Data(object):
@@ -1837,13 +1863,15 @@ def main(options,args):
 	data = [read_data(fn,savenpy=options.savenpy) for fn in args] # returns data objects
 
 	if options.convert_2theta:
-		wl_in,wl_out = options.convert_2theta
-		print wl_in, wl_out
-		data = [d.convert_wavelength(wl_in,wl_out) for d in data]
-		for d in data:
-			d.print_pattern(tag='{:.2f}'.format(wl_out))
-
-
+		if data:
+			wl_in,wl_out = options.convert_2theta
+			data = [d.convert_wavelength(wl_in,wl_out) for d in data]
+			for d in data:
+				d.print_pattern(tag='{:.2f}'.format(wl_out))
+		else:
+			for wl in options.convert_2theta:
+				wavelength_info(wl)
+			exit()
 
 	if options.capillary:
 		capillary = read_data(options.capillary)
@@ -2156,8 +2184,8 @@ if __name__ == '__main__':
 						help="Plots ticks scaled to the intensity. Expects .xy files with 2 columns, 2th/I")
 	
 	parser.add_argument("--convert",
-						action='store', type=parse_wl, nargs=2, dest="convert_2theta",metavar="WL",
-						help="Convert powder pattern to a different wavelength [wavelength_in wavelength_out]")
+						action='store', type=parse_wl, nargs='+', dest="convert_2theta",metavar="WL",
+						help="Convert powder pattern to a different wavelength [wavelength_in wavelength_out]. If no diffraction pattern is given, the program will give a small summary for the wavelengths/energies provided")
 
 	group_adv.add_argument("--ref", metavar='FILE',
 						# action="store", type=str, nargs='*', dest="compare_reference",
@@ -2216,7 +2244,7 @@ if __name__ == '__main__':
 						action="store", type=str, dest='capillary',
 						help="Give capillary file to be subtracted from the pattern.")
 
-	group_adv.add_argument("--uvw",
+	group_adv.add_argument("--uvw", metavar=("U","V","W"),
 						action="store", type=float, nargs=3, dest='plot_uvw',
 						help="Plot FWHM = (U.tan(theta)^2 + V.tan(theta) + W)^0.5")
 
