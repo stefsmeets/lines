@@ -27,7 +27,7 @@ try:
 except ImportError:
 	pass
 
-__version__ = '03-09-2014'
+__version__ = '18-11-2014'
 
 params = {'legend.fontsize': 10,
 		  'legend.labelspacing': 0.1}
