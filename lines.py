@@ -27,7 +27,7 @@ try:
 except ImportError:
 	pass
 
-__version__ = '18-11-2014'
+__version__ = '06-03-2015'
 
 params = {'legend.fontsize': 10,
 		  'legend.labelspacing': 0.1}
@@ -660,7 +660,6 @@ def f_plot_topas_special(xyobs,xycalc,xydiff,xybg,lw=1.0):
 	if not xybg:
 		raise IOError, " ** Background data not found. Please specify with --bgin"
 
-
 	tt = xyobs.x
 
 	bg_interpolate = interpolate(xybg.xy,tt,kind='linear')
@@ -943,6 +942,22 @@ def wavelength_info(wl):
 		print "{:10.3f} {:10.3f} {:10.3f}".format(d,th2,q)
 	print
 
+def calc_agreement(o,c,bg=0):
+	"""Calculates agreement values for given data data."""
+	if np.any(bg):
+		bg = interpolate(bg.T, c.x,kind=options.bg_correct)  # need linear or better here
+
+	oy = interpolate(o.xy, c.x,kind='nearest') - bg  # nearest is fast and accurate, anything else is very slow
+	# oe = interpolate(o.xye[:,0:3:2],c.x,kind='nearest')
+
+	rp = np.sum(np.abs(oy - c.y)) / np.sum(oy) # profile R-value
+	
+	# w = (1/oe)**2
+	# rwp = ( np.sum(w*(oy - c.y)**2) / np.sum(w*(oy)**2) )**0.5 # weighted profile R-value
+
+	return rp
+
+
 
 class Data(object):
 	total = 0
@@ -1125,6 +1140,8 @@ class Background():
 
 		self.tb = plt.get_current_fig_manager().toolbar
 
+		if options.topas_bg:
+			self.last_agreement = 0
 
 		print
 		print 'Left mouse button: add point'
@@ -1139,7 +1156,6 @@ class Background():
 			self.bg_range = np.arange(self.xy[0][0],self.xy[0][1],0.01) # Set limited range to speed up calculations
 			self.bg, = self.ax.plot(self.d.x,self.d.y,label='background')
 			#print self.bg_range
-
 
 	def __call__(self,event):
 		"""Handles events (mouse input)"""
@@ -1163,7 +1179,7 @@ class Background():
 			self.printdata()
 		if button == 3: # rmb
 			pass
-
+		
 		if self.bg_correct and button:
 			self.background_update()
 	
@@ -1189,8 +1205,16 @@ class Background():
 		removed = self.xy[:,ind]
 		self.xy = np.delete(self.xy,ind,1)
 
+		if options.topas_bg:
+			agreement = calc_agreement(self.xyobs, self.xycalc, self.xy)
+			difference = agreement - self.last_agreement
+			self.last_agreement = agreement
+			string = '{:.4f} ({:+.4f})'.format(agreement,difference)
+		else:
+			string = ""
+
 		for n in range(len(ind)):
-			print '   --- {} {}'.format(*removed[:,n])
+			print '   --- {:.4f} {:.4f}          {}'.format(removed[:,n][0], removed[:,n][1], string)
 
 
 	def onkeypress(self,event):
@@ -1208,11 +1232,20 @@ class Background():
 	def add_point(self,x,y,xdata,ydata):
 		"""Store both data points as relative x,y points. The latter are needed to remove points"""
 
-		print '+++    {} {}'.format(xdata, ydata)
-
 		self.xy = np.append(self.xy,[[xdata],[ydata]],axis=1)
 		idx = self.xy[0,:].argsort()
 		self.xy = self.xy[:,idx]
+		
+		if options.topas_bg:
+			agreement = calc_agreement(self.xyobs, self.xycalc, self.xy)
+			difference = agreement - self.last_agreement
+			self.last_agreement = agreement
+			string = '{:.4f} ({:+.4f})'.format(agreement,difference)
+		else:
+			string = ""
+
+		print '+++    {:.4f} {:.4f}          {}'.format(xdata, ydata, string)
+
 	
 
 	def background_update(self):
@@ -1911,8 +1944,6 @@ def main(options,args):
 		for d in data:
 			f_peakdetect(d,lookahead=lookahead,noise=noise)
 
-			
-
 	if options.xrs:
 		fname = options.xrs
 		copyfile(fname,fname+'~')
@@ -2008,6 +2039,8 @@ def main(options,args):
 			exit(0)
 
 		f_plot_topas_special(xyobs,xycalc,xydiff,bg_data,lw=options.linewidth)
+		bg.xycalc = xycalc
+		bg.xyobs  = data[0]
 
 
 	if options.stepco:
