@@ -34,6 +34,7 @@ params = {'legend.fontsize': 10,
 		  'legend.labelspacing': 0.1}
 plt.rcParams.update(params)
 
+LINESDIR = os.path.dirname(os.path.realpath(__file__))
 
 planck_constant   = 6.62606957E-34
 elementary_charge = 1.60217656E-19
@@ -210,9 +211,7 @@ def parse_iza_code(code):
 	"""Takes IZA code and returns path to cif"""
 
 	fn = code.upper()+'0.cif'
-	linesdir = os.path.dirname(os.path.realpath(__file__))
-
-	path = os.path.join(linesdir,'zeolite_database',fn)
+	path = os.path.join(LINESDIR,'zeolite_database',fn)
 
 	print 'Framework code {} -> {}'.format(code, path)
 	print
@@ -265,10 +264,11 @@ def parse_cif(cif):
 	wl = options.wavelength
 
 	root,ext = os.path.splitext(cif)
+	basename = os.path.basename(root)
 
 	focus_inp = open("focus.inp",'w')
 	focus_out = "focus.out"
-	xye_out = root+".xye"
+	xye_out = basename+".xye"
 
 	print >> focus_inp, """
 Title  {title}
@@ -280,10 +280,10 @@ Lambda  {wl}
 
 ProfileStartEndStep 2 49.99 0.002
 ProfilePOLRA 1.0
-ProfileFWHM UVW 0.0005 0.0 0.0
+ProfileFWHM UVW 0.001 0.0 0.0
 #ProfileAsym  a(i) -0.005 0.003 0
 ProfilePeakShape  PseudoVoigt
-PseudoVoigtPeakRange  10
+PseudoVoigtPeakRange  25
 PseudoVoigtFracLorentz  0.5
 ProfileBackground  0
 #ProfileReferenceRefl
@@ -302,6 +302,8 @@ ProfileReferenceMax  50000
 	for atom in scatterers:
 		label = atom.label
 		element = atom.element_symbol()
+		if element == 'T':
+			element = 'Si'
 		x,y,z = atom.site
 		occ = atom.occupancy
 		u_iso = atom.u_iso
@@ -314,7 +316,7 @@ ProfileReferenceMax  50000
 	print >> focus_inp, "End"
 	focus_inp.close()
 
-	print "Generating powder pattern..."
+	print "Generating powder pattern... (wl = {} A)".format(wl)
 	sp.call("focus -PowderStepScan {} > {}".format(focus_inp.name, focus_out), shell=True)
 
 	begin_switch = ">Begin stepscan"
@@ -2433,7 +2435,7 @@ if __name__ == '__main__':
 						help="Plot FWHM = (U.tan(theta)^2 + V.tan(theta) + W)^0.5")
 
 	group_adv.add_argument("--wavelength",
-						action="store", type=float, dest='wavelength',
+						action="store", type=parse_wl, dest='wavelength',
 						help="Specify the wavelength to use for the powder pattern generation. Default = 1.0 Angstrom")
 
 
