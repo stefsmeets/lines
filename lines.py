@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7-32
+#!/usr/bin/env python2.7
 
 import sys
 import os
@@ -23,11 +23,12 @@ import math
 
 try:
 	from IPython.terminal.embed import InteractiveShellEmbed
+	InteractiveShellEmbed.confirm_exit = False
 	ipshell = InteractiveShellEmbed(banner1='')
 except ImportError:
 	pass
 
-__version__ = '06-03-2015'
+__version__ = '18-03-2015'
 
 params = {'legend.fontsize': 10,
 		  'legend.labelspacing': 0.1}
@@ -39,6 +40,17 @@ elementary_charge = 1.60217656E-19
 speed_of_light    = 2.99792458E8
 
 # print plt.get_backend()
+
+iza_codes = ( 'ABW', 'ACO', 'AEI', 'AEL', 'AEN', 'AET', 'AFG', 'AFI', 'AFN', 'AFO', 'AFR', 'AFS',
+'AFT', 'AFX', 'AFY', 'AHT', 'ANA', 'APC', 'APD', 'AST', 'ASV', 'ATN', 'ATO', 'ATS', 'ATT', 'ATV', 'AWO', 'AWW', 'BCT', 'BEA', 'BEC', 'BIK', 'BOF',
+'BOG', 'BPH', 'BRE', 'BSV', 'CAN', 'CAS', 'CDO', 'CFI', 'CGF', 'CGS', 'CHA', 'CHI', 'CLO', 'CON', 'CZP', 'DAC', 'DDR', 'DFO', 'DFT', 'DOH', 'DON',
+'EAB', 'EDI', 'EMT', 'EON', 'EPI', 'ERI', 'ESV', 'ETR', 'EUO', 'EZT', 'FAR', 'FAU', 'FER', 'FRA', 'GIS', 'GIU', 'GME', 'GON', 'GOO', 'HEU', 'IFR',
+'IHW', 'IMF', 'IRR', 'ISV', 'ITE', 'ITH', 'ITR', 'ITV', 'ITW', 'IWR', 'IWS', 'IWV', 'IWW', 'JBW', 'JRY', 'JST', 'KFI', 'LAU', 'LEV', 'LIO', 'LIT',
+'LOS', 'LOV', 'LTA', 'LTF', 'LTJ', 'LTL', 'LTN', 'MAR', 'MAZ', 'MEI', 'MEL', 'MEP', 'MER', 'MFI', 'MFS', 'MON', 'MOR', 'MOZ', 'MRE', 'MSE', 'MSO',
+'MTF', 'MTN', 'MTT', 'MTW', 'MVY', 'MWW', 'NAB', 'NAT', 'NES', 'NON', 'NPO', 'NPT', 'NSI', 'OBW', 'OFF', 'OSI', 'OSO', 'OWE', 'PAR', 'PAU', 'PHI',
+'PON', 'PUN', 'RHO', 'RON', 'RRO', 'RSN', 'RTE', 'RTH', 'RUT', 'RWR', 'RWY', 'SAF', 'SAO', 'SAS', 'SAT', 'SAV', 'SBE', 'SBN', 'SBS', 'SBT', 'SFE',
+'SFF', 'SFG', 'SFH', 'SFN', 'SFO', 'SFS', 'SFV', 'SGT', 'SIV', 'SOD', 'SOF', 'SOS', 'SSF', 'SSY', 'STF', 'STI', 'STO', 'STT', 'STW', 'SVR', 'SZR',
+'TER', 'THO', 'TOL', 'TON', 'TSC', 'TUN', 'UEI', 'UFI', 'UOS', 'UOZ', 'USI', 'UTL', 'UWY', 'VET', 'VFI', 'VNI', 'VSV', 'WEI', 'WEN', 'YUG', 'ZON' )
 
 def lineno():
 	"""Returns the current line number in our program."""
@@ -79,6 +91,14 @@ def read_data(fn,usecols=None,append_zeros=False,savenpy=False,suffix=''):
 		return parse_xrs(f,return_as='d')
 
 	root,ext = os.path.splitext(fn)
+
+	if ext == '' and root.upper() in iza_codes:
+		fn = parse_iza_code(code=root)
+		return read_data(fn)
+
+	if ext == '.cif':
+		fn = parse_cif(fn)  # requires CCTBX and FOCUS
+		return read_data(fn)
 
 	if ext.lower() == '.xrdml':
 		return parse_xrdml(fn)
@@ -183,6 +203,139 @@ def parse_xrdml(fn):
 		d.print_pattern(name=new)
 
 	return d
+
+
+
+def parse_iza_code(code):
+	"""Takes IZA code and returns path to cif"""
+
+	fn = code.upper()+'0.cif'
+	linesdir = os.path.dirname(os.path.realpath(__file__))
+
+	path = os.path.join(linesdir,'zeolite_database',fn)
+
+	print 'Framework code {} -> {}'.format(code, path)
+	print
+
+	return path
+
+
+def read_cif(f):
+	"""opens cif and returns cctbx data object"""
+	from iotbx.cif import reader, CifParserError
+	try:
+		if isinstance(f,file):
+			structures = reader(file_object=f).build_crystal_structures()
+		elif isinstance(f,str):
+			structures = reader(file_path=f).build_crystal_structures()
+		else:
+			raise TypeError, 'read_cif: Can not deal with type {}'.format(type(f))
+	except CifParserError as e:
+		print e
+		print "Error parsing cif file, check if the data tag does not contain any spaces."
+		exit()
+	for key,val in structures.items():
+		print "\nstructure:", key
+		val.show_summary()
+		print "Volume: {:.2f}".format(val.unit_cell().volume())
+		print
+	return structures
+
+
+def parse_cif(cif):
+	"""Parses a cif file, writes an input file for focus to generate the powder pattern, and returns the filename
+	for the newly generated xye."""
+
+	from cctbx import xray
+	from cctbx import crystal
+
+	import subprocess as sp
+
+	print "Reading CIF:", cif
+
+	structure = read_cif(cif).values()[0]
+	sg = structure.space_group()
+	uc = structure.unit_cell()
+	sps = structure.special_position_settings()
+	scatterers = structure.scatterers()
+
+	title = 'lines'
+	spgr = sg.type().lookup_symbol()
+	a,b,c,al,be,ga = uc.parameters()
+	wl = options.wavelength
+
+	root,ext = os.path.splitext(cif)
+
+	focus_inp = open("focus.inp",'w')
+	focus_out = "focus.out"
+	xye_out = root+".xye"
+
+	print >> focus_inp, """
+Title  {title}
+
+SpaceGroup  {spgr}
+UnitCell  {a} {b} {c} {al} {be} {ga}
+
+Lambda  {wl}
+
+ProfileStartEndStep 2 49.99 0.002
+ProfilePOLRA 1.0
+ProfileFWHM UVW 0.0005 0.0 0.0
+#ProfileAsym  a(i) -0.005 0.003 0
+ProfilePeakShape  PseudoVoigt
+PseudoVoigtPeakRange  10
+PseudoVoigtFracLorentz  0.5
+ProfileBackground  0
+#ProfileReferenceRefl
+ProfileReferenceMax  50000
+
+""".format(title=title,
+			spgr=spgr,
+			a=a,
+			b=b,
+			c=c,
+			al=al,
+			be=be,
+			ga=ga,
+			wl=wl)
+
+	for atom in scatterers:
+		label = atom.label
+		element = atom.element_symbol()
+		x,y,z = atom.site
+		occ = atom.occupancy
+		u_iso = atom.u_iso
+
+		print >> focus_inp, '{label:8} {element:4} {x:8.5f} {y:8.5f} {z:8.5f} {occ:.4f} {u_iso:.4f}'.format(label=label,
+																	element=element,
+																	x=x,y=y,z=z,
+																	occ=occ,
+																	u_iso=u_iso)
+	print >> focus_inp, "End"
+	focus_inp.close()
+
+	print "Generating powder pattern..."
+	sp.call("focus -PowderStepScan {} > {}".format(focus_inp.name, focus_out), shell=True)
+
+	begin_switch = ">Begin stepscan"
+	end_switch = "&"
+
+	focus_stepscan = open(focus_out,'r')
+	xye = open(xye_out, 'w')
+
+	do_print = 0
+	for line in focus_stepscan:
+		if line.startswith(end_switch):
+			break
+		elif do_print:
+			print >> xye, line,
+		elif line.startswith(begin_switch):
+			do_print = 1
+			focus_stepscan.next()
+	focus_stepscan.close()
+	xye.close()
+
+	return xye_out
 
 
 
@@ -1891,20 +2044,8 @@ def main(options,args):
 		else:
 			raise ValueError
 		exit()
-	
 
 	data = [read_data(fn,savenpy=options.savenpy) for fn in args] # returns data objects
-
-	if options.convert_2theta:
-		if data:
-			wl_in,wl_out = options.convert_2theta
-			data = [d.convert_wavelength(wl_in,wl_out) for d in data]
-			for d in data:
-				d.print_pattern(tag='{:.2f}'.format(wl_out))
-		else:
-			for wl in options.convert_2theta:
-				wavelength_info(wl)
-			exit()
 
 	if options.capillary:
 		capillary = read_data(options.capillary)
@@ -1919,6 +2060,16 @@ def main(options,args):
 	if spc:
 		data.extend([read_data(fn,usecols=(0,2),suffix=' -DIFFaX',savenpy=options.savenpy) for fn in spc])
 
+	if options.convert_2theta:
+		if data:
+			wl_in,wl_out = options.convert_2theta
+			data = [d.convert_wavelength(wl_in,wl_out) for d in data]
+			for d in data:
+				d.print_pattern(tag='{:.2f}'.format(wl_out))
+		else:
+			for wl in options.convert_2theta:
+				wavelength_info(wl)
+			exit()
 
 	if options.fixsls:
 		fix_sls_data(data)
@@ -2281,6 +2432,10 @@ if __name__ == '__main__':
 						action="store", type=float, nargs=3, dest='plot_uvw',
 						help="Plot FWHM = (U.tan(theta)^2 + V.tan(theta) + W)^0.5")
 
+	group_adv.add_argument("--wavelength",
+						action="store", type=float, dest='wavelength',
+						help="Specify the wavelength to use for the powder pattern generation. Default = 1.0 Angstrom")
+
 
 	
 	parser.set_defaults(backgrounder = True,
@@ -2318,6 +2473,7 @@ if __name__ == '__main__':
 						ipython = False,
 						capillary = None,
 						uvw = None,
+						wavelength = 1.0,
 						#special
 						guess_filetype=True) 
 	
