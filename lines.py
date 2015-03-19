@@ -28,7 +28,7 @@ try:
 except ImportError:
 	pass
 
-__version__ = '18-03-2015'
+__version__ = '19-03-2015'
 
 params = {'legend.fontsize': 10,
 		  'legend.labelspacing': 0.1}
@@ -86,7 +86,7 @@ def read_file(path):
 
 
 
-def read_data(fn,usecols=None,append_zeros=False,savenpy=False,suffix=''):
+def read_data(fn,usecols=None,append_zeros=False,savenpy=False,suffix='',is_ticks=False):
 	if fn == 'stepco.inp':
 		f = read_file(fn)
 		return parse_xrs(f,return_as='d')
@@ -120,7 +120,7 @@ def read_data(fn,usecols=None,append_zeros=False,savenpy=False,suffix=''):
 	if inp.shape[1] > 3:
 		print 'More than 3 columns read from {}, assuming x,y,esd, ignoring the rest.'.format(f.name)
 
-	d = Data(inp,name=fn+suffix)
+	d = Data(inp, name=fn+suffix, is_ticks=is_ticks)
 
 	if savenpy and ext != '.npy':
 		np.save(root,inp)
@@ -129,8 +129,6 @@ def read_data(fn,usecols=None,append_zeros=False,savenpy=False,suffix=''):
 
 def load_tick_marks(path,col=3):
 	"""Checks if file exists and loads tick mark data as data class. Use column=3 default for xrs"""
-	print path
-
 	try:
 		f = open(path,'r')
 		f.close()
@@ -138,7 +136,7 @@ def load_tick_marks(path,col=3):
 		print '-- {} not found. (IOError)'.format(path)
 		return None
 
-	ticks = read_data(path,usecols=(col,),append_zeros=True)
+	ticks = read_data(path,usecols=(col,),append_zeros=True,is_ticks=True)
 	return ticks
 
 def get_correlation_matrix(f,topas=False):
@@ -1119,9 +1117,11 @@ class Data(object):
 	plot_range = None
 
 	"""container class for x,y, err data"""
-	def __init__(self,arr,name=None,quiet=False):
+	def __init__(self,arr,name=None,quiet=False, is_ticks=False):
 		if not quiet:
 			print 'Loading data: {}\n       shape: {}'.format(name,arr.shape)
+
+		self.is_ticks = is_ticks
 
 		if self.plot_range:
 			r0, r1 = self.plot_range
@@ -1153,12 +1153,12 @@ class Data(object):
 		self.filename = name
 		Data.total += 1
 
-		if not quiet:
+		if not quiet and not is_ticks:
 			n = len(self.x)			# observations
 			if self.has_esd:
 				w = 1/self.err**2   # weights
 			else:
-				w = 1/(self.y+1)		# weights = y^-1 if no esds
+				w = 1/(np.abs(self.y)+0.1)		# weights = y^-1 if no esds
 			print '       R_exp: {:.3f}%'.format(100 * ((n) / np.sum(w*self.y**2))**0.5)
 
 	def bin(self,binsize=0.01):
@@ -2170,7 +2170,7 @@ def main(options,args):
 
 	if options.plot_ticks:
 		for i,hkl_file in enumerate(options.plot_ticks):
-			col = 4 if options.plot_ticks == 'hkl.dat' else options.plot_ticks_col -1
+			col = 4 if options.plot_ticks == 'hkl.dat' else options.plot_ticks_col - 1
 			ticks = load_tick_marks(hkl_file,col=col)
 			if ticks:
 				lines.plot_tick_marks(ticks,i=i)
