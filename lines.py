@@ -28,7 +28,7 @@ try:
 except ImportError:
 	pass
 
-__version__ = '19-03-2015'
+__version__ = '10-08-2015'
 
 params = {'legend.fontsize': 10,
 		  'legend.labelspacing': 0.1}
@@ -51,7 +51,9 @@ iza_codes = ( 'ABW', 'ACO', 'AEI', 'AEL', 'AEN', 'AET', 'AFG', 'AFI', 'AFN', 'AF
 'MTF', 'MTN', 'MTT', 'MTW', 'MVY', 'MWW', 'NAB', 'NAT', 'NES', 'NON', 'NPO', 'NPT', 'NSI', 'OBW', 'OFF', 'OSI', 'OSO', 'OWE', 'PAR', 'PAU', 'PHI',
 'PON', 'PUN', 'RHO', 'RON', 'RRO', 'RSN', 'RTE', 'RTH', 'RUT', 'RWR', 'RWY', 'SAF', 'SAO', 'SAS', 'SAT', 'SAV', 'SBE', 'SBN', 'SBS', 'SBT', 'SFE',
 'SFF', 'SFG', 'SFH', 'SFN', 'SFO', 'SFS', 'SFV', 'SGT', 'SIV', 'SOD', 'SOF', 'SOS', 'SSF', 'SSY', 'STF', 'STI', 'STO', 'STT', 'STW', 'SVR', 'SZR',
-'TER', 'THO', 'TOL', 'TON', 'TSC', 'TUN', 'UEI', 'UFI', 'UOS', 'UOZ', 'USI', 'UTL', 'UWY', 'VET', 'VFI', 'VNI', 'VSV', 'WEI', 'WEN', 'YUG', 'ZON' )
+'TER', 'THO', 'TOL', 'TON', 'TSC', 'TUN', 'UEI', 'UFI', 'UOS', 'UOZ', 'USI', 'UTL', 'UWY', 'VET', 'VFI', 'VNI', 'VSV', 'WEI', 'WEN', 'YUG', 'ZON' ,
+'POS', 'JNT', 'IFW', 'UOV', 'CSV', 'EWT', 'PSI', 'IFY', 'ITN', 'SSO', 'IRN') # updated aug 2015
+
 
 def lineno():
 	"""Returns the current line number in our program."""
@@ -395,7 +397,7 @@ def parse_xrs(f,return_as='d_xrs'):
 		xye = np.vstack([x,y,esd]).T
 		d = Data(xye,name='stepco.inp')
 		return d
-	elif return_as == 'd_xrs':
+	elif return_as == 'd_xrs':   # include xrs stepco input data
 		xye = np.vstack([x,y,esd]).T
 		d = Data(xye,name='stepco.inp')
 		xrs = [f.name,pre,post]
@@ -823,9 +825,26 @@ def f_plot_topas_special(xyobs,xycalc,xydiff,xybg,lw=1.0):
 	plt.plot(tt, bg_interpolate + xydiff.y, label='bg + diff',lw=lw)
 	plt.plot(tt, bg_interpolate, label='bg',lw=lw)
 
+def f_plot_weighted_difference(xyobs,xycalc,xyerr,lw=1.0):
+	"""Special function to calculate and display the weighted difference plot
+	For more information see: Young, 'The Rietveld Method', 1993, p24-25"""
+
+	assert xyobs.xy.shape == xycalc.xy.shape == xyerr.xy.shape, "Arrays xyobs, xycalc, and xyerr are of different shape!"
+
+	offset = -20
 
 
+	wdiff = (((xyobs.y-xycalc.y) / (xyobs.y + min(xyobs.y)+1)) / xyerr.y)
+	wdiff2 = ((xyobs.y-xycalc.y) / xyerr.y)
+	plt.plot(xyobs.x,wdiff+offset,label="weighted difference", lw=lw)
+	plt.plot((min(xyobs.x),max(xyobs.x)),(offset,offset), c='black')
 
+
+	plt.plot(xyobs.x,wdiff2+offset*2, label="weighted difference 2", lw=lw)
+
+	#plt.plot(xyobs.x, xyobs.y-xycalc.y+offset*2, label="difference")
+
+	plt.plot(xyobs.x, xyerr.y+offset*3, label="error")
 
 
 def f_bg_correct_out(d,bg_xy,offset='ask',suffix_bg='_bg',suffix_corr='_corr'):
@@ -1284,7 +1303,7 @@ class Background():
 		except (IndexError, ValueError, TypeError):
 			self.xy = np.array([],dtype=float).reshape(2,0)
 
-		self.line, = self.ax.plot(*self.xy,lw=0.5,marker='s',mec='red',mew=1,mfc='None',markersize=3,picker=self.sensitivity,label='interactive background')
+		self.line, = self.ax.plot(*self.xy,lw=0.5,marker='s',mec='red',mew=2,mfc='None',markersize=5,picker=self.sensitivity,label='interactive background')
 
 		self.pick  = self.line.figure.canvas.mpl_connect('pick_event', self.onpick)
 		self.cid   = self.line.figure.canvas.mpl_connect('button_press_event', self)
@@ -1412,6 +1431,25 @@ class Background():
 
 		bg_vals = interpolate(xy,self.bg_range,kind=self.bg_correct)
 		self.bg.set_data(self.bg_range,bg_vals)
+
+	def get_esds(self):
+		"""Returns None if no esds are present on the background, otherwise, it tries to interpolate the esds already present
+		The esds should be specified (manually) in the background beforehand."""
+		
+		if self.d == None:
+			return None
+
+		if self.d.has_esd:
+			print '\nAttempting to interpolate standard deviations... for new background\n'
+			esds = interpolate(self.d.xye[:,0:3:2], self.xy[0], kind='linear')
+
+			#print esds
+		else:
+			esds = None
+
+		# ipshell();exit()
+
+		return esds
 		
 
 	def printdata(self, fout=None):
@@ -1420,23 +1458,16 @@ class Background():
 			print 'No stored coordinates.'
 			return None
 
-		print '---'
+		# print 'End'
 
-		if options.xrs:
-			if self.d.has_esd:
-				print '\nAttempting to interpolate standard deviations... for new stepco.inp\n'
+		if not fout:
+			fout = self.out
 
-				esds = interpolate(self.d.xye[:,0:3:2], self.xy[0], kind='linear')
+		esds = self.get_esds()
+		# print esds
 
-				#print esds
-			else:
-				esds = None
-				
+		if options.xrs:				
 			new_stepco_inp(self.xy,*options.xrs_out,esds=esds)
-		elif self.out:
-			fout = open(self.out,'w')
-			for x,y in self.xy.transpose():
-				print >> fout, '%15.6f%15.2f' % (x,y)
 		else:
 			fout = open(fout,'w')
 			for x,y in self.xy.transpose():
@@ -2175,6 +2206,22 @@ def main(options,args):
 			if ticks:
 				lines.plot_tick_marks(ticks,i=i)
 
+	if options.weighted_ydiff:
+		try:
+			xyobs  = read_data('x_yobs.xy')
+			xycalc = read_data('x_ycalc.xy')
+			xyerr  = read_data('x_yerr.xy')
+		except IOError,e:
+			print e
+			print
+			print """Please add the following lines to the TOPAS input file to generate the needed files:
+	Out_X_Yobs(x_yobs.xy)          
+	Out_X_Ycalc(x_ycalc.xy)       
+	Out_X_Yerr(x_yerr.xy)   
+			"""
+			exit(0)
+		f_plot_weighted_difference(xyobs,xycalc,xyerr,lw=options.linewidth)
+
 	if options.topas_bg:
 		try:
 			xyobs  = read_data('x_yobs.xy')
@@ -2192,6 +2239,7 @@ def main(options,args):
 			exit(0)
 
 		f_plot_topas_special(xyobs,xycalc,xydiff,bg_data,lw=options.linewidth)
+		# specifying bg.xycalc and bg.xyobs is necessary to update the Rp value on every step
 		bg.xycalc = xycalc
 		bg.xyobs  = data[0]
 
@@ -2438,7 +2486,9 @@ if __name__ == '__main__':
 						action="store", type=parse_wl, dest='wavelength',
 						help="Specify the wavelength to use for the powder pattern generation. Default = 1.0 Angstrom")
 
-
+	group_adv.add_argument("--wyd, --weighted_ydiff",
+						action="store_true", dest='weighted_ydiff',
+						help="Display weighted difference plot. Requires x_yobs.xy, x_ycalc.xy, x_yerr.xy")
 	
 	parser.set_defaults(backgrounder = True,
 						xrs = None,
@@ -2477,6 +2527,7 @@ if __name__ == '__main__':
 						uvw = None,
 						wavelength = 1.0,
 						#special
+						weighted_ydiff = False,
 						guess_filetype=True) 
 	
 	options = parser.parse_args()
