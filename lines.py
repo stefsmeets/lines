@@ -1,5 +1,22 @@
 #!/usr/bin/env python2.7
 
+#    Lines - a python plotting program
+#    Copyright (C) 2015 Stef Smeets
+#    
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License along
+#    with this program; if not, write to the Free Software Foundation, Inc.,
+#    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
 import sys
 import os
 import argparse
@@ -28,7 +45,7 @@ try:
 except ImportError:
 	pass
 
-__version__ = '10-08-2015'
+__version__ = '31-08-2015'
 
 params = {'legend.fontsize': 10,
 		  'legend.labelspacing': 0.1}
@@ -52,7 +69,7 @@ iza_codes = ( 'ABW', 'ACO', 'AEI', 'AEL', 'AEN', 'AET', 'AFG', 'AFI', 'AFN', 'AF
 'PON', 'PUN', 'RHO', 'RON', 'RRO', 'RSN', 'RTE', 'RTH', 'RUT', 'RWR', 'RWY', 'SAF', 'SAO', 'SAS', 'SAT', 'SAV', 'SBE', 'SBN', 'SBS', 'SBT', 'SFE',
 'SFF', 'SFG', 'SFH', 'SFN', 'SFO', 'SFS', 'SFV', 'SGT', 'SIV', 'SOD', 'SOF', 'SOS', 'SSF', 'SSY', 'STF', 'STI', 'STO', 'STT', 'STW', 'SVR', 'SZR',
 'TER', 'THO', 'TOL', 'TON', 'TSC', 'TUN', 'UEI', 'UFI', 'UOS', 'UOZ', 'USI', 'UTL', 'UWY', 'VET', 'VFI', 'VNI', 'VSV', 'WEI', 'WEN', 'YUG', 'ZON' ,
-'POS', 'JNT', 'IFW', 'UOV', 'CSV', 'EWT', 'PSI', 'IFY', 'ITN', 'SSO', 'IRN') # updated aug 2015
+'POS', 'JNT', 'IFW', 'UOV', 'CSV', 'EWT', 'PSI', 'IFY', 'ITN', 'SSO', 'IRN', 'IFO') # updated aug 2015
 
 
 def lineno():
