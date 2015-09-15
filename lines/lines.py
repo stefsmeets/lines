@@ -29,29 +29,24 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
 
-try:
-	from scipy.interpolate import interp1d
-except ImportError:
-	print 'Scipy not found, interpolation will crash the program.'
-	print 'www.scipy.org'
-	print
+from scipy.interpolate import interp1d
 
 import math
 
-try:
-	from IPython.terminal.embed import InteractiveShellEmbed
-	InteractiveShellEmbed.confirm_exit = False
-	ipshell = InteractiveShellEmbed(banner1='')
-except ImportError:
-	pass
+# try:
+# 	from IPython.terminal.embed import InteractiveShellEmbed
+# 	InteractiveShellEmbed.confirm_exit = False
+# 	ipshell = InteractiveShellEmbed(banner1='')
+# except ImportError:
+# 	pass
 
-__version__ = '31-08-2015'
+__version__ = '2015-09-15'
 
 params = {'legend.fontsize': 10,
 		  'legend.labelspacing': 0.1}
 plt.rcParams.update(params)
 
-LINESDIR = os.path.dirname(os.path.realpath(__file__))
+LINESDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 planck_constant   = 6.62606957E-34
 elementary_charge = 1.60217656E-19
@@ -105,7 +100,7 @@ def read_file(path):
 
 
 
-def read_data(fn,usecols=None,append_zeros=False,savenpy=False,suffix='',is_ticks=False):
+def read_data(fn,usecols=None,append_zeros=False,savenpy=False,suffix='',is_ticks=False,wl=1.0):
 	if fn == 'stepco.inp':
 		f = read_file(fn)
 		return parse_xrs(f,return_as='d')
@@ -117,7 +112,7 @@ def read_data(fn,usecols=None,append_zeros=False,savenpy=False,suffix='',is_tick
 		return read_data(fn)
 
 	if ext == '.cif':
-		fn = parse_cif(fn)  # requires CCTBX and FOCUS
+		fn = parse_cif(fn, wl=wl)  # requires CCTBX and FOCUS
 		return read_data(fn)
 
 	if ext.lower() == '.xrdml':
@@ -258,7 +253,7 @@ def read_cif(f):
 	return structures
 
 
-def parse_cif(cif):
+def parse_cif(cif, wl=1.0):
 	"""Parses a cif file, writes an input file for focus to generate the powder pattern, and returns the filename
 	for the newly generated xye."""
 
@@ -278,7 +273,6 @@ def parse_cif(cif):
 	title = 'lines'
 	spgr = sg.type().lookup_symbol()
 	a,b,c,al,be,ga = uc.parameters()
-	wl = options.wavelength
 
 	root,ext = os.path.splitext(cif)
 	basename = os.path.basename(root)
@@ -864,7 +858,7 @@ def f_plot_weighted_difference(xyobs,xycalc,xyerr,lw=1.0):
 	plt.plot(xyobs.x, xyerr.y+offset*3, label="error")
 
 
-def f_bg_correct_out(d,bg_xy,offset='ask',suffix_bg='_bg',suffix_corr='_corr'):
+def f_bg_correct_out(d,bg_xy,kind='linear',offset='ask',suffix_bg='_bg',suffix_corr='_corr'):
 	"""Function that removes the background from a data set and prints it to a new file"""
 
 	root,ext = os.path.splitext(d.filename)
@@ -880,7 +874,7 @@ def f_bg_correct_out(d,bg_xy,offset='ask',suffix_bg='_bg',suffix_corr='_corr'):
 	xvals = d.x
 	yvals = d.y
 	
-	bg_yvals = interpolate(bg_xy,xvals,kind=options.bg_correct)
+	bg_yvals = interpolate(bg_xy,xvals,kind=kind)
 	
 	if offset == 'ask':
 		offset = raw_input("What y offset should I add to the data? (x=exit)\n >> [0] ") or 0
@@ -1131,10 +1125,10 @@ def wavelength_info(wl):
 		print "{:10.3f} {:10.3f} {:10.3f}".format(d,th2,q)
 	print
 
-def calc_agreement(o,c,bg=0):
+def calc_agreement(o,c,bg=0,kind='linear'):
 	"""Calculates agreement values for given data data."""
 	if np.any(bg):
-		bg = interpolate(bg.T, c.x,kind=options.bg_correct)  # need linear or better here
+		bg = interpolate(bg.T, c.x,kind=kind)  # need linear or better here
 
 	oy = interpolate(o.xy, c.x,kind='nearest') - bg  # nearest is fast and accurate, anything else is very slow
 	# oe = interpolate(o.xye[:,0:3:2],c.x,kind='nearest')
@@ -1282,7 +1276,7 @@ class Data(object):
 class Background():
 	sensitivity = 8
 
-	def __init__(self,fig,d=None, outfunc=None,bg_correct=False, quiet=False, out=None, npick=-1):
+	def __init__(self,fig,d=None, outfunc=None,bg_correct=False, quiet=False, out=None, npick=-1, topas_bg=False, xrs=None):
 		"""Class that captures mouse events when a graph has been drawn, stores the coordinates
 		of these points and draws them as a line on the screen. Can also remove points and print all
 		the stored points to stdout
@@ -1300,7 +1294,9 @@ class Background():
 
 		self.out = out
 		self.ax = fig.add_subplot(111)
-		
+		self.topas_bg = topas_bg
+		self.xrs = xrs
+
 		# if xy is None:
 		# 	self.xy = np.array([],dtype=float).reshape(2,0)
 		# else:
@@ -1331,7 +1327,7 @@ class Background():
 
 		self.tb = plt.get_current_fig_manager().toolbar
 
-		if options.topas_bg:
+		if self.topas_bg:
 			self.last_agreement = 0
 
 		print
@@ -1396,8 +1392,8 @@ class Background():
 		removed = self.xy[:,ind]
 		self.xy = np.delete(self.xy,ind,1)
 
-		if options.topas_bg:
-			agreement = calc_agreement(self.xyobs, self.xycalc, self.xy)
+		if self.topas_bg:
+			agreement = calc_agreement(self.xyobs, self.xycalc, self.xy,kind=self.bg_correct)
 			difference = agreement - self.last_agreement
 			self.last_agreement = agreement
 			string = '{:.4f} ({:+.4f})'.format(agreement,difference)
@@ -1427,8 +1423,8 @@ class Background():
 		idx = self.xy[0,:].argsort()
 		self.xy = self.xy[:,idx]
 		
-		if options.topas_bg:
-			agreement = calc_agreement(self.xyobs, self.xycalc, self.xy)
+		if self.topas_bg:
+			agreement = calc_agreement(self.xyobs, self.xycalc, self.xy, kind=self.bg_correct)
 			difference = agreement - self.last_agreement
 			self.last_agreement = agreement
 			string = '{:.4f} ({:+.4f})'.format(agreement,difference)
@@ -1464,8 +1460,6 @@ class Background():
 		else:
 			esds = None
 
-		# ipshell();exit()
-
 		return esds
 		
 
@@ -1483,8 +1477,8 @@ class Background():
 		esds = self.get_esds()
 		# print esds
 
-		if options.xrs:				
-			new_stepco_inp(self.xy,*options.xrs_out,esds=esds)
+		if self.xrs:				
+			new_stepco_inp(self.xy,*self.xrs_out,esds=esds)
 		else:
 			fout = open(fout,'w')
 			for x,y in self.xy.transpose():
@@ -1739,7 +1733,7 @@ def f_identify(d,refs,criterium=0.05,lookahead=10,noise=5000):
 
 	lst = []
 
-	for fn in options.compare_reference:
+	for fn in refs:
 		#ref = read_data(fn,usecols=4,append_zeros=True,savenpy=False)
 		ref = load_tick_marks(fn,col=4)
 
@@ -1871,7 +1865,7 @@ def calc_fwhm(uvw):
 
 
 
-def fix_sls_data(data):	
+def fix_sls_data(data, quiet=False):	
 	"""Input list of Data objects, all of them will be processed and written to:
 	filename_fixed.xye"""
 		
@@ -1913,8 +1907,8 @@ def fix_sls_data(data):
 			print
 	
 			fig = plt.figure()
-			bg = Background(fig,d=None,quiet=options.quiet,npick=3)
-			lines = Lines(fig,hide=options.quiet)
+			bg = Background(fig,d=None,quiet=quiet,npick=3)
+			lines = Lines(fig,hide=quiet)
 			lines.plot(d)
 			plt.legend()
 			plt.show()
@@ -2055,271 +2049,7 @@ def plot_reciprocal_space(fnobs, fncalc=None, orthogonal_view=True):
 	plt.show()
 
 
-# fig = plt.figure(figsize=(8,6))
-
-# ax = fig.add_subplot(1,1,1, projection='3d')
-
-# ax.plot_surface(X, Y, Z, rstride=4, cstride=4, alpha=0.25)
-# cset = ax.contour(X, Y, Z, zdir='z', offset=-pi, cmap=cm.coolwarm)
-# cset = ax.contour(X, Y, Z, zdir='x', offset=-pi, cmap=cm.coolwarm)
-# cset = ax.contour(X, Y, Z, zdir='y', offset=3*pi, cmap=cm.coolwarm)
-
-# ax.set_xlim3d(-pi, 2*pi);
-# ax.set_ylim3d(0, 3*pi);
-# ax.set_zlim3d(-pi, 2*pi);
-
-
-def main(options,args):
-	Data.plot_range = options.plot_range
-
-	if options.guess_filetype:
-		prf = [arg for arg in args if arg.endswith('.prf')]
-		for fn in prf:
-			args.remove(fn)
-		spc = [arg for arg in args if '.spc' in arg]
-		for fn in spc:
-			args.remove(fn)
-	else:
-		prf,spc = None,None
-
-	if options.rec3d:
-		print options.rec3d, type(options.rec3d)
-		if options.rec3d == 'args':
-			plot_reciprocal_space(fnobs = args, fncalc = None)
-		elif len(options.rec3d) == 1:
-			plot_reciprocal_space(fnobs = options.rec3d[0], fncalc = None)
-		elif len(options.rec3d) == 2:
-			plot_reciprocal_space(fnobs = options.rec3d[0], fncalc = options.rec3d[1])
-
-		else:
-			raise ValueError
-		exit()
-
-	data = [read_data(fn,savenpy=options.savenpy) for fn in args] # returns data objects
-
-	if options.capillary:
-		capillary = read_data(options.capillary)
-		smoothed = capillary.smooth(window='hanning',window_len=101)
-		for d in data:
-			print ' >> Removing contribution of {} from {}'.format(options.capillary,d.filename)
-			f_bg_correct_out(d,smoothed.xy,offset=0,suffix_corr='_rem_cap')
-		exit()
-
-	if options.plot_esd:
-		data.extend([read_data(fn,usecols=(0,2),suffix=' esd') for fn in args])
-	if spc:
-		data.extend([read_data(fn,usecols=(0,2),suffix=' -DIFFaX',savenpy=options.savenpy) for fn in spc])
-
-	if options.convert_2theta:
-		if data:
-			wl_in,wl_out = options.convert_2theta
-			data = [d.convert_wavelength(wl_in,wl_out) for d in data]
-			for d in data:
-				d.print_pattern(tag='{:.2f}'.format(wl_out))
-		else:
-			for wl in options.convert_2theta:
-				wavelength_info(wl)
-			exit()
-
-	if options.fixsls:
-		fix_sls_data(data)
-		exit()
-
-	if options.corrmat:
-		f = open(options.corrmat)
-		corr,labels = get_correlation_matrix(f)
-		plot_correlation_matrix(corr,labels)
-		exit()
-
-	if options.identify:
-		if options.peakdetect:
-			lookahead,noise = options.peakdetect
-		else:
-			lookahead,noise = None,None
-
-		for d in data:
-			f_identify(d,options.compare_reference,lookahead=lookahead,noise=noise)
-	elif options.peakdetect:
-		#options.show = False
-		lookahead,noise = options.peakdetect
-		for d in data:
-			f_peakdetect(d,lookahead=lookahead,noise=noise)
-
-	if options.xrs:
-		fname = options.xrs
-		copyfile(fname,fname+'~')
-		f = read_file(fname)
-		bg_data,options.xrs_out = parse_xrs(f)
-	elif options.bg_input:
-		try:
-			bg_data = read_data(options.bg_input)
-		except:
-			bg_data = setup_interpolate_background(data[0],name=options.bg_input)
-	else:
-		bg_data = None
-
-
-	fig = plt.figure()
-	lines = Lines(fig,hide=options.quiet)
-	lines.nomove = options.nomove
-	lines.normalize = options.normalize_all
-	lines.linewidth = options.linewidth
-	lines.savefig = options.savefig
-	
-	if plt.get_backend() == 'TkAgg':
-		fig.tight_layout(rect=(0,0,1,1))  ## tight layout, smaller gray border
-
-	if options.quiet or options.fixsls or options.monitor:
-		pass
-	elif options.bg_correct:
-		if not bg_data:
-			bg_data = setup_interpolate_background(data[0])
-		bg = Background(fig,d=bg_data,bg_correct=options.bg_correct,quiet=options.quiet,out=options.bg_output) 
-	elif options.backgrounder:
-		bg = Background(fig,d=bg_data,quiet=options.quiet)
-
-	if options.crplo:
-		f_crplo()
-
-	if prf:	# fullprof profile files
-		for fn in prf:
-			f_prf(fn)
-
-	if options.compare:
-		if options.compare_reference:
-			ref = read_data(options.compare_reference)
-			lines.plot(ref,lw=lines.linewidth*2)
-		else:
-			ref = None
-
-		kind = options.compare-1
-		f_compare(data,kind=kind,reference=ref)
-
-	#plt.plot(range(10),range(10))
-	#plt.show()
-	#plt.plot(range(5),range(5,10))
-	#plt.show()
-
-	if options.plot_ticks_scaled:
-		for fn in options.plot_ticks_scaled:
-			d = read_data(fn,savenpy=False)
-			lines.plot_ticks_scaled(d)
-
-
-	if options.quiet:
-		pass
-	else:
-		for d in reversed(data):
-			lines.plot(d)
-
-	if options.plot_uvw:
-		d = calc_fwhm(options.plot_uvw)
-		lines.plot(d)
-
-	if options.plot_ticks:
-		for i,hkl_file in enumerate(options.plot_ticks):
-			col = 4 if options.plot_ticks == 'hkl.dat' else options.plot_ticks_col - 1
-			ticks = load_tick_marks(hkl_file,col=col)
-			if ticks:
-				lines.plot_tick_marks(ticks,i=i)
-
-	if options.weighted_ydiff:
-		try:
-			xyobs  = read_data('x_yobs.xy')
-			xycalc = read_data('x_ycalc.xy')
-			xyerr  = read_data('x_yerr.xy')
-		except IOError,e:
-			print e
-			print
-			print """Please add the following lines to the TOPAS input file to generate the needed files:
-	Out_X_Yobs(x_yobs.xy)          
-	Out_X_Ycalc(x_ycalc.xy)       
-	Out_X_Yerr(x_yerr.xy)   
-			"""
-			exit(0)
-		f_plot_weighted_difference(xyobs,xycalc,xyerr,lw=options.linewidth)
-
-	if options.topas_bg:
-		try:
-			xyobs  = read_data('x_yobs.xy')
-			xycalc = read_data('x_ycalc.xy')
-			xydiff = read_data('x_ydiff.xy')
-			#xybg   = read_data('x_ybg.xy')
-		except IOError,e:
-			print e
-			print
-			print """Please add the following lines to the TOPAS input file to generate the needed files:
-	Out_X_Yobs(x_yobs.xy)          
-	Out_X_Ycalc(x_ycalc.xy)       
-	Out_X_Difference(x_ydiff.xy)   
-			"""
-			exit(0)
-
-		f_plot_topas_special(xyobs,xycalc,xydiff,bg_data,lw=options.linewidth)
-		# specifying bg.xycalc and bg.xyobs is necessary to update the Rp value on every step
-		bg.xycalc = xycalc
-		bg.xyobs  = data[0]
-
-
-	if options.stepco:
-		assert bg_data, "No background data available, can't use option --stepco!"
-
-		lines.plot(bg_data)
-		f_plot_stepco_special(bg_data.xy)
-
-	if options.bin:
-		for d in reversed(data):
-			dbinned = d.bin(options.bin)
-			dbinned.print_pattern()
-			lines.plot(dbinned)
-	
-	if options.smooth:
-		for d in reversed(data):
-			dsmooth = d.smooth(options.smooth) # smoothing performed in place
-			dsmooth.print_pattern()
-			lines.plot(dsmooth)
-
-	if options.boxes:
-		lines.plot_boxes(options.boxes)
-
-
-
-	if options.quiet or not options.show:
-		pass
-	elif not sys.stdin.isatty():
-		plot_stdin(fig)
-	elif options.monitor:
-		if options.monitor in ('crplot.dat','crplot'):
-			f_monitor('crplot.dat',crplot_init,crplot_update,fig=fig)
-		elif options.monitor.endswith('.prf'):
-			f_monitor(options.monitor,f_prf_init,f_prf_update,fig=fig)
-
-		else:
-			fn = options.monitor
-			f_monitor(fn,plot_init,plot_update,fig=fig)
-	elif options.savefig:
-		plt.legend()
-		out = options.savefig
-		plt.savefig(out, bbox_inches=0)
-	else:
-		plt.legend()
-		plt.show()
-
-
-	if options.bg_correct:
-		#for d in data:
-		#	f_bg_correct_out(d=d,bg_xy=bg.xy.T,offset=options.bg_offset)
-	
-		f_bg_correct_out(d=data[0],bg_xy=bg.xy.T,offset=options.bg_offset)
-	
-	try:
-		if bg.xy.any():
-			bg.printdata(fout='lines.out')
-	except UnboundLocalError:
-		pass
-
-
-if __name__ == '__main__':
+def main():
 	usage = """"""
 
 	description = """Notes:
@@ -2557,4 +2287,254 @@ if __name__ == '__main__':
 		copyfile(options.bg_input, options.bg_input+'~')
 		options.bg_output = options.bg_input
 
-	main(options,args)
+	Data.plot_range = options.plot_range
+
+	if options.guess_filetype:
+		prf = [arg for arg in args if arg.endswith('.prf')]
+		for fn in prf:
+			args.remove(fn)
+		spc = [arg for arg in args if '.spc' in arg]
+		for fn in spc:
+			args.remove(fn)
+	else:
+		prf,spc = None,None
+
+	if options.rec3d:
+		print options.rec3d, type(options.rec3d)
+		if options.rec3d == 'args':
+			plot_reciprocal_space(fnobs = args, fncalc = None)
+		elif len(options.rec3d) == 1:
+			plot_reciprocal_space(fnobs = options.rec3d[0], fncalc = None)
+		elif len(options.rec3d) == 2:
+			plot_reciprocal_space(fnobs = options.rec3d[0], fncalc = options.rec3d[1])
+
+		else:
+			raise ValueError
+		exit()
+
+	data = [read_data(fn,savenpy=options.savenpy,wl=options.wavelength) for fn in args] # returns data objects
+
+	if options.capillary:
+		capillary = read_data(options.capillary)
+		smoothed = capillary.smooth(window='hanning',window_len=101)
+		for d in data:
+			print ' >> Removing contribution of {} from {}'.format(options.capillary,d.filename)
+			f_bg_correct_out(d,smoothed.xy,kind=options.bg_correct,offset=0,suffix_corr='_rem_cap')
+		exit()
+
+	if options.plot_esd:
+		data.extend([read_data(fn,usecols=(0,2),suffix=' esd') for fn in args])
+	if spc:
+		data.extend([read_data(fn,usecols=(0,2),suffix=' -DIFFaX',savenpy=options.savenpy) for fn in spc])
+
+	if options.convert_2theta:
+		if data:
+			wl_in,wl_out = options.convert_2theta
+			data = [d.convert_wavelength(wl_in,wl_out) for d in data]
+			for d in data:
+				d.print_pattern(tag='{:.2f}'.format(wl_out))
+		else:
+			for wl in options.convert_2theta:
+				wavelength_info(wl)
+			exit()
+
+	if options.fixsls:
+		fix_sls_data(data, quiet=options.quiet)
+		exit()
+
+	if options.corrmat:
+		f = open(options.corrmat)
+		corr,labels = get_correlation_matrix(f)
+		plot_correlation_matrix(corr,labels)
+		exit()
+
+	if options.identify:
+		if options.peakdetect:
+			lookahead,noise = options.peakdetect
+		else:
+			lookahead,noise = None,None
+
+		for d in data:
+			f_identify(d,options.compare_reference,lookahead=lookahead,noise=noise)
+	elif options.peakdetect:
+		#options.show = False
+		lookahead,noise = options.peakdetect
+		for d in data:
+			f_peakdetect(d,lookahead=lookahead,noise=noise)
+
+	if options.xrs:
+		fname = options.xrs
+		copyfile(fname,fname+'~')
+		f = read_file(fname)
+		bg_data,options.xrs_out = parse_xrs(f)
+	elif options.bg_input:
+		try:
+			bg_data = read_data(options.bg_input)
+		except:
+			bg_data = setup_interpolate_background(data[0],name=options.bg_input)
+	else:
+		bg_data = None
+
+
+	fig = plt.figure()
+	lines = Lines(fig,hide=options.quiet)
+	lines.nomove = options.nomove
+	lines.normalize = options.normalize_all
+	lines.linewidth = options.linewidth
+	lines.savefig = options.savefig
+	
+	if plt.get_backend() == 'TkAgg':
+		fig.tight_layout(rect=(0,0,1,1))  ## tight layout, smaller gray border
+
+	if options.quiet or options.fixsls or options.monitor:
+		pass
+	elif options.bg_correct:
+		if not bg_data:
+			bg_data = setup_interpolate_background(data[0])
+		bg = Background(fig,d=bg_data,bg_correct=options.bg_correct, quiet=options.quiet, out=options.bg_output, topas_bg=options.topas_bg, xrs=options.xrs) 
+	elif options.backgrounder:
+		bg = Background(fig,d=bg_data,quiet=options.quiet, topas_bg=options.topas_bg, xrs=options.xrs)
+
+	if options.crplo:
+		f_crplo()
+
+	if prf:	# fullprof profile files
+		for fn in prf:
+			f_prf(fn)
+
+	if options.compare:
+		if options.compare_reference:
+			ref = read_data(options.compare_reference)
+			lines.plot(ref,lw=lines.linewidth*2)
+		else:
+			ref = None
+
+		kind = options.compare-1
+		f_compare(data,kind=kind,reference=ref)
+
+	#plt.plot(range(10),range(10))
+	#plt.show()
+	#plt.plot(range(5),range(5,10))
+	#plt.show()
+
+	if options.plot_ticks_scaled:
+		for fn in options.plot_ticks_scaled:
+			d = read_data(fn,savenpy=False)
+			lines.plot_ticks_scaled(d)
+
+
+	if options.quiet:
+		pass
+	else:
+		for d in reversed(data):
+			lines.plot(d)
+
+	if options.plot_uvw:
+		d = calc_fwhm(options.plot_uvw)
+		lines.plot(d)
+
+	if options.plot_ticks:
+		for i,hkl_file in enumerate(options.plot_ticks):
+			col = 4 if options.plot_ticks == 'hkl.dat' else options.plot_ticks_col - 1
+			ticks = load_tick_marks(hkl_file,col=col)
+			if ticks:
+				lines.plot_tick_marks(ticks,i=i)
+
+	if options.weighted_ydiff:
+		try:
+			xyobs  = read_data('x_yobs.xy')
+			xycalc = read_data('x_ycalc.xy')
+			xyerr  = read_data('x_yerr.xy')
+		except IOError,e:
+			print e
+			print
+			print """Please add the following lines to the TOPAS input file to generate the needed files:
+	Out_X_Yobs(x_yobs.xy)          
+	Out_X_Ycalc(x_ycalc.xy)       
+	Out_X_Yerr(x_yerr.xy)   
+			"""
+			exit(0)
+		f_plot_weighted_difference(xyobs,xycalc,xyerr,lw=options.linewidth)
+
+	if options.topas_bg:
+		try:
+			xyobs  = read_data('x_yobs.xy')
+			xycalc = read_data('x_ycalc.xy')
+			xydiff = read_data('x_ydiff.xy')
+			#xybg   = read_data('x_ybg.xy')
+		except IOError,e:
+			print e
+			print
+			print """Please add the following lines to the TOPAS input file to generate the needed files:
+	Out_X_Yobs(x_yobs.xy)          
+	Out_X_Ycalc(x_ycalc.xy)       
+	Out_X_Difference(x_ydiff.xy)   
+			"""
+			exit(0)
+
+		f_plot_topas_special(xyobs,xycalc,xydiff,bg_data,lw=options.linewidth)
+		# specifying bg.xycalc and bg.xyobs is necessary to update the Rp value on every step
+		bg.xycalc = xycalc
+		bg.xyobs  = data[0]
+
+
+	if options.stepco:
+		assert bg_data, "No background data available, can't use option --stepco!"
+
+		lines.plot(bg_data)
+		f_plot_stepco_special(bg_data.xy)
+
+	if options.bin:
+		for d in reversed(data):
+			dbinned = d.bin(options.bin)
+			dbinned.print_pattern()
+			lines.plot(dbinned)
+	
+	if options.smooth:
+		for d in reversed(data):
+			dsmooth = d.smooth(options.smooth) # smoothing performed in place
+			dsmooth.print_pattern()
+			lines.plot(dsmooth)
+
+	if options.boxes:
+		lines.plot_boxes(options.boxes)
+
+
+
+	if options.quiet or not options.show:
+		pass
+	elif not sys.stdin.isatty():
+		plot_stdin(fig)
+	elif options.monitor:
+		if options.monitor in ('crplot.dat','crplot'):
+			f_monitor('crplot.dat',crplot_init,crplot_update,fig=fig)
+		elif options.monitor.endswith('.prf'):
+			f_monitor(options.monitor,f_prf_init,f_prf_update,fig=fig)
+
+		else:
+			fn = options.monitor
+			f_monitor(fn,plot_init,plot_update,fig=fig)
+	elif options.savefig:
+		plt.legend()
+		out = options.savefig
+		plt.savefig(out, bbox_inches=0)
+	else:
+		plt.legend()
+		plt.show()
+
+
+	if options.bg_correct:
+		#for d in data:
+		#	f_bg_correct_out(d=d,bg_xy=bg.xy.T,offset=options.bg_offset)
+	
+		f_bg_correct_out(d=data[0],bg_xy=bg.xy.T,kind=bg_correct,offset=options.bg_offset)
+	
+	try:
+		if bg.xy.any():
+			bg.printdata(fout='lines.out')
+	except UnboundLocalError:
+		pass
+
+
+if __name__ == '__main__':
+	main()
