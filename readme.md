@@ -34,7 +34,7 @@ Since its inception, many functions for operations performed on powder diffracti
 
 Download and extract:
 
-    https://github.com/stefsmeets/lines/archive/master.zip
+https://github.com/stefsmeets/lines/archive/master.zip
 
 Install:
 
