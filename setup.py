@@ -13,19 +13,19 @@ setup(
 	author = "Stef Smeets",
 	author_email = "stef.smeets@mat.ethz.ch",
 	license = "GPL",
-	url ="",
+	url = "https://github.com/stefsmeets/lines",
 
 	classifiers=[
-        'Programming Language :: Python :: 2.7',
-    	],
+		'Programming Language :: Python :: 2.7',
+		],
 
-    packages = ["lines"],
+	packages = ["lines"],
 
-    install_requires = ["numpy", "matplotlib", "scipy"],
+	install_requires = ["numpy", "matplotlib", "scipy"],
 
-    package_data = {
-    "": ["LICENCE",  "readme.md", "setup.py"],
-    	},
+	package_data = {
+	"": ["LICENCE",  "readme.md", "setup.py"],
+		},
 
 	entry_points = {
 		'console_scripts': [

@@ -109,7 +109,7 @@ def read_data(fn,usecols=None,append_zeros=False,savenpy=False,suffix='',is_tick
 
 	if ext == '' and root.upper() in iza_codes:
 		fn = parse_iza_code(code=root)
-		return read_data(fn)
+		return read_data(fn, wl=wl)
 
 	if ext == '.cif':
 		fn = parse_cif(fn, wl=wl)  # requires CCTBX and FOCUS
