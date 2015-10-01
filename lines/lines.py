@@ -99,7 +99,6 @@ def read_file(path):
 	return f
 
 
-
 def read_data(fn,usecols=None,append_zeros=False,savenpy=False,suffix='',is_ticks=False,wl=1.0):
 	if fn == 'stepco.inp':
 		f = read_file(fn)
@@ -112,7 +111,7 @@ def read_data(fn,usecols=None,append_zeros=False,savenpy=False,suffix='',is_tick
 		return read_data(fn, wl=wl)
 
 	if ext == '.cif':
-		fn = parse_cif(fn, wl=wl)  # requires CCTBX and FOCUS
+		fn = run_cif2xy(fn, wl=wl)  # requires CCTBX and FOCUS
 		return read_data(fn)
 
 	if ext.lower() == '.xrdml':
@@ -218,7 +217,6 @@ def parse_xrdml(fn):
 	return d
 
 
-
 def parse_iza_code(code):
 	"""Takes IZA code and returns path to cif"""
 
@@ -231,125 +229,13 @@ def parse_iza_code(code):
 	return path
 
 
-def read_cif(f):
-	"""opens cif and returns cctbx data object"""
-	from iotbx.cif import reader, CifParserError
-	try:
-		if isinstance(f,file):
-			structures = reader(file_object=f).build_crystal_structures()
-		elif isinstance(f,str):
-			structures = reader(file_path=f).build_crystal_structures()
-		else:
-			raise TypeError, 'read_cif: Can not deal with type {}'.format(type(f))
-	except CifParserError as e:
-		print e
-		print "Error parsing cif file, check if the data tag does not contain any spaces."
-		exit()
-	for key,val in structures.items():
-		print "\nstructure:", key
-		val.show_summary()
-		print "Volume: {:.2f}".format(val.unit_cell().volume())
-		print
-	return structures
-
-
-def parse_cif(cif, wl=1.0):
-	"""Parses a cif file, writes an input file for focus to generate the powder pattern, and returns the filename
-	for the newly generated xye."""
-
-	from cctbx import xray
-	from cctbx import crystal
-
+def run_cif2xy(cif, wl=1.0):
 	import subprocess as sp
 
-	print "Reading CIF:", cif
-
-	structure = read_cif(cif).values()[0]
-	sg = structure.space_group()
-	uc = structure.unit_cell()
-	sps = structure.special_position_settings()
-	scatterers = structure.scatterers()
-
-	title = 'lines'
-	spgr = sg.type().lookup_symbol()
-	a,b,c,al,be,ga = uc.parameters()
-
+	sp.call([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "cif2xy.py"), "--wavelength={}".format(wl), cif])
 	root,ext = os.path.splitext(cif)
 	basename = os.path.basename(root)
-
-	focus_inp = open("focus.inp",'w')
-	focus_out = "focus.out"
-	xye_out = basename+".xye"
-
-	print >> focus_inp, """
-Title  {title}
-
-SpaceGroup  {spgr}
-UnitCell  {a} {b} {c} {al} {be} {ga}
-
-Lambda  {wl}
-
-ProfileStartEndStep 2 49.99 0.002
-ProfilePOLRA 1.0
-ProfileFWHM UVW 0.001 0.0 0.0
-#ProfileAsym  a(i) -0.005 0.003 0
-ProfilePeakShape  PseudoVoigt
-PseudoVoigtPeakRange  25
-PseudoVoigtFracLorentz  0.5
-ProfileBackground  0
-#ProfileReferenceRefl
-ProfileReferenceMax  50000
-
-""".format(title=title,
-			spgr=spgr,
-			a=a,
-			b=b,
-			c=c,
-			al=al,
-			be=be,
-			ga=ga,
-			wl=wl)
-
-	for atom in scatterers:
-		label = atom.label
-		element = atom.element_symbol()
-		if element == 'T':
-			element = 'Si'
-		x,y,z = atom.site
-		occ = atom.occupancy
-		u_iso = atom.u_iso
-
-		print >> focus_inp, '{label:8} {element:4} {x:8.5f} {y:8.5f} {z:8.5f} {occ:.4f} {u_iso:.4f}'.format(label=label,
-																	element=element,
-																	x=x,y=y,z=z,
-																	occ=occ,
-																	u_iso=u_iso)
-	print >> focus_inp, "End"
-	focus_inp.close()
-
-	print "Generating powder pattern... (wl = {} A)".format(wl)
-	sp.call("focus -PowderStepScan {} > {}".format(focus_inp.name, focus_out), shell=True)
-
-	begin_switch = ">Begin stepscan"
-	end_switch = "&"
-
-	focus_stepscan = open(focus_out,'r')
-	xye = open(xye_out, 'w')
-
-	do_print = 0
-	for line in focus_stepscan:
-		if line.startswith(end_switch):
-			break
-		elif do_print:
-			print >> xye, line,
-		elif line.startswith(begin_switch):
-			do_print = 1
-			focus_stepscan.next()
-	focus_stepscan.close()
-	xye.close()
-
-	return xye_out
-
+	return basename+".xy"
 
 
 def parse_xrs(f,return_as='d_xrs'):

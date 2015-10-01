@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+import subprocess as sp
+import sys
+import os
+import argparse
+
 try:
 	from cctbx import xray
 	from cctbx import crystal
@@ -9,12 +14,7 @@ except ImportError:
 else:
 	CCTBX_LOADED = True
 
-import subprocess as sp
-import sys
-import os
-import argparse
-
-__version__ = "2014-10-01"
+__version__ = "2015-10-01"
 
 if not CCTBX_LOADED:
 	import environment
@@ -55,6 +55,15 @@ def read_cif(f):
 		print
 	return structures
 
+
+def replace_extension(fn, new=".xy"):
+	"""replaces cif extension by xy extension"""
+	root,ext = os.path.splitext(fn)
+	basename = os.path.basename(root)
+	xy_out = basename + "." + new
+	return xy_out
+
+
 def cif2xy(cif, wl=1.0):
 	print "Reading CIF:", cif
 
@@ -68,12 +77,10 @@ def cif2xy(cif, wl=1.0):
 	spgr = sg.type().lookup_symbol()
 	a,b,c,al,be,ga = uc.parameters()
 
-	root,ext = os.path.splitext(cif)
-	basename = os.path.basename(root)
+	xy_out = replace_extension(cif, new="xy")
 
 	focus_inp = open("focus.inp",'w')
 	focus_out = "focus.out"
-	xye_out = basename+".xye"
 
 	print >> focus_inp, """
 Title  {title}
@@ -128,7 +135,7 @@ ProfileReferenceMax  50000
 	end_switch = "&"
 
 	focus_stepscan = open(focus_out,'r')
-	xye = open(xye_out, 'w')
+	xye = open(xy_out, 'w')
 
 	do_print = 0
 	for line in focus_stepscan:
@@ -142,8 +149,7 @@ ProfileReferenceMax  50000
 	focus_stepscan.close()
 	xye.close()
 
-	return xye_out
-
+	return xy_out
 
 
 def main():
