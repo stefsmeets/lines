@@ -1,0 +1,58 @@
+data_ITQ-50 (calcined)
+_cell_length_a        15.3448
+_cell_length_b        15.3448
+_cell_length_c        11.8118
+_cell_angle_alpha    90.00
+_cell_angle_beta     90.00
+_cell_angle_gamma    90.00
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'P4/mbm'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'-y,x,z'
+'y,-x,z'
+'x+1/2,-y+1/2,-z'
+'-x+1/2,y+1/2,-z'
+'-x,-y,z'
+'y+1/2,x+1/2,-z'
+'-y+1/2,-x+1/2,-z'
+'-x,-y,-z'
+'y,-x,-z'
+'-y,x,-z'
+'-x-1/2,y-1/2,z'
+'x-1/2,-y-1/2,z'
+'x,y,-z'
+'-y-1/2,-x-1/2,z'
+'y-1/2,x-1/2,z'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+Si1 Si 0.09347 0.73141 0.1864 1.00 0.0494
+Si2 Si 0.02840 0.32358 0.0000 1.00 0.0494
+Si3 Si 0.16840 0.18550 0.0000 1.00 0.0494
+Si4 Si 0.02832 0.86009 0.3699 1.00 0.0494
+O1 O 0.1304 0.8108 0.1114 1.00 0.0367
+O2 O 0.0459 0.7743 0.2952 1.00 0.0367
+O3 O 0.1759 0.6759 0.2300 1.00 0.0367
+O4 O 0.0293 0.6690 0.1137 1.00 0.0367
+O5 O 0.0718 0.2273 0.0000 1.00 0.0367
+O6 O 0.1072 0.3928 0.0000 1.00 0.0367
+O7 O 0.2318 0.2682 0.0000 1.00 0.0367
+O8 O 0.0999 0.9337 0.3471 1.00 0.0367
+O9 O 0.0348 0.8313 0.5000 1.00 0.0367
+
+
+
+

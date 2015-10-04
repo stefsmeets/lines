@@ -1,0 +1,56 @@
+data_ASU-7
+_cell_length_a        8.7795
+_cell_length_b        8.7795
+_cell_length_c        14.4696
+_cell_angle_alpha    90
+_cell_angle_beta     90
+_cell_angle_gamma    90
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'P4/mcc'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'-y,x,z'
+'y,-x,z'
+'x,-y,-z+1/2'
+'-x,y,-z+1/2'
+'-x,-y,z'
+'y,x,-z+1/2'
+'-y,-x,-z+1/2'
+'-x,-y,-z'
+'y,-x,-z'
+'-y,x,-z'
+'-x,y,z-1/2'
+'x,-y,z-1/2'
+'x,y,-z'
+'-y,-x,z-1/2'
+'y,x,z-1/2'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+Ge1 Ge 0.0 0.5000 0.2500 1.0 0.0090
+Ge2 Ge 0.2565 0.4239 0.1086 1.0 0.0090
+O1 O 0.1043 0.3755 0.1810 1.0 0.0120
+O20 O 0.2010 0.3595 0.0 0.5 0.0141
+O21 O 0.1764 0.4393 0.0 0.5 0.0120
+O30 O 0.3257 0.5936 0.1557 0.5 0.0149
+O31 O 0.3793 0.2692 0.1194 0.5 0.0120
+H2O1 O2-(H2O) 0.5000 0.5000 0.0 1.0 0.0320
+C1 C 0.0 0.0 0.1258 0.5 0.0840
+C2 C -0.0333 0.0537 0.2080 0.125 0.0940
+N1 N -0.0333 0.0537 0.2080 0.125 0.0940
+
+
+
+

@@ -1,0 +1,48 @@
+data_Cs-Aluminosilicate
+_cell_length_a         16.776
+_cell_length_b         13.828
+_cell_length_c         5.021
+_cell_angle_alpha     90
+_cell_angle_beta      90
+_cell_angle_gamma     90
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'Ama2'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'-x,-y,z'
+'-x+1/2,y,z'
+'x+1/2,-y,z'
+'x,y+1/2,z+1/2'
+'-x,-y+1/2,z+1/2'
+'-x+1/2,y+1/2,z+1/2'
+'x+1/2,-y+1/2,z+1/2'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+CS Cs 0.2500 0.20406 0.00000 0.814 0.0591
+SI1 Si 0.05281 0.74134 0.04651 1.0 0.0186
+SI2 Si 0.15709 0.42622 0.41971 1.0 0.0178
+SI3 Si 0.08952 0.02677 0.40524 1.0 0.0183
+O1 O 0.00000 0.00000 0.31644 1.0 0.0361
+O2 O 0.25000 0.41029 0.35466 1.0 0.0619
+O3 O 0.12235 0.32339 0.51936 1.0 0.0503
+O4 O 0.09931 0.14024 0.48097 1.0 0.0382
+O5 O 0.02323 0.73969 0.35550 1.0 0.0344
+O6 O 0.11123 0.45939 0.15344 1.0 0.0549
+O7 O 0.14838 0.00661 0.15333 1.0 0.0331
+
+
+
+

@@ -1,0 +1,52 @@
+data_Laumontite
+_cell_length_a         14.8538
+_cell_length_b         13.1695
+_cell_length_c         7.5421
+_cell_angle_alpha     90
+_cell_angle_beta      110.323
+_cell_angle_gamma     90
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'C12/m1'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'-x,y,-z'
+'-x,-y,-z'
+'x,-y,z'
+'x+1/2,y+1/2,z'
+'-x+1/2,y+1/2,-z'
+'-x+1/2,-y+1/2,-z'
+'x+1/2,-y+1/2,z'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+CA Ca 0.2601 0.5 0.737 1.0 0.0431
+SI1 Si 0.2368 0.3838 0.156 1.0 0.0239
+SI2 Si 0.0763 0.3834 0.325 1.0 0.0270
+AL1 Al 0.1315 0.3080 0.737 1.0 0.0331
+O1 O 0.260 0.5 0.219 1.0 0.0100
+O2 O 0.2084 0.3744 0.919 1.0 0.0210
+O3 O 0.1384 0.3838 0.552 1.0 0.0070
+O4 O 0.146 0.3454 0.203 1.0 0.0370
+O5 O 0.3205 0.3185 0.248 1.0 0.0100
+O6 O 0.043 0.5 0.267 1.0 0.0090
+O7 O 0.013 0.3083 0.743 1.0 0.0320
+H2O1 O2-(H2O) 0.029 0.171 0.0 0.5 0.0310
+H2O2 O2-(H2O) 0.401 0.5 0.026 1.0 0.0750
+H2O5 O2-(H2O) 0.5 0.467 0.5 0.5 0.0400
+H2O8 O2-(H2O) 0.1426 0.129 0.332 1.0 0.0510
+
+
+
+

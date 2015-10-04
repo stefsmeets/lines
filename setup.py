@@ -19,12 +19,13 @@ setup(
 		'Programming Language :: Python :: 2.7',
 		],
 
-	packages = ["lines"],
+	packages = ["lines", "zeolite_database"],
 
 	install_requires = ["numpy", "matplotlib", "scipy"],
 
 	package_data = {
 	"": ["LICENCE",  "readme.md", "setup.py"],
+	"zeolite_database": ["*.cif"],
 		},
 
 	entry_points = {

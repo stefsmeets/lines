@@ -1,0 +1,63 @@
+data_ITQ-24
+_cell_length_a        21.2549
+_cell_length_b        13.5210
+_cell_length_c        12.6095
+_cell_angle_alpha    90.0
+_cell_angle_beta     90.0
+_cell_angle_gamma    90.0
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'Cmmm'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'x,-y,-z'
+'-x,y,-z'
+'-x,-y,z'
+'-x,-y,-z'
+'-x,y,z'
+'x,-y,z'
+'x,y,-z'
+'x+1/2,y+1/2,z'
+'x+1/2,-y+1/2,-z'
+'-x+1/2,y+1/2,-z'
+'-x+1/2,-y+1/2,z'
+'-x+1/2,-y+1/2,-z'
+'-x+1/2,y+1/2,z'
+'x+1/2,-y+1/2,z'
+'x+1/2,y+1/2,-z'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+Si1 Si 0.0757 0.1185 0.3737 0.69 0.0291
+Si2 Si 0.1502 0.1933 0.1831 1.0 0.0291
+Si3 Si 0.2822 0.1106 0.1273 0.95 0.0291
+Si4 Si 0.0763 0.1139 0.0 0.91 0.0291
+Ge1 Ge 0.0757 0.1185 0.3737 0.31 0.0291
+Ge3 Ge 0.2822 0.1106 0.1273 0.05 0.0291
+Ge4 Ge 0.0763 0.1139 0.0 0.09 0.0291
+O1 O 0.0949 0.1601 0.1107 1.0 0.0291
+O2 O 0.0 0.1258 0 1.0 0.0291
+O3 O 0.0992 0.0 0.0 1.0 0.0291
+O4 O 0.0938 0.1362 0.5 1.0 0.0291
+O5 O 0.0783 0.0 0.3298 1.0 0.0291
+O6 O 0.1199 0.1867 0.2961 1.0 0.0291
+O7 O 0.0 0.1477 0.3673 1.0 0.0291
+O8 O 0.2130 0.1271 0.1800 1.0 0.0291
+O9 O 0.1698 0.3091 0.1828 1.0 0.0291
+O10 O 0.2992 0.0 0.1630 1.0 0.0291
+O11 O 0.2731 0.1196 0.0 1.0 0.0291
+
+
+
+

@@ -1,0 +1,53 @@
+data_Chiavennite
+_cell_length_a         8.729
+_cell_length_b         31.326
+_cell_length_c         4.903
+_cell_angle_alpha     90
+_cell_angle_beta      90
+_cell_angle_gamma     90
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'Pnab'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'x+1/2,-y+1/2,-z+1/2'
+'-x+1/2,y,-z'
+'-x,-y+1/2,z+1/2'
+'-x,-y,-z'
+'-x-1/2,y-1/2,z-1/2'
+'x-1/2,-y,z'
+'x,y-1/2,-z-1/2'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+CA Ca 0.25000 0.08789 0.00000 1.0 0.0184
+MN Mn 0.00000 0.00000 0.00000 1.0 0.0152
+SI1 Si 0.25000 0.00131 0.50000 1.0 0.0124
+SI2 Si 0.58376 0.23216 0.10475 1.0 0.0185
+SI3 Si 0.14247 -0.13511 0.24360 1.0 0.0194
+BE1 Be -0.00037 0.05722 -0.42986 1.0 0.0087
+O1 O 0.13917 -0.02785 0.31336 1.0 0.0155
+O2 O 0.15170 0.03243 -0.29572 1.0 0.0153
+O3 O 0.04143 0.23906 0.13475 1.0 0.0409
+O4 O 0.25000 -0.24779 0.00000 1.0 0.0285
+O5 O 0.25000 -0.11875 0.00000 1.0 0.0773
+O6 O 0.25000 -0.13872 0.50000 1.0 0.0035
+O7 O 0.07997 -0.18239 0.17734 1.0 0.0342
+O8 O 0.00055 -0.10438 0.27050 1.0 0.0206
+OH O1-(OH) 0.01254 0.05814 0.24296 1.0 0.0206
+H2O O2-(H2O) 0.15815 0.14739 0.26022 1.0 0.0371
+
+
+
+

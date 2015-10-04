@@ -1,0 +1,68 @@
+data_Pahasapaite
+_cell_length_a         13.781
+_cell_length_b         13.781
+_cell_length_c         13.781
+_cell_angle_alpha     90
+_cell_angle_beta      90
+_cell_angle_gamma     90
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'I23'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'z,x,y'
+'y,z,x'
+'-y,-z,x'
+'z,-x,-y'
+'-y,z,-x'
+'-z,-x,y'
+'-z,x,-y'
+'y,-z,-x'
+'x,-y,-z'
+'-x,y,-z'
+'-x,-y,z'
+'x+1/2,y+1/2,z+1/2'
+'z+1/2,x+1/2,y+1/2'
+'y+1/2,z+1/2,x+1/2'
+'-y+1/2,-z+1/2,x+1/2'
+'z+1/2,-x+1/2,-y+1/2'
+'-y+1/2,z+1/2,-x+1/2'
+'-z+1/2,-x+1/2,y+1/2'
+'-z+1/2,x+1/2,-y+1/2'
+'y+1/2,-z+1/2,-x+1/2'
+'x+1/2,-y+1/2,-z+1/2'
+'-x+1/2,y+1/2,-z+1/2'
+'-x+1/2,-y+1/2,z+1/2'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+LI Li 0.3013 0.3013 0.3013 1.0 0.0239
+LI Li 0.3013 0.3013 0.3013 1.0 0.0239
+NA Na 0.3615 0.0357 0.0301 0.008 0.0464
+K1 K 0.3615 0.0357 0.0301 0.05 0.0464
+CA Ca 0.3615 0.0357 0.0301 0.229 0.0464
+BE Be 0.4207 0.1210 0.2675 1.0 0.0096
+P1 P 0.2771 0.1240 0.4224 1.0 0.0090
+O1 O 0.2246 0.2178 0.3914 1.0 0.0120
+O2 O 0.3781 0.1245 0.3766 1.0 0.0147
+O3 O 0.3791 0.0329 0.2041 1.0 0.0149
+O4 O 0.2160 0.0383 0.3889 1.0 0.0147
+H2O1 O2-(H2O) 0.3851 0.3851 0.3851 1.0 0.0390
+H2O2 O2-(H2O) 0.4768 0.0 0.0 0.5 0.0213
+H2O3 O2-(H2O) 0.2171 0.1095 0.0714 0.5 0.0507
+H2O4 O2-(H2O) 0.2459 0.0765 0.0504 0.5 0.0833
+
+
+
+

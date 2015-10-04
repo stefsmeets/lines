@@ -1,0 +1,49 @@
+data_Tiptopite
+_cell_length_a         11.655
+_cell_length_b         11.655
+_cell_length_c         4.692
+_cell_angle_alpha     90
+_cell_angle_beta      90
+_cell_angle_gamma     120
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'P63'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'x-y,x,z+1/2'
+'y,-x+y,z+1/2'
+'-y,x-y,z'
+'-x+y,-x,z'
+'-x,-y,z+1/2'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+LI Li 0.2207 0.1137 0.7486 0.483 0.0294
+NA Na 0.2207 0.1137 0.7486 0.283 0.0294
+K K 0.3333 0.6667 0.253 1.0 0.0258
+CA Ca 0.2207 0.1137 0.7486 0.1167 0.0294
+BE Be 0.338 0.418 0.746 1.0 0.0080
+P1 P 0.0851 0.4167 0.7500 1.0 0.0063
+O1 O 0.1902 0.3843 0.6518 1.0 0.0123
+O2 O 0.1378 0.5647 0.7027 1.0 0.0095
+O3 O 0.0547 0.3801 0.0688 1.0 0.0120
+O4 O 0.3302 0.3747 0.0862 1.0 0.0082
+O5 O 0.0000 0.0000 0.253 1.0 0.0338
+O6 O 0.064 0.130 0.378 0.25 0.0200
+O7 O 0.066 0.130 0.097 0.25 0.0200
+O8 O 0.168 0.322 0.236 0.17 0.0200
+
+
+
+

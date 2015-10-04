@@ -1,0 +1,58 @@
+data_Epistilbite
+_cell_length_a         9.08
+_cell_length_b         17.74
+_cell_length_c         10.25
+_cell_angle_alpha     90
+_cell_angle_beta      124.54
+_cell_angle_gamma     90
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'C12/m1'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'-x,y,-z'
+'-x,-y,-z'
+'x,-y,z'
+'x+1/2,y+1/2,z'
+'-x+1/2,y+1/2,-z'
+'-x+1/2,-y+1/2,-z'
+'x+1/2,-y+1/2,z'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+NA1 Na 0.760 0.0 0.251 0.26 0.0329
+CA1 Ca 0.760 0.0 0.251 0.64 0.0329
+SI1 Si 0.001 0.088 0.161 0.74 0.0076
+SI2 Si 0.293 0.208 0.390 0.74 0.0101
+SI3 Si 0.707 0.197 0.097 0.74 0.0139
+AL1 Al 0.001 0.088 0.161 0.26 0.0076
+AL2 Al 0.293 0.208 0.390 0.26 0.0101
+AL3 Al 0.707 0.197 0.097 0.26 0.0139
+O1 O 0.021 0.0 0.215 1.0 0.0101
+O2 O 0.0 0.100 0.0 1.0 0.0253
+O3 O 0.812 0.117 0.132 1.0 0.0215
+O4 O 0.170 0.134 0.309 1.0 0.0190
+O5 O 0.5 0.180 0.0 1.0 0.0393
+O6 O 0.5 0.179 0.5 1.0 0.0139
+O7 O 0.75 0.25 0.0 1.0 0.0583
+O8 O 0.773 0.233 0.261 1.0 0.0595
+O9 O 0.25 0.25 0.5 1.0 0.0583
+H2O1 O2-(H2O) 0.724 0.0 0.502 0.875 0.0621
+H2O2 O2-(H2O) 0.0 0.078 0.5 0.875 0.0621
+H2O3 O2-(H2O) 0.559 0.082 0.281 0.875 0.0507
+H2O4 O2-(H2O) 0.5 0.0 0.0 0.875 0.0418
+
+
+
+

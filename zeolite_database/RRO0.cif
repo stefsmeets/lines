@@ -1,0 +1,48 @@
+data_RUB-41
+_cell_length_a         7.345 
+_cell_length_b        8.724
+_cell_length_c        17.152
+_cell_angle_alpha    90.0
+_cell_angle_beta     114.2
+_cell_angle_gamma    90.0
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'P12/c1'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'-x,y,-z+1/2'
+'-x,-y,-z'
+'x,-y,z-1/2'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+Si1 Si -0.062 0.8238 -0.0084 1 0.0204
+Si2 Si 0.6912 0.3973 0.9447 1 0.0204
+Si3 Si 0.2873 0.6479 0.6786 1 0.0204
+Si4 Si 0.273 0.347 0.9209 1 0.0204
+Si5 Si 0 0.4969 0.25 1 0.0204
+O1 O 0.1315 0.7211 0.0296 1 0.0228
+O2 O 0 0 0 1 0.0228
+O3 O 0.8079 0.7985 0.0468 1 0.0228
+O4 O 0.8077 0.777 0.8939 1 0.0228
+O5 O 0.7255 0.5097 0.0222 1 0.0228
+O6 O 0.4877 0.3072 0.924 1 0.0228
+O7 O 0.6798 0.4931 0.864 1 0.0228
+O8 O 0.142 0.6127 0.7243 1 0.0228
+O9 O 0.5 0.7013 0.75 1 0.0228
+O10 O 0.1281 0.3913 0.8263 1 0.0228
+
+
+
+

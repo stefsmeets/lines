@@ -1,0 +1,51 @@
+data_ITQ-4_Calcined
+_cell_length_a        18.65243
+_cell_length_b        13.49597
+_cell_length_c        7.63109
+_cell_angle_alpha    90.0
+_cell_angle_beta     101.9781
+_cell_angle_gamma    90.0
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'I12/m1'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'-x,y,-z'
+'-x,-y,-z'
+'x,-y,z'
+'x+1/2,y+1/2,z+1/2'
+'-x+1/2,y+1/2,-z+1/2'
+'-x+1/2,-y+1/2,-z+1/2'
+'x+1/2,-y+1/2,z+1/2'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+Si1 Si -0.01265 0.11371 0.2918 1.0 0.0203
+Si2 Si 0.249813 0.11336 0.6215 1.0 0.0225
+Si3 Si 0.14687 0.11588 0.2469 1.0 0.0175
+Si4 Si 0.16169 0.20243 -0.1058 1.0 0.0233
+O5 O 0.31979 0.17940 0.6417 1.0 0.0165
+O6 O -0.07340 0.18435 0.1910 1.0 0.0165
+O7 O 0.0 0.12865 0.5 1.0 0.0165
+O8 O 0.06025 0.13926 0.2230 1.0 0.0165
+O9 O 0.15762 0.0 0.2024 1.0 0.0165
+O10 O 0.18823 0.13830 0.4442 1.0 0.0165
+O11 O -0.03438 0.0 0.2395 1.0 0.0165
+O12 O 0.21031 0.13257 0.7932 1.0 0.0165
+O13 O 0.27006 0.0 0.6233 1.0 0.0165
+O14 O 0.17722 0.17880 0.0971 1.0 0.0165
+
+
+
+

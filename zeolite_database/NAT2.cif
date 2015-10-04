@@ -1,0 +1,55 @@
+data_Natrolite
+_cell_length_a         18.30
+_cell_length_b         18.63
+_cell_length_c         6.60
+_cell_angle_alpha     90
+_cell_angle_beta      90
+_cell_angle_gamma     90
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'Fdd2'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'-x,-y,z'
+'-x+1/4,y+1/4,z+1/4'
+'x+1/4,-y+1/4,z+1/4'
+'x,y+1/2,z+1/2'
+'-x,-y+1/2,z+1/2'
+'-x+1/4,y+3/4,z+3/4'
+'x+1/4,-y+3/4,z+3/4'
+'x+1/2,y,z+1/2'
+'-x+1/2,-y,z+1/2'
+'-x+3/4,y+1/4,z+3/4'
+'x+3/4,-y+1/4,z+3/4'
+'x+1/2,y+1/2,z'
+'-x+1/2,-y+1/2,z'
+'-x+3/4,y+3/4,z+1/4'
+'x+3/4,-y+3/4,z+1/4'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+NA1 Na 0.2208 0.0305 0.6120 1.0 0.0253
+SI1 Si 0.0 0.0 0.0 1.0 0.0136
+SI2 Si 0.1532 0.2112 0.6181 1.0 0.0127
+AL1 Al 0.0376 0.0936 0.6119 1.0 0.0142
+O1 O 0.0227 0.0683 0.8594 1.0 0.0229
+O2 O 0.0704 0.1824 0.6011 1.0 0.0139
+O3 O 0.0986 0.0346 0.4997 1.0 0.0196
+O4 O 0.2063 0.1526 0.7166 1.0 0.0157
+O5 O 0.1799 0.2272 0.3860 1.0 0.0232
+H2O1 O2-(H2O) 0.0564 0.1893 0.1085 1.0 0.0317
+
+
+
+

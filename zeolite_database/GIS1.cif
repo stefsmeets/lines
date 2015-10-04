@@ -1,0 +1,50 @@
+data_Na-P1
+_cell_length_a         10.043
+_cell_length_b         10.043
+_cell_length_c         10.043
+_cell_angle_alpha     90
+_cell_angle_beta      90
+_cell_angle_gamma     90
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'I-4'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'y,-x,-z'
+'-y,x,-z'
+'-x,-y,z'
+'x+1/2,y+1/2,z+1/2'
+'y+1/2,-x+1/2,-z+1/2'
+'-y+1/2,x+1/2,-z+1/2'
+'-x+1/2,-y+1/2,z+1/2'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+NA4 Na 0.0140 0.1895 0.4940 0.32 0.0557
+NA5 Na 0.3590 0.0825 0.2210 0.42 0.0507
+SI1 Si 0.1438 0.1692 -0.0181 0.62 0.0139
+SI2 Si 0.1683 0.3579 0.2329 0.62 0.0114
+AL1 Al 0.1438 0.1692 -0.0181 0.38 0.0139
+AL2 Al 0.1683 0.3579 0.2329 0.38 0.0114
+O1 O 0.1890 0.0215 0.0410 1.0 0.0063
+O2 O 0.1885 0.2895 0.0880 1.0 0.0165
+O3 O 0.0090 0.3460 0.2985 1.0 0.0317
+O4 O 0.2830 0.2845 0.3300 1.0 0.0355
+H2O1 O2-(H2O) 0.0 0.0 0.3250 0.42 0.0747
+H2O2 O2-(H2O) 0.2195 0.0240 0.3515 0.70 0.0329
+H2O3 O2-(H2O) 0.2930 0.0020 0.3520 0.50 0.0507
+
+
+
+

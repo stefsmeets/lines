@@ -1,0 +1,71 @@
+data_Barium_Chloroaluminosilicate
+_cell_length_a         14.194
+_cell_length_b         14.194
+_cell_length_c         9.234
+_cell_angle_alpha     90
+_cell_angle_beta      90
+_cell_angle_gamma     90
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'I4/mmm'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'-y,x,z'
+'y,-x,z'
+'x,-y,-z'
+'-x,y,-z'
+'-x,-y,z'
+'y,x,-z'
+'-y,-x,-z'
+'-x,-y,-z'
+'y,-x,-z'
+'-y,x,-z'
+'-x,y,z'
+'x,-y,z'
+'x,y,-z'
+'-y,-x,z'
+'y,x,z'
+'x+1/2,y+1/2,z+1/2'
+'-y+1/2,x+1/2,z+1/2'
+'y+1/2,-x+1/2,z+1/2'
+'x+1/2,-y+1/2,-z+1/2'
+'-x+1/2,y+1/2,-z+1/2'
+'-x+1/2,-y+1/2,z+1/2'
+'y+1/2,x+1/2,-z+1/2'
+'-y+1/2,-x+1/2,-z+1/2'
+'-x+1/2,-y+1/2,-z+1/2'
+'y+1/2,-x+1/2,-z+1/2'
+'-y+1/2,x+1/2,-z+1/2'
+'-x+1/2,y+1/2,z+1/2'
+'x+1/2,-y+1/2,z+1/2'
+'x+1/2,y+1/2,-z+1/2'
+'-y+1/2,-x+1/2,z+1/2'
+'y+1/2,x+1/2,z+1/2'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+BA1 Ba 0.1816 0.5 0.5 1.0 0.0633
+BA2 Ba 0.5 0.5 0.288 1.0 0.1836
+CL1 Cl 0.375 0.375 0.5 1.0 0.0646
+O2- O2- 0.0 0.5 0.25 1.0 0.0608
+SI1 Si 0.2386 0.3917 0.157 0.6667 0.0279
+AL1 Al 0.2386 0.3917 0.157 0.3333 0.0279
+O1 O 0.193 0.390 0.0 1.0 0.0456
+O2 O 0.350 0.350 0.156 1.0 0.0583
+O3 O 0.158 0.342 0.25 1.0 0.0887
+O4 O 0.257 0.5 0.213 1.0 0.0418
+
+
+
+

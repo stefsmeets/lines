@@ -1,0 +1,55 @@
+data_Piperidine_AlPO-17
+_cell_length_a         13.2371
+_cell_length_b         13.2371
+_cell_length_c         14.7708
+_cell_angle_alpha     90
+_cell_angle_beta      90
+_cell_angle_gamma     120
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'P63/m'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'x-y,x,z+1/2'
+'y,-x+y,z+1/2'
+'-y,x-y,z'
+'-x+y,-x,z'
+'-x,-y,z+1/2'
+'-x,-y,-z'
+'-x+y,-x,-z-1/2'
+'-y,x-y,-z-1/2'
+'y,-x+y,-z'
+'x-y,x,-z'
+'x,y,-z-1/2'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+AL1 Al 0.7708 0.9983 0.1180 1.0 0.0350
+AL2 Al 0.0999 0.4214 0.2500 1.0 0.0241
+P1 P 0.9989 0.2369 0.0938 1.0 0.0250
+P2 P 0.5675 0.9079 0.2500 1.0 0.0180
+O1 O 0.0365 0.3435 0.1529 1.0 0.0380
+O11 O 0.6373 0.9669 0.1649 1.0 0.0270
+O2 O 0.0826 0.1910 0.1053 1.0 0.0400
+O3 O 0.1432 0.2640 0.6244 1.0 0.0400
+O4 O 0.2773 0.0030 0.9970 1.0 0.0420
+O5 O 0.2468 0.4693 0.2500 1.0 0.0329
+O6 O 0.4584 0.9171 0.2500 1.0 0.0260
+O7 O 0.1721 0.1876 0.2500 0.69 0.0439
+C1 C 0.3770 0.7930 0.9599 1.0 0.4192
+C2 C 0.4590 0.7490 0.9920 1.0 0.4192
+
+
+
+

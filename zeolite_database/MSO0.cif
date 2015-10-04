@@ -1,0 +1,57 @@
+data_MCM-61
+_cell_length_a        11.841
+_cell_length_b        11.841
+_cell_length_c        11.841
+_cell_angle_alpha    93.29
+_cell_angle_beta     93.29
+_cell_angle_gamma    93.29
+
+
+# setting R
+# _symmetry_space_group_name_H-M 'R-3m'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'z,x,y'
+'y,z,x'
+'-y,-x,-z'
+'-z,-y,-x'
+'-x,-z,-y'
+'-x,-y,-z'
+'-z,-x,-y'
+'-y,-z,-x'
+'y,x,z'
+'z,y,x'
+'x,z,y'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+Si1 Si -0.0002 0.1797 0.2725 1.0 0.0073
+Si2 Si 0.0002 0.1795 0.1129 1.0 0.0073
+Si3 Si 0.0 0.3073 0.0 1.0 0.0073
+O1 O 0.093 0.1861 0.295 1.0 0.0181
+O2 O 0.9232 0.0768 0.2889 1.0 0.0181
+O3 O 0.9845 0.2469 0.32 1.0 0.0181
+O4 O -0.0012 0.2058 0.1927 1.0 0.0181
+O5 O 0.0755 0.151 0.1005 1.0 0.0181
+O6 O 0.0205 0.2648 0.0667 1.0 0.0181
+O7 O 0.9044 0.0955 0.09 1.0 0.0181
+K1 K -0.6667 -0.3333 0.2355 0.5 0.0835
+K2 K 0.0 0.0 0.0057 0.344 0.0874
+K3 K -0.6667 -0.3333 0.2829 0.167 0.0215
+C1 C 0.5504 -0.2694 0.1662 1.0 0.1267
+O8 O -0.5198 -0.3338 0.1231 0.5 0.1249
+H1 H -0.5346 -0.0692 0.1486 4.0 0.1520
+
+
+
+

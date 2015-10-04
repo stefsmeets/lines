@@ -1,0 +1,53 @@
+data_Partheite
+_cell_length_a         21.555
+_cell_length_b         8.761
+_cell_length_c         9.304
+_cell_angle_alpha     90
+_cell_angle_beta      91.55
+_cell_angle_gamma     90
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'C12/c1'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'-x,y,-z+1/2'
+'-x,-y,-z'
+'x,-y,z-1/2'
+'x+1/2,y+1/2,z'
+'-x+1/2,y+1/2,-z+1/2'
+'-x+1/2,-y+1/2,-z'
+'x+1/2,-y+1/2,z-1/2'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+CA Ca 0.35586 0.1991 0.0444 1.0 0.0118
+SI1 Si 0.06729 0.1832 0.2896 1.0 0.0067
+SI2 Si 0.23983 0.0077 0.4621 1.0 0.0058
+AL1 Al 0.1161 0.0844 0.6006 1.0 0.0071
+AL2 Al 0.1999 0.3162 0.2858 1.0 0.0065
+O1 O 0.0695 0.0181 0.2162 1.0 0.0092
+O2 O 0.0725 0.1719 0.4626 1.0 0.0106
+O3 O 0.1222 0.2883 0.2295 1.0 0.0113
+O4 O 0.1722 0.0363 0.0250 1.0 0.0109
+O5 O 0.2081 0.4669 0.4096 1.0 0.0090
+O6 O 0.2345 0.1550 0.3605 1.0 0.0106
+O7 O 0.2340 0.3599 0.1221 1.0 0.0096
+O8 O 0.0 0.2632 0.2500 1.0 0.0080
+OH O1-(OH) 0.3523 0.2673 0.2918 1.0 0.0141
+H2O1 O2-(H2O) 0.0712 0.5050 0.0159 1.0 0.0332
+H2O2 O2-(H2O) 0.4541 0.3070 0.0800 1.0 0.0218
+
+
+
+

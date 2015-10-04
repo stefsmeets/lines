@@ -1,0 +1,53 @@
+data_Chabazite
+_cell_length_a         9.459
+_cell_length_b         9.459
+_cell_length_c         9.459
+_cell_angle_alpha     94.07
+_cell_angle_beta      94.07
+_cell_angle_gamma     94.07
+
+
+# setting R
+# _symmetry_space_group_name_H-M 'R-3m'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'z,x,y'
+'y,z,x'
+'-y,-x,-z'
+'-z,-y,-x'
+'-x,-z,-y'
+'-x,-y,-z'
+'-z,-x,-y'
+'-y,-z,-x'
+'y,x,z'
+'z,y,x'
+'x,z,y'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+K1 K 0.2222 0.2222 0.2222 0.97 0.0263
+K2 K 0.5611 0.5611 0.2506 0.15 0.1142
+K3 K 0.5255 0.5255 0.1064 0.22 0.1261
+SI1 Si 0.1033 0.3331 0.8743 0.68 0.0113
+AL1 Al 0.1033 0.3331 0.8743 0.32 0.0113
+O1 O 0.2665 -0.2665 0.0 1.0 0.0301
+O2 O 0.1506 -0.1506 0.5 1.0 0.0263
+O3 O 0.2503 0.2503 0.8930 1.0 0.0281
+O4 O 0.0204 0.0204 0.3193 1.0 0.0280
+H2O1 O2-(H2O) 0.0 0.50 0.50 0.61 0.1600
+H2O2 O2-(H2O) 0.7387 0.7387 0.4784 0.77 0.1030
+H2O3 O2-(H2O) 0.4469 0.4469 0.2260 0.13 0.1600
+
+
+
+

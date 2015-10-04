@@ -1,0 +1,50 @@
+data_OSB-1
+_cell_length_a        10.0928
+_cell_length_b        10.0928
+_cell_length_c        7.6264
+_cell_angle_alpha    90
+_cell_angle_beta     90
+_cell_angle_gamma    120
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'P32'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'-y,x-y,z+2/3'
+'-x+y,-x,z+1/3'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+Si1 Si 0.5818 0.2893 0.7241 0.58 0.0130
+Be1 Be 0.5818 0.2893 0.7241 0.42 0.0130
+Si2 Si 0.2899 0.5811 0.0599 0.53 0.0090
+Be2 Be 0.2899 0.5811 0.0599 0.47 0.0090
+Si3 Si 0.0007 0.4976 0.2277 0.73 0.0130
+Be3 Be 0.0007 0.4976 0.2277 0.28 0.0130
+O1 O 0.68 0.3710 0.5540 1.0 0.0200
+O2 O 0.312 0.6910 0.8820 1.0 0.0310
+O3 O 0.465 0.1070 0.6810 1.0 0.0210
+O4 O 0.349 0.4560 0.0180 1.0 0.0280
+O5 O 0.107 0.4640 0.1020 1.0 0.0250
+O6 O 0.469 0.3560 0.7720 1.0 0.0220
+K11 K 0.005 0.4620 0.7200 0.44 0.0500
+K12 K -0.006 0.5270 0.7180 0.56 0.0570
+K2 K 0.185 0.0750 0.7140 0.79 0.2600
+H2O1 O2-(H2O) 0.115 0.1710 0.0510 1.0 0.1170
+H2O2 O2-(H2O) 0.136 0.3270 0.5840 1.0 0.1900
+H2O3 O2-(H2O) -0.138 0.1890 -0.0790 1.0 0.1800
+
+
+
+

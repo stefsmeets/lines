@@ -1,0 +1,55 @@
+data_Tetrapropylammonium_Fluoride_AlPO-5
+_cell_length_a         13.740
+_cell_length_b         13.740
+_cell_length_c         8.474
+_cell_angle_alpha     90
+_cell_angle_beta      90
+_cell_angle_gamma     120
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'P6cc'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'x-y,x,z'
+'y,-x+y,z'
+'-y,x-y,z'
+'-x+y,-x,z'
+'-x,-y,z'
+'-x+y,y,z+1/2'
+'x,x-y,z+1/2'
+'-y,-x,z+1/2'
+'y,x,z+1/2'
+'x-y,-y,z+1/2'
+'-x,-x+y,z+1/2'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+P1 P 0.4529 0.3281 0.053 1.0 0.0285
+AL1 Al 0.4571 0.3382 0.425 1.0 0.0239
+O1 O 0.4214 0.209 0.008 1.0 0.0529
+O2 O 0.4550 0.3299 0.251 1.0 0.0675
+O3 O 0.3658 0.3597 0.004 1.0 0.0521
+O4 O 0.5742 0.4175 0.007 1.0 0.0637
+C1 C 0.104 0.041 0.666 0.1667 0.0500
+C2 C 0.125 0.979 0.750 0.1667 0.0500
+C3 C 0.104 0.979 0.416 0.1667 0.0500
+C4 C 0.000 0.895 0.500 0.1667 0.0500
+C5 C 0.041 0.895 0.359 0.1667 0.0500
+C6 C 0.082 0.957 0.221 0.1667 0.0500
+N1 N 0.000 0.000 0.543 0.5 0.0500
+F1 F 0.500 0.500 0.317 0.1667 0.0500
+
+
+
+

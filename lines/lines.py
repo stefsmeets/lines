@@ -40,7 +40,7 @@ import math
 # except ImportError:
 # 	pass
 
-__version__ = '2015-09-15'
+__version__ = '2015-10-03'
 
 params = {'legend.fontsize': 10,
 		  'legend.labelspacing': 0.1}

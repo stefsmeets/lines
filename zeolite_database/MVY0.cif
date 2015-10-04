@@ -1,0 +1,48 @@
+data_MCM-70
+_cell_length_a        13.3167
+_cell_length_b        4.6604
+_cell_length_c        8.7000
+_cell_angle_alpha    90.00
+_cell_angle_beta     90.00
+_cell_angle_gamma    90.00
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'Pmn21'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'-x+1/2,-y,z+1/2'
+'-x,y,z'
+'x+1/2,-y,z+1/2'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+Si1 Si 0.2051 0.6366 0.3318 1.00 0.0141
+Si2 Si 0.2977 0.1346 0.1726 1.00 0.0141
+Si3 Si 0.5 0.5817 -0.084 1.00 0.0141
+B4 B 0.0 0.918 0.603 1.00 0.0141
+O1 O 0.0944 0.512 0.315 1.00 0.0090
+O2 O 0.2135 0.896 0.208 1.00 0.0090
+O3 O 0.5 0.923 -0.043 1.00 0.0090
+O4 O 0.2886 0.407 0.294 1.00 0.0090
+O5 O 0.2733 0.251 0.0 1.00 0.0090
+O6 O 0.4101 0.007 0.194 1.00 0.0090
+O7 O 0.5 0.402 0.070 1.00 0.0090
+K1 K 0.0 0.477 -0.107 0.58 0.0540
+K2 K 0.0 0.045 0.112 0.42 0.0540
+Ow2 O 0.0 0.477 -0.107 0.42 0.0540
+Ow1 O 0.0 0.045 0.112 0.58 0.0540
+
+
+
+

@@ -1,0 +1,54 @@
+data_UCSB-15GaGe
+_cell_length_a        7.7308
+_cell_length_b        13.375
+_cell_length_c        14.6126
+_cell_angle_alpha    90.0
+_cell_angle_beta     90.0
+_cell_angle_gamma    90.0
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'Pnma'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'x+1/2,-y+1/2,-z+1/2'
+'-x,y+1/2,-z'
+'-x+1/2,-y,z+1/2'
+'-x,-y,-z'
+'-x-1/2,y-1/2,z-1/2'
+'x,-y-1/2,z'
+'x-1/2,y,-z-1/2'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+Ge1 Ge 0.0619 0.6295 0.6768 1 0.0130
+Ge2 Ge 0.6694 0.5624 0.6214 1 0.0139
+Ge3 Ge 0.3276 0.6264 0.5109 0.5 0.0120
+Ga1 Ga 0.3276 0.6264 0.5109 0.5 0.0120
+O1 O 0.5511 0.6219 0.5346 1 0.0210
+O2 O 0.0571 0.5551 0.7753 1 0.0239
+O3 O -0.142 0.6335 0.6272 1 0.0280
+O4 O 0.205 0.5744 0.6008 1 0.0250
+O5 O 0.2849 0.5621 0.4078 1 0.0231
+O6 O 0.1303 0.75 0.7056 1 0.0210
+O7 O 0.2599 0.75 0.4856 1 0.0210
+C1 C 0.3745 0.6574 0.1171 1 0.0360
+C2 C 0.2268 0.6588 0.1867 1 0.0360
+N1 N 0.4809 0.75 0.1363 0.5 0.0290
+N2 N 0.1179 0.75 0.1764 0.5 0.0390
+N3 N 0.3444 0.75 0.0515 0.5 0.0300
+N4 N 0.2542 0.75 0.244 0.5 0.0660
+
+
+
+

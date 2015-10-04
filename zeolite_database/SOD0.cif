@@ -1,0 +1,83 @@
+data_Bicchulite
+_cell_length_a         8.825
+_cell_length_b         8.825
+_cell_length_c         8.825
+_cell_angle_alpha     90
+_cell_angle_beta      90
+_cell_angle_gamma     90
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'I-43m'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'-x,z,-y'
+'-x,-z,y'
+'-z,-y,x'
+'z,-y,-x'
+'y,-x,-z'
+'-y,x,-z'
+'z,x,y'
+'y,z,x'
+'-y,-z,x'
+'z,-x,-y'
+'-y,z,-x'
+'-z,-x,y'
+'-z,x,-y'
+'y,-z,-x'
+'x,-y,-z'
+'-x,y,-z'
+'-x,-y,z'
+'-y,-x,z'
+'y,x,z'
+'-z,y,-x'
+'z,y,x'
+'x,-z,-y'
+'x,z,y'
+'x+1/2,y+1/2,z+1/2'
+'-x+1/2,z+1/2,-y+1/2'
+'-x+1/2,-z+1/2,y+1/2'
+'-z+1/2,-y+1/2,x+1/2'
+'z+1/2,-y+1/2,-x+1/2'
+'y+1/2,-x+1/2,-z+1/2'
+'-y+1/2,x+1/2,-z+1/2'
+'z+1/2,x+1/2,y+1/2'
+'y+1/2,z+1/2,x+1/2'
+'-y+1/2,-z+1/2,x+1/2'
+'z+1/2,-x+1/2,-y+1/2'
+'-y+1/2,z+1/2,-x+1/2'
+'-z+1/2,-x+1/2,y+1/2'
+'-z+1/2,x+1/2,-y+1/2'
+'y+1/2,-z+1/2,-x+1/2'
+'x+1/2,-y+1/2,-z+1/2'
+'-x+1/2,y+1/2,-z+1/2'
+'-x+1/2,-y+1/2,z+1/2'
+'-y+1/2,-x+1/2,z+1/2'
+'y+1/2,x+1/2,z+1/2'
+'-z+1/2,y+1/2,-x+1/2'
+'z+1/2,y+1/2,x+1/2'
+'x+1/2,-z+1/2,-y+1/2'
+'x+1/2,z+1/2,y+1/2'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+CA Ca 0.1434 0.1434 0.1434 1.0 0.0095
+SI Si 0.25 0.5 0.0 0.3333 0.0062
+AL Al 0.25 0.5 0.0 0.6667 0.0062
+O O 0.1407 0.1407 0.4220 1.0 0.0119
+OH O1-(OH) 0.3845 0.3845 0.3845 1.0 0.0118
+H H 0.328 0.328 0.328 1.0 0.0127
+
+
+
+

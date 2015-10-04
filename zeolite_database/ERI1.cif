@@ -1,0 +1,73 @@
+data_Erionite
+_cell_length_a         13.27
+_cell_length_b         13.27
+_cell_length_c         15.05
+_cell_angle_alpha     90
+_cell_angle_beta      90
+_cell_angle_gamma     120
+
+
+# setting 
+# _symmetry_space_group_name_H-M 'P63/mmc'
+
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x,y,z'
+'x-y,x,z+1/2'
+'y,-x+y,z+1/2'
+'-y,x-y,z'
+'-x+y,-x,z'
+'x-y,-y,-z'
+'-x,-x+y,-z'
+'-x,-y,z+1/2'
+'y,x,-z'
+'-y,-x,-z+1/2'
+'-x+y,y,-z+1/2'
+'x,x-y,-z+1/2'
+'-x,-y,-z'
+'-x+y,-x,-z-1/2'
+'-y,x-y,-z-1/2'
+'y,-x+y,-z'
+'x-y,x,-z'
+'-x+y,y,z'
+'x,x-y,z'
+'x,y,-z-1/2'
+'-y,-x,z'
+'y,x,z-1/2'
+'x-y,-y,z-1/2'
+'-x,-x+y,z-1/2'
+
+
+loop_
+_atom_site_label
+_atom_site_type_sumbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+NA1 Na 0.3333 0.6667 0.14 0.30 0.0380
+NA2 Na 0.5 0.0 0.0 0.11 0.0393
+K1 K 0.0 0.0 0.25 1.0 0.0251
+MG Mg 0.66667 0.33333 0.2030 0.175 0.0380
+CA1 Ca 0.3333 0.6667 0.14 0.07 0.0380
+CA2 Ca 0.5 0.0 0.0 0.04 0.0393
+CA3 Ca 0.66667 0.33333 0.0730 0.195 0.0456
+SI1 Si 0.00021 0.23350 0.10446 0.75 0.0114
+SI2 Si 0.0935 0.4245 0.2500 0.75 0.0139
+AL1 Al 0.00021 0.23350 0.10446 0.25 0.0114
+AL2 Al 0.0935 0.4245 0.2500 0.25 0.0139
+O1 O 0.0267 0.3493 0.1610 1.0 0.0306
+O2 O 0.0979 0.1957 0.1264 1.0 0.0209
+O3 O 0.1258 0.2516 0.6339 1.0 0.0241
+O4 O 0.2638 0.0 0.0 1.0 0.0310
+O5 O 0.2293 0.4585 0.25 1.0 0.0266
+O6 O 0.4603 0.9206 0.25 1.0 0.0355
+H2O1 O2-(H2O) 0.4890 0.2450 0.25 0.34 0.0583
+H2O2 O2-(H2O) 0.2490 0.4970 0.0160 0.11 0.0241
+H2O3 O2-(H2O) 0.8950 0.4480 0.0950 0.23 0.0532
+
+
+
+
