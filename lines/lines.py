@@ -2413,7 +2413,7 @@ def main():
 		#for d in data:
 		#	f_bg_correct_out(d=d,bg_xy=bg.xy.T,offset=options.bg_offset)
 	
-		f_bg_correct_out(d=data[0],bg_xy=bg.xy.T,kind=bg_correct,offset=options.bg_offset)
+		f_bg_correct_out(d=data[0],bg_xy=bg.xy.T,kind=options.bg_correct,offset=options.bg_offset)
 	
 	try:
 		if bg.xy.any():
