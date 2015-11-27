@@ -48,9 +48,9 @@ plt.rcParams.update(params)
 
 LINESDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-planck_constant   = 6.62606957E-34
+planck_constant = 6.62606957E-34
 elementary_charge = 1.60217656E-19
-speed_of_light    = 2.99792458E8
+speed_of_light = 2.99792458E8
 
 # print plt.get_backend()
 
@@ -175,7 +175,8 @@ def get_correlation_matrix(f, topas=False):
 
     def yield_corrmat(f):
         for i, line in enumerate(f):
-            shift = max(0, int(math.log10(i+1))-1)  # calculate shift to correct for topas formatting
+            # calculate shift to correct for topas formatting
+            shift = max(0, int(math.log10(i+1))-1)
             if line.startswith('}'):
                 raise StopIteration
             else:
@@ -207,7 +208,8 @@ def parse_xrdml(fn):
     xmldoc = minidom.parse(fn)
 
     counts = xmldoc.getElementsByTagName('intensities')[0]  # grab element
-    counts = map(float, counts.firstChild.wholeText.split())  # get first node + convert to float
+    # get first node + convert to float
+    counts = map(float, counts.firstChild.wholeText.split())
 
     for rangenode in xmldoc.getElementsByTagName('positions'):
         if rangenode.getAttribute('axis') == '2Theta':
@@ -217,8 +219,10 @@ def parse_xrdml(fn):
     if not rangenode:
         raise IOError("Cannot find range node in xrdml file.")
 
-    r_min = float(rangenode.getElementsByTagName('startPosition')[0].firstChild.wholeText)
-    r_max = float(rangenode.getElementsByTagName('endPosition')[0].firstChild.wholeText)
+    r_min = float(rangenode.getElementsByTagName(
+        'startPosition')[0].firstChild.wholeText)
+    r_max = float(rangenode.getElementsByTagName(
+        'endPosition')[0].firstChild.wholeText)
     steps = len(counts)
 
     th2 = np.linspace(r_min, r_max, steps)
@@ -250,7 +254,8 @@ def parse_iza_code(code):
 def run_cif2xy(cif, wl=1.0):
     import subprocess as sp
 
-    sp.call([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "cif2xy.py"), "--wavelength={}".format(wl), cif])
+    sp.call([sys.executable, os.path.join(os.path.dirname(
+        os.path.abspath(__file__)), "cif2xy.py"), "--wavelength={}".format(wl), cif])
     root, ext = os.path.splitext(cif)
     basename = os.path.basename(root)
     return basename+".xy"
@@ -371,7 +376,8 @@ def plot_stdin(fig, update_time=0.2):
 
         if line == '':
             try:
-                fig.canvas.flush_events()  # update figure to prevent slow responsiveness
+                # update figure to prevent slow responsiveness
+                fig.canvas.flush_events()
             except TclError:
                 print '-- Window closed (TclError on readline).'
                 break
@@ -407,7 +413,8 @@ def plot_stdin(fig, update_time=0.2):
             plt.draw()
 
             try:
-                fig.canvas.flush_events()  # update figure to prevent slow responsiveness
+                # update figure to prevent slow responsiveness
+                fig.canvas.flush_events()
             except TclError:
                 print '-- Window closed (TclError on update).'
                 break
@@ -468,10 +475,12 @@ def f_monitor(fin, f_init, f_update, fig=None, poll_time=0.05):
             args = f_update(fin, *args)
 
             # ax.relim()
-            # ax.autoscale() # resets the boundaries -> annoying for a plot that doesn't need rescaling
+            # ax.autoscale() # resets the boundaries -> annoying for a plot
+            # that doesn't need rescaling
             plt.draw()
 
-            # And this allows you to at least close the window (and crash the program by that ;))
+            # And this allows you to at least close the window (and crash the
+            # program by that ;))
             fig.canvas.flush_events()
 
 
@@ -490,8 +499,10 @@ def plot_init(fn, fig, ax):
         ax.set_xlabel(xl)
         ax.set_ylabel(yl)
         ax.set_title(fn)
-        line,  = ax.plot(d.x, d.y, 'o', label='{} vs {}'.format(xl, yl), color='r', linestyle='')
-        diag, =  ax.plot([0, 25], [0, 25], color='b', linestyle='-', linewidth=2)
+        line,  = ax.plot(
+            d.x, d.y, 'o', label='{} vs {}'.format(xl, yl), color='r', linestyle='')
+        diag, =  ax.plot(
+            [0, 25], [0, 25], color='b', linestyle='-', linewidth=2)
         return [line, diag]
     else:
         line, = ax.plot(d.x, d.y, label=fn)
@@ -524,7 +535,7 @@ def crplot_init(fin, fig, ax):
     fcr.close()
     fhkl.close()
 
-    tt  = crdata[:, 0]
+    tt = crdata[:, 0]
     obs = crdata[:, 1]
     clc = crdata[:, 2]
     dif = crdata[:, 3]
@@ -540,7 +551,8 @@ def crplot_init(fin, fig, ax):
     pobs_zero, = ax.plot(tt, np.zeros(tt.size), c='black')
     pdif_zero, = ax.plot(tt, np.zeros(tt.size) - mx_dif, c='black')
 
-    ptcks, = ax.plot(tck, np.zeros(tck.size) - (mx_dif / 4), linestyle='', marker='|', markersize=10, label='ticks', c='purple')
+    ptcks, = ax.plot(tck, np.zeros(tck.size) - (mx_dif / 4),
+                     linestyle='', marker='|', markersize=10, label='ticks', c='purple')
 
     args = [pobs, pclc, pdif, pobs_zero, pdif_zero, ptcks]
 
@@ -559,7 +571,7 @@ def crplot_update(fin, *args):
     fcr.close()
     fhkl.close()
 
-    tt  = crdata[:, 0]
+    tt = crdata[:, 0]
     obs = crdata[:, 1]
     clc = crdata[:, 2]
     dif = crdata[:, 3]
@@ -587,7 +599,7 @@ def f_crplo():
 
     crdata = np.array(parse_crplot_dat(fcr))
 
-    tt  = crdata[:, 0]
+    tt = crdata[:, 0]
     obs = crdata[:, 1]
     clc = crdata[:, 2]
     dif = crdata[:, 3]
@@ -610,7 +622,8 @@ def f_crplo():
     else:
         hkldata = np.array(parse_hkl_dat(fhkl))
         tck = hkldata[:, 3]
-        plt.plot(tck, np.zeros(tck.size) - (mx_dif / 4), linestyle='', marker='|', markersize=10, label='ticks', c='purple')
+        plt.plot(tck, np.zeros(tck.size) - (mx_dif / 4), linestyle='',
+                 marker='|', markersize=10, label='ticks', c='purple')
 
 
 def f_prf(fin):
@@ -619,7 +632,8 @@ def f_prf(fin):
     for i in range(6):
         fin.next()
 
-    tt, fobs, fcal, diff = np.genfromtxt(fin, usecols=(0, 1, 2, 3), unpack=True)
+    tt, fobs, fcal, diff = np.genfromtxt(
+        fin, usecols=(0, 1, 2, 3), unpack=True)
 
     mx_diff = max(diff)
 
@@ -637,7 +651,8 @@ def f_prf_init(fin, fig, ax):
     for i in range(6):
         fin.next()
 
-    tt, fobs, fcal, diff = np.genfromtxt(fin, usecols=(0, 1, 2, 3), unpack=True)
+    tt, fobs, fcal, diff = np.genfromtxt(
+        fin, usecols=(0, 1, 2, 3), unpack=True)
 
     mx_diff = max(diff)
 
@@ -646,13 +661,14 @@ def f_prf_init(fin, fig, ax):
     pdiff, = ax.plot(tt, diff-mx_diff, label='difference')
 
     pzero_fobs, = ax.plot(tt, np.zeros(tt.size), c='black')
-    pzero_diff, = ax.plot(tt, np.zeros(tt.size) + (diff[0] - mx_diff), c='black')
+    pzero_diff, = ax.plot(
+        tt, np.zeros(tt.size) + (diff[0] - mx_diff), c='black')
 
     args = [pfobs, pfcal, pdiff, pzero_fobs, pzero_diff]
     return args
 
 
-def f_prf_update(fin,*args):
+def f_prf_update(fin, *args):
     pfobs, pfcal, pdiff, pzero_fobs, pzero_diff = args
 
     fin = open(fin, 'r')
@@ -660,7 +676,8 @@ def f_prf_update(fin,*args):
     for i in range(6):
         fin.next()
 
-    tt, fobs, fcal, diff = np.genfromtxt(fin, usecols=(0, 1, 2, 3), unpack=True)
+    tt, fobs, fcal, diff = np.genfromtxt(
+        fin, usecols=(0, 1, 2, 3), unpack=True)
 
     mx_diff = max(diff)
 
@@ -698,7 +715,8 @@ def f_plot_topas_special(xyobs, xycalc, xydiff, xybg, lw=1.0):
     This is useful to compare the difference and adjust the background accordingly"""
 
     if not xybg:
-        raise IOError(" ** Background data not found. Please specify with --bgin")
+        raise IOError(
+            " ** Background data not found. Please specify with --bgin")
 
     tt = xyobs.x
 
@@ -735,22 +753,23 @@ def f_bg_correct_out(d, bg_xy, kind='linear', offset='ask', suffix_bg='_bg', suf
     """Function that removes the background from a data set and prints it to a new file"""
 
     root, ext = os.path.splitext(d.filename)
-    fn_bg     = root+suffix_bg+ext
-    fn_corr   = root+suffix_corr+ext
+    fn_bg = root+suffix_bg+ext
+    fn_corr = root+suffix_corr+ext
 
     # fn_bg   = d.filename.replace('.','_bg.')
     # fn_corr = d.filename.replace('.','_corr.')
 
-    out_bg   = open(fn_bg, 'w')
+    out_bg = open(fn_bg, 'w')
     out_corr = open(fn_corr, 'w')
 
     xvals = d.x
     yvals = d.y
 
-    bg_yvals = interpolate(bg_xy,xvals,kind=kind)
+    bg_yvals = interpolate(bg_xy, xvals, kind=kind)
 
     if offset == 'ask':
-        offset = raw_input("What y offset should I add to the data? (x=exit)\n >> [0] ") or 0
+        offset = raw_input(
+            "What y offset should I add to the data? (x=exit)\n >> [0] ") or 0
         offset = int(offset)
 
     if offset == 'x':
@@ -779,7 +798,8 @@ def f_bg_correct_out(d, bg_xy, kind='linear', offset='ask', suffix_bg='_bg', suf
                     continue
                 print >> out_corr, '%15.6f%15.2f' % (x, y)
     else:
-        raise IndexError('Not enough values in background array, need at least 4 points.')
+        raise IndexError(
+            'Not enough values in background array, need at least 4 points.')
 
 
 def new_stepco_inp(xy, name, pre, post, esds=None):
@@ -891,7 +911,8 @@ def smooth(x, window_len=11, window='hanning'):
         return x
 
     if window not in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
-        raise ValueError("Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'")
+        raise ValueError(
+            "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'")
 
     s = np.r_[2*x[0]-x[window_len-1::-1], x, 2*x[-1]-x[-1:-window_len:-1]]
 
@@ -968,7 +989,8 @@ def savitzky_golay(y, window_size=11, order=2, deriv=0):
 
     half_window = (window_size - 1) // 2
     # precompute coefficients
-    b = np.mat([[k**i for i in order_range] for k in range(-half_window, half_window+1)])
+    b = np.mat([[k**i for i in order_range]
+                for k in range(-half_window, half_window+1)])
     m = np.linalg.pinv(b).A[deriv]  # coefficients
 
     # pad the signal at the extremes with
@@ -990,7 +1012,7 @@ def wavelength_info(wl):
     dvals = 10/np.linspace(1, 10, 10)
 
     theta2 = d2twotheta(dvals, wl)
-    qvals  = 4*(np.pi/wl) * np.sin(np.radians(theta2/2))
+    qvals = 4*(np.pi/wl) * np.sin(np.radians(theta2/2))
 
     print "\n         d        th2          q"
     for d, th2, q in zip(dvals, theta2, qvals):
@@ -1003,13 +1025,15 @@ def calc_agreement(o, c, bg=0, kind='linear'):
     if np.any(bg):
         bg = interpolate(bg.T, c.x, kind=kind)  # need linear or better here
 
-    oy = interpolate(o.xy, c.x, kind='nearest') - bg  # nearest is fast and accurate, anything else is very slow
+    # nearest is fast and accurate, anything else is very slow
+    oy = interpolate(o.xy, c.x, kind='nearest') - bg
     # oe = interpolate(o.xye[:,0:3:2],c.x,kind='nearest')
 
     rp = np.sum(np.abs(oy - c.y)) / np.sum(oy)  # profile R-value
 
     # w = (1/oe)**2
-    # rwp = ( np.sum(w*(oy - c.y)**2) / np.sum(w*(oy)**2) )**0.5 # weighted profile R-value
+    # rwp = ( np.sum(w*(oy - c.y)**2) / np.sum(w*(oy)**2) )**0.5 # weighted
+    # profile R-value
 
     return rp
 
@@ -1019,6 +1043,7 @@ class Data(object):
     plot_range = None
 
     """container class for x,y, err data"""
+
     def __init__(self, arr, name=None, quiet=False, is_ticks=False):
         if not quiet:
             print 'Loading data: {}\n       shape: {}'.format(name, arr.shape)
@@ -1032,9 +1057,9 @@ class Data(object):
             self.arr = arr
 
         try:
-            self.x   = self.arr[:, 0]
-            self.y   = self.arr[:, 1]
-            self.xy  = self.arr[:, 0:2]
+            self.x = self.arr[:, 0]
+            self.y = self.arr[:, 1]
+            self.xy = self.arr[:, 0:2]
             self.xye = self.arr[:, 0:3]
         except IndexError:
             raise IOError("Could not load file/data: {}".format(name))
@@ -1090,13 +1115,15 @@ class Data(object):
         name = root+'_bin_'+str(binsize)+ext
 
         if self.has_esd:
-            interpolated_errors = interpolate((self.x, self.err), xbinned, kind='linear')
+            interpolated_errors = interpolate(
+                (self.x, self.err), xbinned, kind='linear')
             return Data(np.hstack((xbinned, ybinned, interpolated_errors)), name=name)
         else:
             return Data(np.hstack((xbinned, ybinned)), name=name)
 
     def smooth(self, window='savitzky_golay', window_len=7, order=3, suffix='_smooth'):
-        assert window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman', 'savitzky_golay', 'moving_avg']
+        assert window in ['flat', 'hanning', 'hamming',
+                          'bartlett', 'blackman', 'savitzky_golay', 'moving_avg']
 
         print ' >> Applying filter: {}, window: {}, order {} (SG only) to {}'.format(window, window_len, order, self.filename)
 
@@ -1175,10 +1202,10 @@ class Background():
         #   self.xy = xy[:,idx]
 
         if d:
-            self.d  = d
+            self.d = d
             self.xy = np.array(self.d.xy, copy=True).T
         else:
-            self.d  = None
+            self.d = None
             self.xy = None
 
         try:
@@ -1187,12 +1214,16 @@ class Background():
         except (IndexError, ValueError, TypeError):
             self.xy = np.array([], dtype=float).reshape(2, 0)
 
-        self.line, = self.ax.plot(*self.xy, lw=0.5, marker='s', mec='red', mew=2, mfc='None', markersize=5, picker=self.sensitivity, label='interactive background')
+        self.line, = self.ax.plot(*self.xy, lw=0.5, marker='s', mec='red', mew=2,
+                                  mfc='None', markersize=5, picker=self.sensitivity, label='interactive background')
 
-        self.pick = self.line.figure.canvas.mpl_connect('pick_event', self.onpick)
-        self.cid  = self.line.figure.canvas.mpl_connect('button_press_event', self)
+        self.pick = self.line.figure.canvas.mpl_connect(
+            'pick_event', self.onpick)
+        self.cid = self.line.figure.canvas.mpl_connect(
+            'button_press_event', self)
 
-        self.keyevent = self.line.figure.canvas.mpl_connect('key_press_event', self.onkeypress)
+        self.keyevent = self.line.figure.canvas.mpl_connect(
+            'key_press_event', self.onkeypress)
 
         self.n = 0
 
@@ -1211,7 +1242,8 @@ class Background():
 
         self.bg_correct = bg_correct
         if self.bg_correct:
-            self.bg_range = np.arange(self.xy[0][0], self.xy[0][1], 0.01)  # Set limited range to speed up calculations
+            # Set limited range to speed up calculations
+            self.bg_range = np.arange(self.xy[0][0], self.xy[0][1], 0.01)
             self.bg, = self.ax.plot(self.d.x, self.d.y, label='background')
             # print self.bg_range
 
@@ -1261,7 +1293,8 @@ class Background():
         self.xy = np.delete(self.xy, ind, 1)
 
         if self.topas_bg:
-            agreement = calc_agreement(self.xyobs, self.xycalc, self.xy, kind=self.bg_correct)
+            agreement = calc_agreement(
+                self.xyobs, self.xycalc, self.xy, kind=self.bg_correct)
             difference = agreement - self.last_agreement
             self.last_agreement = agreement
             string = '{:.4f} ({:+.4f})'.format(agreement, difference)
@@ -1290,7 +1323,8 @@ class Background():
         self.xy = self.xy[:, idx]
 
         if self.topas_bg:
-            agreement = calc_agreement(self.xyobs, self.xycalc, self.xy, kind=self.bg_correct)
+            agreement = calc_agreement(
+                self.xyobs, self.xycalc, self.xy, kind=self.bg_correct)
             difference = agreement - self.last_agreement
             self.last_agreement = agreement
             string = '{:.4f} ({:+.4f})'.format(agreement, difference)
@@ -1349,7 +1383,9 @@ class Background():
 
 
 class Lines(object):
+
     """docstring for Lines"""
+
     def __init__(self, fig, hide=False):
         super(Lines, self).__init__()
         if hide:
@@ -1393,19 +1429,22 @@ class Lines(object):
         #   scl = 20
 
         if self.nomove:
-            ax.plot(data.x,data.y,label=label,lw=lw)
+            ax.plot(data.x, data.y, label=label, lw=lw)
         else:
             dx, dy = 0/72., 64/72.
 
             dx *= data.index
             dy *= data.index
-            offset = transforms.ScaledTranslation(dx, dy, self.fig.dpi_scale_trans)
+            offset = transforms.ScaledTranslation(
+                dx, dy, self.fig.dpi_scale_trans)
             transform = ax.transData + offset
 
-            # transform broken as of matplotlib 1.2.0, because it doesn't rescale the view
+            # transform broken as of matplotlib 1.2.0, because it doesn't
+            # rescale the view
             ax.plot(data.x, data.y, transform=transform, label=label, lw=lw)
 
-            ax.axis([data.x.min(), data.x.max()*1.2, data.y.min(), data.y.max()*1.2])
+            ax.axis(
+                [data.x.min(), data.x.max()*1.2, data.y.min(), data.y.max()*1.2])
 
     def plot_tick_marks(self, data, i=0):
         ax = self.ax
@@ -1417,7 +1456,8 @@ class Lines(object):
         offset = transforms.ScaledTranslation(dx, dy, self.fig.dpi_scale_trans)
         transform = ax.transData + offset
 
-        ax.plot(data.x, data.y, transform=transform, c='black', label=label, linestyle='', marker='|', markersize=15)
+        ax.plot(data.x, data.y, transform=transform, c='black',
+                label=label, linestyle='', marker='|', markersize=15)
         # plt.plot(tck, np.zeros(tck.size) - (mx_dif / 4), linestyle='', marker='|', markersize=10, label = 'ticks', c='purple')
 
     def plot_ticks_scaled(self, data):
@@ -1441,7 +1481,8 @@ class Lines(object):
 
         for x1, x2, y2 in boxes.T:
             # Class matplotlib.patches.Rectangle(xy, width, height, **kwargs)
-            rect = patches.Rectangle((x1, y1), x2-x1, y2, edgecolor='red', facecolor='none', lw=lw, alpha=alpha)
+            rect = patches.Rectangle(
+                (x1, y1), x2-x1, y2, edgecolor='red', facecolor='none', lw=lw, alpha=alpha)
             ax.add_patch(rect)
 
     def black_hole(*args, **kwargs):
@@ -1509,10 +1550,13 @@ def f_peakdetect(d, lookahead=10, noise=5000):
     ax = fig.add_subplot(111)
     d.plot(ax)
 
-    peaks, = ax.plot(xm, ym, marker='o', lw=0, markeredgecolor='red', markerfacecolor='None', markersize=20)
+    peaks, = ax.plot(xm, ym, marker='o', lw=0,
+                     markeredgecolor='red', markerfacecolor='None', markersize=20)
 
     class Okp(object):
+
         """docstring for okp"""
+
         def __init__(self, noise, lookahead):
             self.noise = noise
             self.lookahead = lookahead
@@ -1522,7 +1566,8 @@ def f_peakdetect(d, lookahead=10, noise=5000):
             print '1,2,3 = lookahead +/-/step'
             print '1,2,3 = noise +/-/step'
 
-            printer('lookahead  = {}({}), noiselevel = {}({})'.format(self.lookahead, [1, 10, 100][self.lookaheadstep%3], self.noise, [1, 10, 100][self.noisestep % 3]))
+            printer('lookahead  = {}({}), noiselevel = {}({})'.format(self.lookahead, [
+                    1, 10, 100][self.lookaheadstep % 3], self.noise, [1, 10, 100][self.noisestep % 3]))
 
         def onkeypress(self, event):
             if event.key == 'q':
@@ -1542,9 +1587,11 @@ def f_peakdetect(d, lookahead=10, noise=5000):
             if event.key == '3':
                 self.noisestep += 1
 
-            printer('lookahead  = {}({}), noiselevel = {}({})'.format(self.lookahead, [1, 10, 100][self.lookaheadstep%3], self.noise, [1, 10, 100][self.noisestep%3]))
+            printer('lookahead  = {}({}), noiselevel = {}({})'.format(self.lookahead, [
+                    1, 10, 100][self.lookaheadstep % 3], self.noise, [1, 10, 100][self.noisestep % 3]))
 
-            _max, _min = pd.peakdetect(d.y, d.x, lookahead=self.lookahead, delta=self.noise)
+            _max, _min = pd.peakdetect(
+                d.y, d.x, lookahead=self.lookahead, delta=self.noise)
             xm = [p[0] for p in _max]
             ym = [p[1] for p in _max]
 
@@ -1608,7 +1655,8 @@ def f_identify(d, refs, criterium=0.05, lookahead=10, noise=5000):
         exit()
 
         r = sum(min_diff[da]*min_diff[da]) / sum(xm[da]*xm[da])
-        wr = sum(ym[da] * min_diff[da]*min_diff[da]) / sum(ym[da]*xm[da]*xm[da])
+        wr = sum(ym[da] * min_diff[da]*min_diff[da]) / \
+            sum(ym[da]*xm[da]*xm[da])
         missing = len(xm) - sum(da)
 
         lst.append((r, wr, missing, ref.filename))
@@ -1625,14 +1673,15 @@ def f_compare(data, kind=0, reference=None):
     import scipy.stats
     import operator
 
-    def calc_combined_value(spearmanr,kendallr,pearsonr):
+    def calc_combined_value(spearmanr, kendallr, pearsonr):
         spearmanr = spearmanr if not np.isnan(spearmanr) else 1.0
-        kendallr  = kendallr  if not np.isnan(kendallr ) else 1.0
-        pearsonr  = pearsonr  if not np.isnan(pearsonr ) else 1.0
+        kendallr = kendallr if not np.isnan(kendallr) else 1.0
+        pearsonr = pearsonr if not np.isnan(pearsonr) else 1.0
 
         return pearsonr**(1/3.0)*kendallr**(1/3.0)*spearmanr**(1/3.0)
 
-    start, stop, step = 2, 25.00, 0.01  # parameters used for calculated pattern
+    # parameters used for calculated pattern
+    start, stop, step = 2, 25.00, 0.01
 
     min_tt = 0      # boundary for check
     max_tt = 2300   # should not excede number of parameters
@@ -1644,20 +1693,22 @@ def f_compare(data, kind=0, reference=None):
 
     xvals = np.arange(start, stop, step)
     # resample at same step rate as calculated pattern
-    data = [Data(np.vstack((xvals, interpolate(d.xy, xvals, kind='linear'))).T, name=d.filename, quiet=True) for d in data]
+    data = [Data(np.vstack((xvals, interpolate(
+        d.xy, xvals, kind='linear'))).T, name=d.filename, quiet=True) for d in data]
 
-    #for d in data:
+    # for d in data:
     #   print d.xy.shape
 
     if reference:
-        reference = Data(np.vstack((xvals, interpolate(reference.xy, xvals, kind='linear'))).T, name=reference.filename)
+        reference = Data(np.vstack(
+            (xvals, interpolate(reference.xy, xvals, kind='linear'))).T, name=reference.filename)
         pairs = ((reference, d) for d in data)
         l = float(len(data))
         lfill = len(reference.filename.split('/')[-1])
         rfill = max(len(d.filename.split('/')[-1]) for d in data)
     else:
         lfill = rfill = max(len(d.filename.split('/')[-1]) for d in data)
-        pairs = itertools.combinations(data,2)
+        pairs = itertools.combinations(data, 2)
         l = float(len(data)*(len(data)-1)/2)
     # pairs = itertools.combinations_with_replacement(data,2)
 
@@ -1668,12 +1719,16 @@ def f_compare(data, kind=0, reference=None):
     for i, (d1, d2) in enumerate(pairs):
         printer("{:2.0f}%".format(i/l*100))
 
-        names = "{:<{lfill}} - {:<{rfill}}".format(d1.filename.split('/')[-1], d2.filename.split('/')[-1], lfill=lfill, rfill=rfill)
+        names = "{:<{lfill}} - {:<{rfill}}".format(
+            d1.filename.split('/')[-1], d2.filename.split('/')[-1], lfill=lfill, rfill=rfill)
 
         for shift in shuffle:
-            pearsonr, pearsonp   = scipy.stats.pearsonr(  d1.y[min_tt-min_shift+shift:max_tt-max_shift+shift],   d2.y[min_tt-min_shift+shift:max_tt-max_shift+shift])
-            kendallr, kendallp   = scipy.stats.kendalltau(d1.y[min_tt-min_shift+shift:max_tt-max_shift+shift:5], d2.y[min_tt-min_shift+shift:max_tt-max_shift+shift:5])
-            spearmanr, spearmanp = scipy.stats.spearmanr( d1.y[min_tt-min_shift+shift:max_tt-max_shift+shift],   d2.y[min_tt-min_shift+shift:max_tt-max_shift+shift])
+            pearsonr, pearsonp = scipy.stats.pearsonr(
+                d1.y[min_tt-min_shift+shift:max_tt-max_shift+shift],   d2.y[min_tt-min_shift+shift:max_tt-max_shift+shift])
+            kendallr, kendallp = scipy.stats.kendalltau(
+                d1.y[min_tt-min_shift+shift:max_tt-max_shift+shift:5], d2.y[min_tt-min_shift+shift:max_tt-max_shift+shift:5])
+            spearmanr, spearmanp = scipy.stats.spearmanr(
+                d1.y[min_tt-min_shift+shift:max_tt-max_shift+shift],   d2.y[min_tt-min_shift+shift:max_tt-max_shift+shift])
 
             if pearsonr <= 0 or kendallr <= 0 or spearmanr <= 0:
                 continue
@@ -1683,7 +1738,8 @@ def f_compare(data, kind=0, reference=None):
 
             combined = calc_combined_value(pearsonr, kendallr, spearmanr)
 
-            lst.append((combined, spearmanr, kendallr, pearsonr, spearmanp, kendallp, pearsonp, shift*step, names))
+            lst.append((combined, spearmanr, kendallr, pearsonr,
+                        spearmanp, kendallp, pearsonp, shift*step, names))
 
     printer("")
     print
@@ -1700,8 +1756,8 @@ def f_compare(data, kind=0, reference=None):
 
 def calc_fwhm(uvw):
     u, v, w = uvw
-    th2     = np.linspace(0, 70, 70*50)
-    th_rad  = np.radians(th2 / 2)
+    th2 = np.linspace(0, 70, 70*50)
+    th_rad = np.radians(th2 / 2)
 
     fwhm = (u*np.tan(th_rad)**2 + v*np.tan(th_rad) + w)**0.5
 
@@ -1745,7 +1801,8 @@ def fix_sls_data(data, quiet=False):
         if 'esd' in d.filename:
             continue
 
-        assert d.has_esd, '\n *** Data file {} contains no standard deviations!!'.format(d.filename)
+        assert d.has_esd, '\n *** Data file {} contains no standard deviations!!'.format(
+            d.filename)
 
         if not scl:
             print '\nPick 3 background points'
@@ -1889,7 +1946,8 @@ def plot_reciprocal_space(fnobs, fncalc=None, orthogonal_view=True):
 
         if fncalc:
             h, k, l = zip(*diff)
-            ax.plot(h, k, l, 'ro', label=label+' missing', mfc='None', mec='red')
+            ax.plot(
+                h, k, l, 'ro', label=label+' missing', mfc='None', mec='red')
             if len(absent) > 0:
                 h, k, l = zip(*absent)
                 ax.plot(h, k, l, 'r+', label=label+' sys. absent')
@@ -1929,7 +1987,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("args",
-                        type=str, metavar="FILE",nargs='*',
+                        type=str, metavar="FILE", nargs='*',
                         help="Paths to input files.")
 
     parser.add_argument("-s", "--shift",
@@ -1972,7 +2030,8 @@ def main():
                         action="store_true", dest="normalize_all",
                         help="Normalize the values of all data sets by dividing by their integrated intensity")
 
-    group_xrs = parser.add_argument_group('XRS', description="Command line options specific to XRS-82")
+    group_xrs = parser.add_argument_group(
+        'XRS', description="Command line options specific to XRS-82")
 
     group_xrs.add_argument("-x", "--xrs", metavar='FILE',
                            action="store", type=str, nargs='?', dest="xrs", const='stepco.inp',
@@ -2005,7 +2064,8 @@ def main():
                         help="Convert powder pattern to a different wavelength [wavelength_in wavelength_out]. If no diffraction pattern is given, the program will give a small summary for the wavelengths/energies provided")
 
     group_adv.add_argument("--ref", metavar='FILE',
-                           # action="store", type=str, nargs='*', dest="compare_reference",
+                           # action="store", type=str, nargs='*',
+                           # dest="compare_reference",
                            action="store", type=str, dest="compare_reference",
                            help="Reference pattern to check against all patterns for --compare")
 
@@ -2025,13 +2085,13 @@ def main():
                            action="store", type=int, nargs=2, dest="peakdetect",
                            help="Use peak detection algorithm")
 
-    group_adv.add_argument("--lw","--linewidth",
+    group_adv.add_argument("--lw", "--linewidth",
                            action="store", type=float, dest="linewidth",
                            help="Set linewidth of the plot")
 
     group_adv.add_argument("--corrmat",
                            action="store", type=str, dest="corrmat",
-                           help="Plot given file as correlation matrix (expects ascii file with a n*m matrix). Can also take a Topas output file if a matrix has been generated with keyword C_matrix_normalized.")    
+                           help="Plot given file as correlation matrix (expects ascii file with a n*m matrix). Can also take a Topas output file if a matrix has been generated with keyword C_matrix_normalized.")
 
     group_adv.add_argument("--identify",
                            action="store", type=float, dest="identify",
@@ -2039,7 +2099,7 @@ def main():
 
     group_adv.add_argument("--nobg",
                            action="store_false", dest="backgrounder",
-                           help="Turns off background module." )
+                           help="Turns off background module.")
 
     group_adv.add_argument("--plot_esd",
                            action="store_true", dest="plot_esd",
@@ -2142,26 +2202,31 @@ def main():
         elif len(options.rec3d) == 1:
             plot_reciprocal_space(fnobs=options.rec3d[0], fncalc=None)
         elif len(options.rec3d) == 2:
-            plot_reciprocal_space(fnobs=options.rec3d[0], fncalc=options.rec3d[1])
+            plot_reciprocal_space(
+                fnobs=options.rec3d[0], fncalc=options.rec3d[1])
 
         else:
             raise ValueError
         exit()
 
-    data = [read_data(fn, savenpy=options.savenpy, wl=options.wavelength) for fn in args]  # returns data objects
+    data = [read_data(fn, savenpy=options.savenpy, wl=options.wavelength)
+            for fn in args]  # returns data objects
 
     if options.capillary:
         capillary = read_data(options.capillary)
         smoothed = capillary.smooth(window='hanning', window_len=101)
         for d in data:
             print ' >> Removing contribution of {} from {}'.format(options.capillary, d.filename)
-            f_bg_correct_out(d, smoothed.xy, kind=options.bg_correct, offset=0, suffix_corr='_rem_cap')
+            f_bg_correct_out(
+                d, smoothed.xy, kind=options.bg_correct, offset=0, suffix_corr='_rem_cap')
         exit()
 
     if options.plot_esd:
-        data.extend([read_data(fn, usecols=(0, 2), suffix=' esd') for fn in args])
+        data.extend([read_data(fn, usecols=(0, 2), suffix=' esd')
+                     for fn in args])
     if spc:
-        data.extend([read_data(fn, usecols=(0, 2), suffix=' -DIFFaX', savenpy=options.savenpy) for fn in spc])
+        data.extend([read_data(
+            fn, usecols=(0, 2), suffix=' -DIFFaX', savenpy=options.savenpy) for fn in spc])
 
     if options.convert_2theta:
         if data:
@@ -2191,7 +2256,8 @@ def main():
             lookahead, noise = None, None
 
         for d in data:
-            f_identify(d, options.compare_reference, lookahead=lookahead, noise=noise)
+            f_identify(
+                d, options.compare_reference, lookahead=lookahead, noise=noise)
     elif options.peakdetect:
         # options.show = False
         lookahead, noise = options.peakdetect
@@ -2207,28 +2273,32 @@ def main():
         try:
             bg_data = read_data(options.bg_input)
         except:
-            bg_data = setup_interpolate_background(data[0], name=options.bg_input)
+            bg_data = setup_interpolate_background(
+                data[0], name=options.bg_input)
     else:
         bg_data = None
 
     fig = plt.figure()
-    lines = Lines(fig,hide=options.quiet)
+    lines = Lines(fig, hide=options.quiet)
     lines.nomove = options.nomove
     lines.normalize = options.normalize_all
     lines.linewidth = options.linewidth
     lines.savefig = options.savefig
 
     if plt.get_backend() == 'TkAgg':
-        fig.tight_layout(rect=(0, 0, 1, 1))  # tight layout, smaller gray border
+        # tight layout, smaller gray border
+        fig.tight_layout(rect=(0, 0, 1, 1))
 
     if options.quiet or options.fixsls or options.monitor:
         pass
     elif options.bg_correct:
         if not bg_data:
             bg_data = setup_interpolate_background(data[0])
-        bg = Background(fig, d=bg_data, bg_correct=options.bg_correct, quiet=options.quiet, out=options.bg_output, topas_bg=options.topas_bg, xrs=options.xrs)
+        bg = Background(fig, d=bg_data, bg_correct=options.bg_correct, quiet=options.quiet,
+                        out=options.bg_output, topas_bg=options.topas_bg, xrs=options.xrs)
     elif options.backgrounder:
-        bg = Background(fig, d=bg_data, quiet=options.quiet, topas_bg=options.topas_bg, xrs=options.xrs)
+        bg = Background(fig, d=bg_data, quiet=options.quiet,
+                        topas_bg=options.topas_bg, xrs=options.xrs)
 
     if options.crplo:
         f_crplo()
@@ -2269,22 +2339,23 @@ def main():
 
     if options.plot_ticks:
         for i, hkl_file in enumerate(options.plot_ticks):
-            col = 4 if options.plot_ticks == 'hkl.dat' else options.plot_ticks_col - 1
+            col = 4 if options.plot_ticks == 'hkl.dat' else options.plot_ticks_col - \
+                1
             ticks = load_tick_marks(hkl_file, col=col)
             if ticks:
                 lines.plot_tick_marks(ticks, i=i)
 
     if options.weighted_ydiff:
         try:
-            xyobs  = read_data('x_yobs.xy')
+            xyobs = read_data('x_yobs.xy')
             xycalc = read_data('x_ycalc.xy')
-            xyerr  = read_data('x_yerr.xy')
+            xyerr = read_data('x_yerr.xy')
         except IOError, e:
             print e
             print
             print """Please add the following lines to the TOPAS input file to generate the needed files:
-    Out_X_Yobs(x_yobs.xy)       
-    Out_X_Ycalc(x_ycalc.xy)    
+    Out_X_Yobs(x_yobs.xy)
+    Out_X_Ycalc(x_ycalc.xy)
     Out_X_Yerr(x_yerr.xy)
             """
             exit(0)
@@ -2292,7 +2363,7 @@ def main():
 
     if options.topas_bg:
         try:
-            xyobs  = read_data('x_yobs.xy')
+            xyobs = read_data('x_yobs.xy')
             xycalc = read_data('x_ycalc.xy')
             xydiff = read_data('x_ydiff.xy')
             # xybg   = read_data('x_ybg.xy')
@@ -2306,10 +2377,12 @@ def main():
             """
             exit(0)
 
-        f_plot_topas_special(xyobs, xycalc, xydiff, bg_data, lw=options.linewidth)
-        # specifying bg.xycalc and bg.xyobs is necessary to update the Rp value on every step
+        f_plot_topas_special(
+            xyobs, xycalc, xydiff, bg_data, lw=options.linewidth)
+        # specifying bg.xycalc and bg.xyobs is necessary to update the Rp value
+        # on every step
         bg.xycalc = xycalc
-        bg.xyobs  = data[0]
+        bg.xyobs = data[0]
 
     if options.stepco:
         assert bg_data, "No background data available, can't use option --stepco!"
@@ -2357,7 +2430,8 @@ def main():
         # for d in data:
         #   f_bg_correct_out(d=d,bg_xy=bg.xy.T,offset=options.bg_offset)
 
-        f_bg_correct_out(d=data[0], bg_xy=bg.xy.T, kind=options.bg_correct, offset=options.bg_offset)
+        f_bg_correct_out(
+            d=data[0], bg_xy=bg.xy.T, kind=options.bg_correct, offset=options.bg_offset)
 
     try:
         if bg.xy.any():

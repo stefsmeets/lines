@@ -38,21 +38,24 @@ if not CCTBX_LOADED:
 
     if platform == "darwin":
         environment.set_environment_variables_osx()
-        sp.call([sys.executable, os.path.abspath(__file__)] + sys.argv[1:])  # call self
+        # call self
+        sp.call([sys.executable, os.path.abspath(__file__)] + sys.argv[1:])
     elif platform == "win32":
         environment.set_environment_variables_windows()
-        sp.call([sys.executable, os.path.abspath(__file__)] + sys.argv[1:])  # call self
+        # call self
+        sp.call([sys.executable, os.path.abspath(__file__)] + sys.argv[1:])
     elif platform == "linux2":
         environment.set_environment_variables_linux()
-        sp.call([sys.executable, os.path.abspath(__file__)] + sys.argv[1:])  # call self
+        # call self
+        sp.call([sys.executable, os.path.abspath(__file__)] + sys.argv[1:])
     else:
         print "Operating system not supported!"
         exit()
     exit()
 
-planck_constant   = 6.62606957E-34
+planck_constant = 6.62606957E-34
 elementary_charge = 1.60217656E-19
-speed_of_light    = 2.99792458E8
+speed_of_light = 2.99792458E8
 
 
 def energy2wavelength(E):
@@ -69,7 +72,8 @@ def read_cif(f):
         elif isinstance(f, str):
             structures = reader(file_path=f).build_crystal_structures()
         else:
-            raise TypeError('read_cif: Can not deal with type {}'.format(type(f)))
+            raise TypeError(
+                'read_cif: Can not deal with type {}'.format(type(f)))
     except CifParserError as e:
         print e
         print "Error parsing cif file, check if the data tag does not contain any spaces."
@@ -155,7 +159,8 @@ ProfileReferenceMax  50000
     focus_inp.close()
 
     print "Generating powder pattern... (wl = {} A)".format(wl)
-    sp.call("focus -PowderStepScan {} > {}".format(focus_inp.name, focus_out), shell=True)
+    sp.call(
+        "focus -PowderStepScan {} > {}".format(focus_inp.name, focus_out), shell=True)
 
     begin_switch = ">Begin stepscan"
     end_switch = "&"

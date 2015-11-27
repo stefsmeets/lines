@@ -5,7 +5,11 @@ import sys
 
 
 def find_LIBTBX_BUILD():
-    raise RuntimeError("Could not locate LIBTBX_BUILD directory")
+    """Can be used to locate cctbx library"""
+    from distutils.spawn import find_executable
+    prg = 'cctbx.python'
+    fpath = find_executable(prg)
+    return os.path.abspath(os.path.join(os.path.dirname(fpath), '..'))
 
 
 def set_environment_variables_osx():
@@ -20,24 +24,29 @@ def set_environment_variables_osx():
         BASE = find_LIBTBX_BUILD()
         os.environ['LIBTBX_BUILD'] = BASE
     if not BASE:
-        raise ImportError("Could not locate CCTBX, please ensure that LIBTBX_BUILD environment variable points at cctbx/cctbx_build")
+        raise ImportError(
+            "Could not locate CCTBX, please ensure that LIBTBX_BUILD environment variable points at cctbx/cctbx_build")
 
-    # cannot use sys.path here, because it is not persistent when calling child process
+    # cannot use sys.path here, because it is not persistent when calling
+    # child process
     PYTHONPATH = os.environ.get("PYTHONPATH", "")
     for src in ["../cctbx_sources",
                 "../cctbx_sources/clipper_adaptbx",
                 "../cctbx_sources/docutils",
                 "../cctbx_sources/boost_adaptbx",
                 "../cctbx_sources/libtbx/pythonpath",
-                "lib" ]:
+                "lib"]:
         # sys.path.insert(1, os.path.abspath(os.path.join(BASE, src)))
-        PYTHONPATH = os.path.abspath(os.path.join(BASE, src)) + ":" + PYTHONPATH
+        PYTHONPATH = os.path.abspath(
+            os.path.join(BASE, src)) + ":" + PYTHONPATH
     os.environ["PYTHONPATH"] = PYTHONPATH
 
     if "DYLD_LIBRARY_PATH" not in os.environ:
-        os.environ['DYLD_LIBRARY_PATH'] = os.path.join(BASE, "lib") + ":" + os.path.join(BASE, "base", "lib")
+        os.environ['DYLD_LIBRARY_PATH'] = os.path.join(
+            BASE, "lib") + ":" + os.path.join(BASE, "base", "lib")
     else:
-        os.environ['DYLD_LIBRARY_PATH'] += ":" + os.path.join(BASE, "lib") + ":" + os.path.join(BASE, "base", "lib")
+        os.environ['DYLD_LIBRARY_PATH'] += ":" + \
+            os.path.join(BASE, "lib") + ":" + os.path.join(BASE, "base", "lib")
 
 
 def set_environment_variables_linux():
@@ -48,9 +57,11 @@ def set_environment_variables_linux():
         BASE = find_LIBTBX_BUILD()
         os.environ['LIBTBX_BUILD'] = BASE
     if not BASE:
-        raise ImportError("Could not locate CCTBX, please ensure that LIBTBX_BUILD environment variable points at cctbx/cctbx_build")
+        raise ImportError(
+            "Could not locate CCTBX, please ensure that LIBTBX_BUILD environment variable points at cctbx/cctbx_build")
 
-    # cannot use sys.path here, because it is not persistent when calling child process
+    # cannot use sys.path here, because it is not persistent when calling
+    # child process
     PYTHONPATH = os.environ.get("PYTHONPATH", "")
     for src in ["../cctbx_sources",
                 "../cctbx_sources/clipper_adaptbx",
@@ -59,7 +70,8 @@ def set_environment_variables_linux():
                 "../cctbx_sources/libtbx/pythonpath",
                 "lib"]:
         # sys.path.insert(1, os.path.abspath(os.path.join(BASE, src)))
-        PYTHONPATH = os.path.abspath(os.path.join(BASE, src)) + ":" + PYTHONPATH
+        PYTHONPATH = os.path.abspath(
+            os.path.join(BASE, src)) + ":" + PYTHONPATH
     os.environ["PYTHONPATH"] = PYTHONPATH
 
     clib1 = os.path.join(BASE, "lib")  # ~/cctbx/cctbx_build/lib
@@ -75,9 +87,12 @@ def set_environment_variables_linux():
     os.environ["LD_LIBRARY_PATH"] = LD_LIBRARY_PATH
 
     if "LD_LIBRARY_PATH" not in os.environ:
-        os.environ['LD_LIBRARY_PATH'] = os.path.join(BASE, "lib") + ":/usr/lib"  # + os.path.join(BASE, "base", "lib")
+        os.environ['LD_LIBRARY_PATH'] = os.path.join(
+            BASE, "lib") + ":/usr/lib"  # + os.path.join(BASE, "base", "lib")
     else:
-        os.environ['LD_LIBRARY_PATH'] += ":" + os.path.join(BASE, "lib") + ":/usr/lib"  # + os.path.join(BASE, "base", "lib")
+        # + os.path.join(BASE, "base", "lib")
+        os.environ['LD_LIBRARY_PATH'] += ":" + \
+            os.path.join(BASE, "lib") + ":/usr/lib"
 
 
 def set_environment_variables_windows():
@@ -88,7 +103,8 @@ def set_environment_variables_windows():
         BASE = "C:\cctbx\cctbx_build"
         os.environ["LIBTBX_BUILD"] = BASE
     else:
-        raise ImportError("Could not locate CCTBX, please ensure that LIBTBX_BUILD environment variable points at /cctbx/cctbx_build, or CCTBX is installed in C:\cctbx\\")
+        raise ImportError(
+            "Could not locate CCTBX, please ensure that LIBTBX_BUILD environment variable points at /cctbx/cctbx_build, or CCTBX is installed in C:\cctbx\\")
 
     for src in ["..\cctbx_sources",
                 "..\cctbx_sources\clipper_adaptbx",

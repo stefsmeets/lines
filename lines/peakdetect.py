@@ -2,7 +2,7 @@
 
 #    Lines - a python plotting program
 #    Copyright (C) 2015 Stef Smeets
-#    
+#
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -37,12 +37,14 @@ def _datacheck_peakdetect(x_axis, y_axis):
         x_axis = range(len(y_axis))
 
     if len(y_axis) != len(x_axis):
-        raise ValueError('Input vectors y_axis and x_axis must have same length')
+        raise ValueError(
+            'Input vectors y_axis and x_axis must have same length')
 
     # needs to be a numpy array
     y_axis = np.array(y_axis)
     x_axis = np.array(x_axis)
     return x_axis, y_axis
+
 
 def _peakdetect_parabole_fitter(raw_peaks, x_axis, y_axis, points):
     """
@@ -130,9 +132,9 @@ def peakdetect(y_axis, x_axis=None, lookahead=300, delta=0):
 
     # perform some checks
     if lookahead < 1:
-        raise ValueError, "Lookahead must be '1' or above in value"
+        raise ValueError("Lookahead must be '1' or above in value")
     if not (np.isscalar(delta) and delta >= 0):
-        raise ValueError, "delta must be a positive number"
+        raise ValueError("delta must be a positive number")
 
     # maxima and minima candidates are temporarily stored in
     # mx and mn respectively
@@ -182,7 +184,7 @@ def peakdetect(y_axis, x_axis=None, lookahead=300, delta=0):
             # else:  #slows shit down this does
             #    mn = ahead
             #    mnpos = x_axis[np.where(y_axis[index:index+lookahead]==mn)]
-    
+
     # Remove the false hit on the first value of the y_axis
     try:
         if dump[0]:
@@ -259,7 +261,7 @@ def peakdetect_fft(y_axis, x_axis, pad_len=5):
     # Return only the real component
     y_axis_ifft = ifft(fft_padded).real * sf  # (pad_len + 1)
     x_axis_ifft = np.linspace(x_axis[zero_indices[0]], x_axis[zero_indices[last_indice]],
-                len(y_axis_ifft))
+                              len(y_axis_ifft))
     # get the peaks to the interpolated waveform
     max_peaks, min_peaks = peakdetect(y_axis_ifft, x_axis_ifft, 500,
                                       delta=abs(np.diff(y_axis).max() * 2))
@@ -295,7 +297,7 @@ def peakdetect_fft(y_axis, x_axis, pad_len=5):
     return [max_peaks, min_peaks]
 
 
-def peakdetect_parabole(y_axis, x_axis, points = 9):
+def peakdetect_parabole(y_axis, x_axis, points=9):
     """
     Function for detecting local maximas and minmias in a signal.
     Discovers peaks by fitting the model function: y = k (x - tau) ** 2 + m
@@ -338,9 +340,9 @@ def peakdetect_parabole(y_axis, x_axis, points = 9):
     max_ = _peakdetect_parabole_fitter(max_raw, x_axis, y_axis, points)
     min_ = _peakdetect_parabole_fitter(min_raw, x_axis, y_axis, points)
 
-    max_peaks  = map(lambda x: [x[0], x[1]], max_)
+    max_peaks = map(lambda x: [x[0], x[1]], max_)
     max_fitted = map(lambda x: x[-1], max_)
-    min_peaks  = map(lambda x: [x[0], x[1]], min_)
+    min_peaks = map(lambda x: [x[0], x[1]], min_)
     min_fitted = map(lambda x: x[-1], min_)
 
     # pylab.plot(x_axis, y_axis)
@@ -467,9 +469,9 @@ def peakdetect_sine(y_axis, x_axis, points=9, lock_frequency=False):
         fitted_peaks.append(peak_data)
 
     # structure date for output
-    max_peaks  = map(lambda x: [x[0], x[1]], fitted_peaks[0])
+    max_peaks = map(lambda x: [x[0], x[1]], fitted_peaks[0])
     max_fitted = map(lambda x: x[-1], fitted_peaks[0])
-    min_peaks  = map(lambda x: [x[0], x[1]], fitted_peaks[1])
+    min_peaks = map(lambda x: [x[0], x[1]], fitted_peaks[1])
     min_fitted = map(lambda x: x[-1], fitted_peaks[1])
 
     # pylab.plot(x_axis, y_axis)
@@ -485,7 +487,7 @@ def peakdetect_sine(y_axis, x_axis, points=9, lock_frequency=False):
     return [max_peaks, min_peaks]
 
 
-def peakdetect_sine_locked(y_axis, x_axis, points = 9):
+def peakdetect_sine_locked(y_axis, x_axis, points=9):
     """
     Convinience function for calling the 'peakdetect_sine' function with
     the lock_frequency argument as True.
@@ -501,7 +503,7 @@ def peakdetect_sine_locked(y_axis, x_axis, points = 9):
     return peakdetect_sine(y_axis, x_axis, points, True)
 
 
-def peakdetect_zero_crossing(y_axis, x_axis = None, window = 11):
+def peakdetect_zero_crossing(y_axis, x_axis=None, window=11):
     """
     Function for detecting local maximas and minmias in a signal.
     Discovers peaks by dividing the signal into bins and retrieving the
@@ -706,7 +708,7 @@ if __name__ == "__main__":
     import pylab
 
     i = 10000
-    x = np.linspace(0,3.7*pi, i)
+    x = np.linspace(0, 3.7*pi, i)
     y = (0.3*np.sin(x) + np.sin(1.3 * x) + 0.9 * np.sin(4.2 * x) + 0.06 *
          np.random.randn(i))
     y *= -1
