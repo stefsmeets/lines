@@ -40,7 +40,7 @@ import math
 # except ImportError:
 #   pass
 
-__version__ = '2015-10-03'
+__version__ = '2015-12-04'
 
 params = {'legend.fontsize': 10,
           'legend.labelspacing': 0.1}
@@ -54,30 +54,32 @@ speed_of_light = 2.99792458E8
 
 # print plt.get_backend()
 
-iza_codes = ('ABW', 'ACO', 'AEI', 'AEL', 'AEN', 'AET', 'AFG', 'AFI', 'AFN',
-             'AFO', 'AFR', 'AFS', 'AFT', 'AFX', 'AFY', 'AHT', 'ANA', 'APC',
-             'APD', 'AST', 'ASV', 'ATN', 'ATO', 'ATS', 'ATT', 'ATV', 'AWO',
-             'AWW', 'BCT', 'BEA', 'BEC', 'BIK', 'BOF', 'BOG', 'BPH', 'BRE',
-             'BSV', 'CAN', 'CAS', 'CDO', 'CFI', 'CGF', 'CGS', 'CHA', 'CHI',
-             'CLO', 'CON', 'CZP', 'DAC', 'DDR', 'DFO', 'DFT', 'DOH', 'DON',
-             'EAB', 'EDI', 'EMT', 'EON', 'EPI', 'ERI', 'ESV', 'ETR', 'EUO',
-             'EZT', 'FAR', 'FAU', 'FER', 'FRA', 'GIS', 'GIU', 'GME', 'GON',
-             'GOO', 'HEU', 'IFR', 'IHW', 'IMF', 'IRR', 'ISV', 'ITE', 'ITH',
-             'ITR', 'ITV', 'ITW', 'IWR', 'IWS', 'IWV', 'IWW', 'JBW', 'JRY',
-             'JST', 'KFI', 'LAU', 'LEV', 'LIO', 'LIT', 'LOS', 'LOV', 'LTA',
-             'LTF', 'LTJ', 'LTL', 'LTN', 'MAR', 'MAZ', 'MEI', 'MEL', 'MEP',
-             'MER', 'MFI', 'MFS', 'MON', 'MOR', 'MOZ', 'MRE', 'MSE', 'MSO',
-             'MTF', 'MTN', 'MTT', 'MTW', 'MVY', 'MWW', 'NAB', 'NAT', 'NES',
-             'NON', 'NPO', 'NPT', 'NSI', 'OBW', 'OFF', 'OSI', 'OSO', 'OWE',
-             'PAR', 'PAU', 'PHI', 'PON', 'PUN', 'RHO', 'RON', 'RRO', 'RSN',
-             'RTE', 'RTH', 'RUT', 'RWR', 'RWY', 'SAF', 'SAO', 'SAS', 'SAT',
-             'SAV', 'SBE', 'SBN', 'SBS', 'SBT', 'SFE', 'SFF', 'SFG', 'SFH',
-             'SFN', 'SFO', 'SFS', 'SFV', 'SGT', 'SIV', 'SOD', 'SOF', 'SOS',
-             'SSF', 'SSY', 'STF', 'STI', 'STO', 'STT', 'STW', 'SVR', 'SZR',
-             'TER', 'THO', 'TOL', 'TON', 'TSC', 'TUN', 'UEI', 'UFI', 'UOS',
-             'UOZ', 'USI', 'UTL', 'UWY', 'VET', 'VFI', 'VNI', 'VSV', 'WEI',
-             'WEN', 'YUG', 'ZON', 'POS', 'JNT', 'IFW', 'UOV', 'CSV', 'EWT',
-             'PSI', 'IFY', 'ITN', 'SSO', 'IRN', 'IFO')  # updated aug 2015
+iza_codes = ["ABW", "ACO", "AEI", "AEL", "AEN", "AET", "AFG", "AFI", "AFN",
+             "AFO", "AFR", "AFS", "AFT", "AFV", "AFX", "AFY", "AHT", "ANA",
+             "APC", "APD", "AST", "ASV", "ATN", "ATO", "ATS", "ATT", "ATV",
+             "AVL", "AWO", "AWW", "BCT", "BEA", "BEC", "BIK", "BOF", "BOG",
+             "BOZ", "BPH", "BRE", "BSV", "CAN", "CAS", "CDO", "CFI", "CGF",
+             "CGS", "CHA", "CHI", "CLO", "CON", "CSV", "CZP", "DAC", "DDR",
+             "DFO", "DFT", "DOH", "DON", "EAB", "EDI", "EEI", "EMT", "EON",
+             "EPI", "ERI", "ESV", "ETR", "EUO", "EWT", "EZT", "FAR", "FAU",
+             "FER", "FRA", "GIS", "GIU", "GME", "GON", "GOO", "HEU", "IFO",
+             "IFR", "IFW", "IFY", "IHW", "IMF", "IRN", "IRR", "IRY", "ISV",
+             "ITE", "ITG", "ITH", "ITN", "ITR", "ITT", "ITV", "ITW", "IWR",
+             "IWS", "IWV", "IWW", "JBW", "JNT", "JOZ", "JRY", "JSN", "JSR",
+             "JST", "JSW", "KFI", "LAU", "LEV", "LIO", "LIT", "LOS", "LOV",
+             "LTA", "LTF", "LTJ", "LTL", "LTN", "MAR", "MAZ", "MEI", "MEL",
+             "MEP", "MER", "MFI", "MFS", "MON", "MOR", "MOZ", "MRE", "MSE",
+             "MSO", "MTF", "MTN", "MTT", "MTW", "MVY", "MWW", "NAB", "NAT",
+             "NES", "NON", "NPO", "NPT", "NSI", "OBW", "OFF", "OKO", "OSI",
+             "OSO", "OWE", "PAR", "PAU", "PCR", "PHI", "PON", "POS", "PSI",
+             "PUN", "RHO", "RON", "RRO", "RSN", "RTE", "RTH", "RUT", "RWR",
+             "RWY", "SAF", "SAO", "SAS", "SAT", "SAV", "SBE", "SBN", "SBS",
+             "SBT", "SEW", "SFE", "SFF", "SFG", "SFH", "SFN", "SFO", "SFS",
+             "SFV", "SFW", "SGT", "SIV", "SOD", "SOF", "SOS", "SSF", "SSO",
+             "SSY", "STF", "STI", "STO", "STT", "STW", "SVR", "SVV", "SZR",
+             "TER", "THO", "TOL", "TON", "TSC", "TUN", "UEI", "UFI", "UOS",
+             "UOV", "UOZ", "USI", "UTL", "UWY", "VET", "VFI", "VNI", "VSV",
+             "WEI", "WEN", "YUG", "ZON"]  # updated dec 2015
 
 
 def lineno():
