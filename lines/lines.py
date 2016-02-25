@@ -40,7 +40,7 @@ import math
 # except ImportError:
 #   pass
 
-__version__ = '2015-12-04'
+__version__ = '2016-02-25'
 
 params = {'legend.fontsize': 10,
           'legend.labelspacing': 0.1}
@@ -1960,7 +1960,7 @@ def plot_reciprocal_space(fnobs, fncalc=None, orthogonal_view=True):
     plt.show()
 
 
-def main():
+def run_script(gui_options=None):
     description = """Notes:
 - Requires numpy and matplotlib for plotting.
 - Scipy is needed for some interpolation functions.
@@ -2176,6 +2176,12 @@ def main():
                         guess_filetype=True)
 
     options = parser.parse_args()
+
+    if gui_options:
+        for k,v in gui_options.items():
+            print k,v
+            setattr(options, k, v)
+
     args = options.args
 
     if options.stepco:
@@ -2440,6 +2446,13 @@ def main():
             bg.printdata(fout='lines.out')
     except UnboundLocalError:
         pass
+
+def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "gui":
+        import lines_gui
+        lines_gui.run()
+    else:
+        run_script()
 
 
 if __name__ == '__main__':
