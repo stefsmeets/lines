@@ -59,8 +59,6 @@ class LinesBackgroundDialog(Tk, object):
         self.pattern_file.set("pattern.xye")
 
         self.bgin_file = StringVar()
-        if os.path.exists("lines.out"):
-            self.bgin_file.set("lines.out")
 
         self.bgorder = IntVar()
         self.bgorder.set(1)
@@ -164,15 +162,21 @@ class LinesBackgroundDialog(Tk, object):
         p.start()
 
     def load_pattern_file(self):
-
         f = askopenfilename(initialdir=self.drc)
         if f:
             self.pattern_file.set(str(f))
+            self.drc = os.path.dirname(f)
+
+            path_lines_out = os.path.join(self.drc,"lines.out")
+
+            if not self.bgin_file.get() and os.path.exists(path_lines_out):
+                self.bgin_file.set(path_lines_out)
 
     def load_bgin_file(self):
         f = askopenfilename(initialdir=self.drc)
         if f:
             self.bgin_file.set(str(f))
+            self.drc = os.path.dirname(f)
 
 
 def run():
