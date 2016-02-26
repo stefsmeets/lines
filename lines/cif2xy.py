@@ -40,18 +40,20 @@ if not CCTBX_LOADED:
         environment.set_environment_variables_osx()
         # call self
         sp.call([sys.executable, os.path.abspath(__file__)] + sys.argv[1:])
+        exit()
     elif platform == "win32":
         environment.set_environment_variables_windows()
         # call self
-        sp.call([sys.executable, os.path.abspath(__file__)] + sys.argv[1:])
+        # sp.call([sys.executable, os.path.abspath(__file__)] + sys.argv[1:])
+        from iotbx.cif import reader, CifParserError
     elif platform == "linux2":
         environment.set_environment_variables_linux()
         # call self
         sp.call([sys.executable, os.path.abspath(__file__)] + sys.argv[1:])
+        exit()
     else:
         print "Operating system not supported!"
         exit()
-    exit()
 
 planck_constant = 6.62606957E-34
 elementary_charge = 1.60217656E-19
