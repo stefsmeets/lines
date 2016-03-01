@@ -1245,7 +1245,7 @@ class Background():
         self.bg_correct = bg_correct
         if self.bg_correct:
             # Set limited range to speed up calculations
-            self.bg_range = np.arange(self.xy[0][0], self.xy[0][1], 0.01)
+            self.bg_range = np.arange(self.xy[0][0], self.xy[0][-1], 0.01)
             self.bg, = self.ax.plot(self.d.x, self.d.y, label='background')
             # print self.bg_range
 
