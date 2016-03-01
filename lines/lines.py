@@ -2443,7 +2443,8 @@ def run_script(gui_options=None):
 
     try:
         if bg.xy.any():
-            bg.printdata(fout='lines.out')
+            drc = os.path.dirname(data[0].filename)
+            bg.printdata(fout=os.path.join(drc,'lines.out'))
     except UnboundLocalError:
         pass
 
