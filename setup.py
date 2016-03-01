@@ -7,11 +7,11 @@ from os import path
 
 setup(
     name="lines",
-    version="1.1.0",
+    version="1.2.0",
     description="Program for plotting powder diffraction patterns and background subtraction",
 
     author="Stef Smeets",
-    author_email="stef.smeets@mat.ethz.ch",
+    author_email="stef.smeets@mmk.su.se",
     license="GPL",
     url="https://github.com/stefsmeets/lines",
 
