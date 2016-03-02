@@ -166,6 +166,9 @@ class LinesBackgroundDialog(Tk, object):
         if f:
             self.pattern_file.set(str(f))
             self.drc = os.path.dirname(f)
+            os.chdir(self.drc)
+            if os.path.exists("x_yobs.xy") and os.path.exists("x_ycalc.xy") and os.path.exists("x_ydiff.xy"):
+               self.topasbg.set(True)
 
             path_lines_out = os.path.join(self.drc,"lines.out")
 
