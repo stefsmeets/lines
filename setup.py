@@ -7,7 +7,7 @@ from os import path
 
 setup(
     name="lines",
-    version="1.2.0",
+    version="1.3.0",
     description="Program for plotting powder diffraction patterns and background subtraction",
 
     author="Stef Smeets",
@@ -31,7 +31,7 @@ setup(
     entry_points={
         'console_scripts': [
             'lines = lines.lines:main',
-            'cif2xy = lines.cif2xy:main'
+            'cif2xy = lines.cif2xy:main',
         ]
     }
 

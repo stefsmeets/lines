@@ -22,38 +22,11 @@ import sys
 import os
 import argparse
 
-try:
-    from iotbx.cif import reader, CifParserError
-except ImportError:
-    CCTBX_LOADED = False
-else:
-    CCTBX_LOADED = True
+import numpy as np
+
+from xcore.formats import read_cif
 
 __version__ = "2015-10-01"
-
-if not CCTBX_LOADED:
-    import environment
-
-    platform = sys.platform
-
-    if platform == "darwin":
-        environment.set_environment_variables_osx()
-        # call self
-        sp.call([sys.executable, os.path.abspath(__file__)] + sys.argv[1:])
-        exit()
-    elif platform == "win32":
-        environment.set_environment_variables_windows()
-        # call self
-        # sp.call([sys.executable, os.path.abspath(__file__)] + sys.argv[1:])
-        from iotbx.cif import reader, CifParserError
-    elif platform == "linux2":
-        environment.set_environment_variables_linux()
-        # call self
-        sp.call([sys.executable, os.path.abspath(__file__)] + sys.argv[1:])
-        exit()
-    else:
-        print "Operating system not supported!"
-        exit()
 
 planck_constant = 6.62606957E-34
 elementary_charge = 1.60217656E-19
@@ -64,28 +37,6 @@ def energy2wavelength(E):
     """Takes wavelength in keV, returns energy in Angstrom"""
     # 1E3 from ev to kev, divide by 1E10 from angstrom to meter
     return 1E10*planck_constant*speed_of_light/(E*1E3*elementary_charge)
-
-
-def read_cif(f):
-    """opens cif and returns cctbx data object"""
-    try:
-        if isinstance(f, file):
-            structures = reader(file_object=f).build_crystal_structures()
-        elif isinstance(f, str):
-            structures = reader(file_path=f).build_crystal_structures()
-        else:
-            raise TypeError(
-                'read_cif: Can not deal with type {}'.format(type(f)))
-    except CifParserError as e:
-        print e
-        print "Error parsing cif file, check if the data tag does not contain any spaces."
-        exit()
-    for key, val in structures.items():
-        print "\nstructure:", key
-        val.show_summary()
-        print "Volume: {:.2f}".format(val.unit_cell().volume())
-        print
-    return structures
 
 
 def replace_extension(fn, new=".xy"):
@@ -99,15 +50,13 @@ def replace_extension(fn, new=".xy"):
 def cif2xy(cif, wl=1.0):
     print "Reading CIF:", cif
 
-    structure = read_cif(cif).values()[0]
-    sg = structure.space_group()
-    uc = structure.unit_cell()
-    # sps = structure.special_position_settings()
-    scatterers = structure.scatterers()
+    cell, atoms = read_cif(cif)
+
+    a, b, c, al, be, ga = cell.parameters
+
+    spgr = cell.spgr_name
 
     title = 'lines'
-    spgr = sg.type().lookup_symbol()
-    a, b, c, al, be, ga = uc.parameters()
 
     xy_out = replace_extension(cif, new="xy")
 
@@ -143,14 +92,14 @@ ProfileReferenceMax  50000
            ga=ga,
            wl=wl)
 
-    for atom in scatterers:
+    for i, atom in atoms.iterrows():
         label = atom.label
-        element = atom.element_symbol()
+        element = atom.symbol
         if element == 'T':
             element = 'Si'
-        x, y, z = atom.site
-        occ = atom.occupancy
-        u_iso = atom.u_iso
+        x, y, z = atom.x, atom.y, atom.z
+        occ = atom.occ
+        u_iso = atom.biso / (8*np.pi**2)
 
         print >> focus_inp, '{label:8} {element:4} {x:8.5f} {y:8.5f} {z:8.5f} {occ:.4f} {u_iso:.4f}'.format(label=label,
                                                                                                             element=element,
@@ -186,9 +135,8 @@ ProfileReferenceMax  50000
 
 
 def main():
-    description = """Notes:
-- Requires CCTBX
-"""
+    description = """"""
+    
     epilog = 'Updated: {}'.format(__version__)
 
     parser = argparse.ArgumentParser(description=description,
