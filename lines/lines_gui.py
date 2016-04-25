@@ -59,6 +59,8 @@ class LinesBackgroundDialog(Tk, object):
         self.pattern_file.set("pattern.xye")
 
         self.bgin_file = StringVar()
+        
+        self.ticks_file = StringVar()
 
         self.bgorder = IntVar()
         self.bgorder.set(1)
@@ -94,6 +96,16 @@ class LinesBackgroundDialog(Tk, object):
         lfbgin.columnconfigure(0, minsize=120)
         lfbgin.columnconfigure(0, weight=1)
 
+        lfticks = Labelframe(master, text="Tick marks (2th)", padding=(10, 10, 10, 10))
+        self.e_fname = Entry(
+            lfticks, textvariable=self.ticks_file)
+        self.e_fname.grid(row=21, column=0, columnspan=3, sticky=E+W)
+        but_load = Button(lfticks, text="Browse..", width=10, command=self.load_ticks_file)
+        but_load.grid(row=21, column=4, sticky=E)
+        lfticks.grid(row=2, sticky=E+W)
+        lfticks.columnconfigure(0, minsize=120)
+        lfticks.columnconfigure(0, weight=1)
+
         lfbg   = Labelframe(master, text="Background correction", padding=(10, 10, 10, 10))
         Label(lfbg, text="Background order").grid(row=25, column=0, sticky=W)
         self.sb_order = Spinbox(lfbg, from_=1, to=10, textvariable=self.bgorder)
@@ -105,7 +117,7 @@ class LinesBackgroundDialog(Tk, object):
         self.c_topasbg = Checkbutton(lfbg, variable=self.topasbg, text="Topas mode?")
         self.c_topasbg.grid(row=32, column=0, sticky=W)
 
-        lfbg.grid(row=2, sticky=E+W)
+        lfbg.grid(row=3, sticky=E+W)
         lfbg.columnconfigure(0, minsize=120)
         # lfbg.columnconfigure(0, weight=1)
 
@@ -157,6 +169,9 @@ class LinesBackgroundDialog(Tk, object):
         if self.bgcorrect.get():
             gui_options["bg_correct"] = self.bgorder.get()
 
+        if self.ticks_file.get():
+            gui_options["plot_ticks"] = [self.ticks_file.get()]
+
         # interactive matplotlib window is not thread safe, so call a separate process instead
         p = mp.Process(target=lines.run_script, kwargs={"gui_options":gui_options})
         p.start()
@@ -164,13 +179,13 @@ class LinesBackgroundDialog(Tk, object):
     def load_pattern_file(self):
         f = askopenfilename(initialdir=self.drc)
         if f:
-            self.pattern_file.set(str(f))
+            self.pattern_file.set(os.path.normpath(str(f)))
             self.drc = os.path.dirname(f)
             os.chdir(self.drc)
             if os.path.exists("x_yobs.xy") and os.path.exists("x_ycalc.xy") and os.path.exists("x_ydiff.xy"):
                self.topasbg.set(True)
 
-            path_lines_out = os.path.join(self.drc,"lines.out")
+            path_lines_out = os.path.normpath(os.path.join(self.drc,"lines.out"))
 
             if not self.bgin_file.get() and os.path.exists(path_lines_out):
                 self.bgin_file.set(path_lines_out)
@@ -178,8 +193,15 @@ class LinesBackgroundDialog(Tk, object):
     def load_bgin_file(self):
         f = askopenfilename(initialdir=self.drc)
         if f:
-            self.bgin_file.set(str(f))
+            self.bgin_file.set(os.path.normpath(str(f)))
             self.drc = os.path.dirname(f)
+
+    def load_ticks_file(self):
+        f = askopenfilename(initialdir=self.drc)
+        if f:
+            self.ticks_file.set(os.path.normpath(str(f)))
+            self.drc = os.path.dirname(f)
+
 
 
 def run():
