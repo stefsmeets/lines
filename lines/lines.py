@@ -2179,7 +2179,7 @@ def run_script(gui_options=None):
 
     if gui_options:
         for k,v in gui_options.items():
-            print k,v
+            # print k,v
             setattr(options, k, v)
 
     args = options.args

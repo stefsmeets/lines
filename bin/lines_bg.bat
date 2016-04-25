@@ -1,0 +1,2 @@
+@setlocal
+@lines.exe gui
