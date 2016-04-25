@@ -40,7 +40,7 @@ class LinesBackgroundDialog(Tk, object):
 
         self.drc = '.'
 
-        self.title("GUI for lines background routine")
+        self.title("lines: background")
 
         body = Frame(self, padding=(10, 10, 10, 10))
         self.initial_focus = self.body(body)
@@ -76,7 +76,7 @@ class LinesBackgroundDialog(Tk, object):
 
     def body(self, master):
         
-        lfpattern    = Labelframe(master, text="Pattern to perform background correction on (xy, xye)", padding=(10, 10, 10, 10))
+        lfpattern    = Labelframe(master, text="Observed data (.xy, .xye)", padding=(10, 10, 10, 10))
         self.e_fname = Entry(
             lfpattern, textvariable=self.pattern_file)
         self.e_fname.grid(row=11, column=0, columnspan=3, sticky=E+W)
@@ -86,7 +86,7 @@ class LinesBackgroundDialog(Tk, object):
         lfpattern.columnconfigure(0, minsize=120)
         lfpattern.columnconfigure(0, weight=1)
 
-        lfbgin = Labelframe(master, text="Path to saved background points (xy)", padding=(10, 10, 10, 10))
+        lfbgin = Labelframe(master, text="Background points (.xy, lines.out)", padding=(10, 10, 10, 10))
         self.e_fname = Entry(
             lfbgin, textvariable=self.bgin_file)
         self.e_fname.grid(row=21, column=0, columnspan=3, sticky=E+W)
@@ -96,7 +96,7 @@ class LinesBackgroundDialog(Tk, object):
         lfbgin.columnconfigure(0, minsize=120)
         lfbgin.columnconfigure(0, weight=1)
 
-        lfticks = Labelframe(master, text="Tick marks (2th)", padding=(10, 10, 10, 10))
+        lfticks = Labelframe(master, text="Tick marks (x)", padding=(10, 10, 10, 10))
         self.e_fname = Entry(
             lfticks, textvariable=self.ticks_file)
         self.e_fname.grid(row=21, column=0, columnspan=3, sticky=E+W)
@@ -128,7 +128,10 @@ class LinesBackgroundDialog(Tk, object):
         w.pack(side=RIGHT, padx=5, pady=5)
         w = Button(box, text="Exit", width=10, command=self.cancel)
         w.pack(side=RIGHT, padx=5, pady=5)
+        w = Button(box, text="Help", width=10, command=self.help)
+        w.pack(side=RIGHT, padx=5, pady=5)
 
+        self.bind("<F1>", self.help)
         self.bind("<Return>", self.ok)
         self.bind("<Escape>", self.cancel)
 
@@ -155,6 +158,75 @@ class LinesBackgroundDialog(Tk, object):
 
     def validate(self):
         return 1  # override
+
+    def help(self):
+        print "Lines: background (manual)"
+        print "=========================="
+
+        print """
+Lines is a background correction program to interactively 
+remove the background for powder diffraction data. It respects your
+standard deviations and never overwrites the original data. 
+
+Clicking 'run' will initiate the background correction routine. 
+Left-clicking will add a point, right-clicking on a poitn will remove it
+
+Closing the plotting window will write the background corrected files. The 
+corrected file is written to XXX_corr.xye and the background to XXX_bg.xye
+The background points are by default written to the file lines.out. In case
+this file exists, the original is backed up to lines.out~.
+
+If XXX_corr.xye is used in the rietveld refinement program, by simply 
+opening lines.out the background correction can be continued so it is then
+possible to update the background correction without modifying the original
+data."""
+        print
+        print "Observed data"
+        print "-------------"
+        print """
+    Path to your observed data to perform background correction on.
+    Lines can read any ascii file with 2 or 3 space-separated columns, 
+    such as .xy or .xye format.
+    """
+
+        print "Background points"
+        print "-----------------"
+        print """
+    Path to the file containing the background points to load. Lines 
+    will interpolate between these points to remove the background from 
+    the observed data. Lines can read any ascii file with two space-
+    separated columns, such as .xy format. By default, lines stores 
+    the background points to the file lines.out
+    """
+
+        print "Tick marks"
+        print "----------"
+        print """
+    Path to file with tick marks. This can be generated n Topas using 
+    the macro 'Create_2Th_Ip_file(ticks.out)'. Should be a single column
+    containing the 2thetha values for the tick marks.
+    """
+
+        print "Background correction"
+        print "---------------------"
+        print """
+    Background order: Lines can interpolate between the 
+        background points based on the order given here. The default 
+        is 1 and indicates a linear background correction.
+    
+    Correct background?: Lines will update the background after the 
+        plotting window is closed. Turning this off prevents that.
+    
+    Topas mode?: In case the calculated and difference plots are 
+        present in the current folder, Lines will load these files and 
+        plot them as well.
+
+        Use the following macros to generate these files:
+
+            Out_X_Yobs(x_yobs.xy)
+            Out_X_Ycalc(x_ycalc.xy)
+            Out_X_Difference(x_ydiff.xy)
+    """
 
     def apply(self):
         gui_options = {
