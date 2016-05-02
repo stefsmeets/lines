@@ -1088,7 +1088,7 @@ class Data(object):
                 w = 1/self.err**2   # weights
             else:
                 w = 1/(np.abs(self.y)+0.1)      # weights = y^-1 if no esds
-            print '       R_exp: {:.3f}%'.format(100 * ((n) / np.sum(w*self.y**2))**0.5)
+            print '       R_exp: {:.3%}'.format(((n) / np.sum(w*self.y**2))**0.5)
 
     def bin(self, binsize=0.01):
         x = self.x
@@ -1719,7 +1719,7 @@ def f_compare(data, kind=0, reference=None):
     print "Calculate agreement for {} combinations of {} patterns.".format(int(l), len(data))
 
     for i, (d1, d2) in enumerate(pairs):
-        printer("{:2.0f}%".format(i/l*100))
+        printer("{:2.0%}".format(i/l))
 
         names = "{:<{lfill}} - {:<{rfill}}".format(
             d1.filename.split('/')[-1], d2.filename.split('/')[-1], lfill=lfill, rfill=rfill)
