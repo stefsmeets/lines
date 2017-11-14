@@ -1195,7 +1195,7 @@ class Background():
         self.out = out
         self.ax = fig.add_subplot(111)
         self.topas_bg = topas_bg
-        self.xrs = xrs
+        self.xrs_out = xrs
 
         # if xy is None:
         #   self.xy = np.array([],dtype=float).reshape(2,0)
@@ -1376,7 +1376,7 @@ class Background():
         esds = self.get_esds()
         # print esds
 
-        if self.xrs:
+        if self.xrs_out:
             new_stepco_inp(self.xy, *self.xrs_out, esds=esds)
         else:
             fout = open(fout, 'w')
@@ -1418,6 +1418,7 @@ class Lines(object):
 
         if self.normalize:
             scale = np.trapz(data.y, data.x)
+            # scale = np.max(data.y)
             print ' >> Scaling {} by 1/{:.5f}'.format(data.filename, scale)
             data.y = data.y / scale
             # print scale
@@ -2303,10 +2304,10 @@ def run_script(gui_options=None):
         if not bg_data:
             bg_data = setup_interpolate_background(data[0])
         bg = Background(fig, d=bg_data, bg_correct=options.bg_correct, quiet=options.quiet,
-                        out=options.bg_output, topas_bg=options.topas_bg, xrs=options.xrs)
+                        out=options.bg_output, topas_bg=options.topas_bg, xrs=options.xrs_out)
     elif options.backgrounder:
         bg = Background(fig, d=bg_data, quiet=options.quiet,
-                        topas_bg=options.topas_bg, xrs=options.xrs)
+                        topas_bg=options.topas_bg, xrs=options.xrs_out)
 
     if options.crplo:
         f_crplo()
