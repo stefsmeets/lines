@@ -4,7 +4,7 @@ Lines is a program for plotting powder diffraction patterns, and was initially d
 
 ## Background correction
 
-The background of any pattern (xy or xye format) can be corrected with:
+The background of any pattern (.xy or .xye format) can be corrected with:
 
     lines pattern.xye --bg_correct 1
 
@@ -28,11 +28,12 @@ The option --topasbg will tell the program to read the observed, calculated and 
 
 ![background](https://cloud.githubusercontent.com/assets/873520/14958064/02be1a30-1089-11e6-8f2d-61b458e4cc0d.png)
 
-Since its inception, many functions for operations performed on powder diffraction data have been implemented. A number of different file formats can be read and visualized in numerous ways. Further options for diffraction pattern manipulation include the options to adjust the wavelength of the diffraction data, or to re-bin, normalize, and smooth them. All the functions are documented in the help file, which can be accessed via luke --help.
+Since its inception, many functions for operations performed on powder diffraction data have been implemented. A number of different file formats can be read and visualized in numerous ways. Further options for diffraction pattern manipulation include the options to adjust the wavelength of the diffraction data, or to re-bin, normalize, and smooth them. All the functions are documented in the help file, which can be accessed via lines --help.
 
 ## GUI
 
 On Windows, a GUI is available, and is accessible via the lines_bg.bat file after installation.
+Pressing run opens an instance of lines where the background can be modified. By closing the plot window, and the corrected and background patterns will be written.
 
 ![gui](https://cloud.githubusercontent.com/assets/873520/14958063/029e912e-1089-11e6-9ffc-976ddbf1f992.png)
 
