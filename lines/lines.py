@@ -33,14 +33,7 @@ from scipy.interpolate import interp1d
 
 import math
 
-# try:
-#   from IPython.terminal.embed import InteractiveShellEmbed
-#   InteractiveShellEmbed.confirm_exit = False
-#   ipshell = InteractiveShellEmbed(banner1='')
-# except ImportError:
-#   pass
-
-__version__ = '2016-02-25'
+__version__ = '2018-10-03'
 
 params = {'legend.fontsize': 10,
           'legend.labelspacing': 0.1}
@@ -1195,7 +1188,7 @@ class Background():
         self.out = out
         self.ax = fig.add_subplot(111)
         self.topas_bg = topas_bg
-        self.xrs_out = xrs
+        self.xrs = xrs
 
         # if xy is None:
         #   self.xy = np.array([],dtype=float).reshape(2,0)
@@ -1376,8 +1369,8 @@ class Background():
         esds = self.get_esds()
         # print esds
 
-        if self.xrs_out:
-            new_stepco_inp(self.xy, *self.xrs_out, esds=esds)
+        if self.xrs:
+            new_stepco_inp(self.xy, *self.xrs, esds=esds)
         else:
             fout = open(fout, 'w')
             for x, y in self.xy.transpose():
@@ -2277,7 +2270,7 @@ def run_script(gui_options=None):
         fname = options.xrs
         copyfile(fname, fname+'~')
         f = read_file(fname)
-        bg_data, options.xrs_out = parse_xrs(f)
+        bg_data, options.xrs = parse_xrs(f)
     elif options.bg_input:
         try:
             bg_data = read_data(options.bg_input)
@@ -2304,10 +2297,10 @@ def run_script(gui_options=None):
         if not bg_data:
             bg_data = setup_interpolate_background(data[0])
         bg = Background(fig, d=bg_data, bg_correct=options.bg_correct, quiet=options.quiet,
-                        out=options.bg_output, topas_bg=options.topas_bg, xrs=options.xrs_out)
+                        out=options.bg_output, topas_bg=options.topas_bg, xrs=options.xrs)
     elif options.backgrounder:
         bg = Background(fig, d=bg_data, quiet=options.quiet,
-                        topas_bg=options.topas_bg, xrs=options.xrs_out)
+                        topas_bg=options.topas_bg, xrs=options.xrs)
 
     if options.crplo:
         f_crplo()
