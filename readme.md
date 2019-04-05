@@ -42,21 +42,24 @@ Pressing run opens an instance of lines where the background can be modified. By
 - Python2.7
 - numpy
 - scipy
-- matplotlib
+- matplotlib<3.0 (the latest matplotlib no longer supports python2.7)
 
 ## Installation
+
+Install Python2.7 (https://www.python.org/downloads/release/python-2716/).
+Make sure to click 'Add python.exe to Path' during installation.
 
 Download and extract:
 
 https://github.com/stefsmeets/lines/archive/master.zip
 
-Install:
-
+Install (alternatively, run `setup_win.bat`):
+	
+    python -m pip install numpy scipy matplotlib<3.0
     python setup.py install
 
 Uninstall:
 
     pip uninstall lines
 
-
-
+To access the gui, run `lines_bg.bat` in the `bin` directory. 
