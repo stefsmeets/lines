@@ -6,13 +6,13 @@ Lines is a program for plotting powder diffraction patterns, and was initially d
 
 The background of any pattern (.xy or .xye format) can be corrected with:
 
-    lines pattern.xye --bg_correct 1
+    lines pattern.xye --bgcorrect 1
 
 Then by clicking on the figure, the background can be specified. By closing the program, a list of X and Y coordinates is printed to console and written to the file lines.out. The command line option --bgcorrect 1 tells the program to perform a linear background correction, and print the corrected file to pattern_corr.xy. Lines respects your standard deviations and never overwrites the original data. The background points are by default written to the file lines.out. In case this file exists, the original is backed up to lines.out~.
 
 It is then possible to continue the background correction process by loading in the points from the file lines.out  like this:
 
-	lines pattern.xye --bg_correct 1 --bgin lines.out
+	lines pattern.xye --bgcorrect 1 --bgin lines.out
 
 It is also possible to perform the background correction while doing a refinement with TOPAS. In order to do so, the observed, calculated and difference plot should be output from TOPAS with the following commands:
 
@@ -22,7 +22,7 @@ It is also possible to perform the background correction while doing a refinemen
 
 Then, to start the background correct prodecure:
 
-    lines pattern.xye --bg_correct 1 --bgin lines.out --topasbg
+    lines pattern.xye --bgcorrect 1 --bgin lines.out --topasbg
 
 The option --topasbg will tell the program to read the observed, calculated and difference plots and --bg_in lines.out will load previously saved background points from the file lines.out.
 
