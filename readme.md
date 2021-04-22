@@ -51,8 +51,8 @@ Make sure to click 'Add python.exe to Path' during installation.
 
 Alternatively, if you use [conda](https://docs.conda.io/en/latest/miniconda.html), you can setup a python 2.7 environment like this:
     
-    conda create -n topas_tools python=2.7
-    conda activate topas_tools
+    conda create -n lines python=2.7
+    conda activate lines
 
 Install `lines`:
 
