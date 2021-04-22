@@ -21,7 +21,14 @@ setup(
 
     packages=["lines", "zeolite_database"],
 
-    install_requires=["numpy", "matplotlib", "scipy"],
+    install_requires=[
+        "cycler==0.10.0",
+        "kiwisolver==1.1.0",
+        "matplotlib<3.0",
+        "numpy==1.12", 
+        "pyparsing==2.4.7",
+        "scipy==0.16",
+    ],
 
     package_data={
         "": ["LICENCE",  "readme.md", "setup.py"],

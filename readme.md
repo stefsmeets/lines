@@ -40,8 +40,8 @@ Pressing run opens an instance of lines where the background can be modified. By
 ## Requirements
 
 - Python2.7
-- numpy
-- scipy
+- numpy==1.12
+- scipy==0.16
 - matplotlib<3.0 (the latest matplotlib no longer supports python2.7)
 
 ## Installation
@@ -49,17 +49,13 @@ Pressing run opens an instance of lines where the background can be modified. By
 Install Python2.7 (https://www.python.org/downloads/release/python-2716/).
 Make sure to click 'Add python.exe to Path' during installation.
 
-Download and extract:
+Alternatively, if you use [conda](https://docs.conda.io/en/latest/miniconda.html), you can setup a python 2.7 environment like this:
+    
+    conda create -n topas_tools python=2.7
+    conda activate topas_tools
 
-https://github.com/stefsmeets/lines/archive/master.zip
+Install `lines`:
 
-Install (alternatively, run `setup_win.bat`):
-	
-    python -m pip install numpy scipy matplotlib<3.0
-    python setup.py install
-
-Uninstall:
-
-    pip uninstall lines
+    pip install git+https://github.com/stefsmeets/lines.git
 
 To access the gui, run `lines_bg.bat` in the `bin` directory. 
