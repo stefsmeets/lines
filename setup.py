@@ -11,7 +11,7 @@ setup(
     description="Program for plotting powder diffraction patterns and background subtraction",
 
     author="Stef Smeets",
-    author_email="stef.smeets@mmk.su.se",
+    author_email="s.smeets@esciencecenter.nl",
     license="GPL",
     url="https://github.com/stefsmeets/lines",
 
@@ -22,12 +22,9 @@ setup(
     packages=["lines", "zeolite_database"],
 
     install_requires=[
-        "cycler==0.10.0",
-        "kiwisolver==1.1.0",
         "matplotlib<3.0",
-        "numpy==1.12", 
-        "pyparsing==2.4.7",
-        "scipy==0.16",
+        "numpy>=1.10", 
+        "scipy>=0.16",
     ],
 
     package_data={

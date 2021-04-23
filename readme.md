@@ -39,23 +39,24 @@ Pressing run opens an instance of lines where the background can be modified. By
 
 ## Requirements
 
+In brackets are known working versions from conda.
+
 - Python2.7
-- numpy==1.12
-- scipy==0.16
-- matplotlib<3.0 (the latest matplotlib no longer supports python2.7)
+- numpy (1.16)
+- scipy (1.2)
+- matplotlib (2.2)
 
 ## Installation
 
-Install Python2.7 (https://www.python.org/downloads/release/python-2716/).
-Make sure to click 'Add python.exe to Path' during installation.
+1. Install [miniconda](https://docs.conda.io/en/latest/miniconda.html) (pick the one suitable for your platform, Python version does not matter here).
 
-Alternatively, if you use [conda](https://docs.conda.io/en/latest/miniconda.html), you can setup a python 2.7 environment like this:
+2. Download and extract: https://github.com/stefsmeets/lines/archive/master.zip
+
+3. Install using:
     
-    conda create -n lines python=2.7
-    conda activate lines
-
-Install `lines`:
-
-    https://github.com/stefsmeets/lines/archive/master.zip
+```bash
+    conda create env -f environment.yml
+    python setup.py develop
+```
 
 To access the gui, run `lines_bg.bat` in the `bin` directory. 
