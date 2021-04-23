@@ -32,7 +32,8 @@ Since its inception, many functions for operations performed on powder diffracti
 
 ## GUI
 
-On Windows, a GUI is available, and is accessible via the lines_bg.bat file after installation.
+On Windows, a GUI for the background subtraction is available. It is accessible via the `lines_bg.bat` file  in the `bin` directory or by typing `lines gui`.
+
 Pressing run opens an instance of lines where the background can be modified. By closing the plot window, and the corrected and background patterns will be written.
 
 ![gui](https://cloud.githubusercontent.com/assets/873520/14958063/029e912e-1089-11e6-9ffc-976ddbf1f992.png)
@@ -59,4 +60,3 @@ In brackets are known working versions from conda.
     python setup.py develop
 ```
 
-To access the gui, run `lines_bg.bat` in the `bin` directory. 
