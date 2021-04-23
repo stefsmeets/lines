@@ -56,6 +56,6 @@ Alternatively, if you use [conda](https://docs.conda.io/en/latest/miniconda.html
 
 Install `lines`:
 
-    pip install git+https://github.com/stefsmeets/lines.git
+    pip install https://github.com/stefsmeets/lines/archive/refs/heads/master.zip
 
 To access the gui, run `lines_bg.bat` in the `bin` directory. 
