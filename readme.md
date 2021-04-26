@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4715880.svg)](https://doi.org/10.5281/zenodo.4715880)
+
 # Lines
 
 Lines is a program for plotting powder diffraction patterns, and was initially developed for interactively modifying the background during the course of a Rietveld refinement with XRS-82 (Baerlocher, 1982). The modern way of removing backgrounds is by fitting a Chebyshev polynomial during the course of the Rietveld refinement. In practice, this method is unreliable when doing a Pawley or Le Bail fit, and offers little control over the shape of the background during a Rietveld refinement. 
