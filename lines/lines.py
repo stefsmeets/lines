@@ -777,7 +777,7 @@ def f_bg_correct_out(d, bg_xy, kind='linear', offset='ask', suffix_bg='_bg', suf
         for x, y in zip(xvals, bg_yvals):
             if np.isnan(y):
                 continue
-            print >> out_bg, '%15.6f%15.2f' % (x, y)
+            print >> out_bg, '%15.6f%15.6f' % (x, y)
         print 'Writing corrected pattern to %s' % fn_corr
 
         if d.has_esd:
@@ -786,12 +786,12 @@ def f_bg_correct_out(d, bg_xy, kind='linear', offset='ask', suffix_bg='_bg', suf
             for x, y, e in zip(xvals, yvals-bg_yvals+offset, err):
                 if np.isnan(y):
                     continue
-                print >> out_corr, '%15.6f%15.2f%15.6f' % (x, y, e)
+                print >> out_corr, '%15.6f%15.6f%15.6f' % (x, y, e)
         else:
             for x, y in zip(xvals, yvals-bg_yvals+offset):
                 if np.isnan(y):
                     continue
-                print >> out_corr, '%15.6f%15.2f' % (x, y)
+                print >> out_corr, '%15.6f%15.6f' % (x, y)
     else:
         raise IndexError(
             'Not enough values in background array, need at least 4 points.')
@@ -814,11 +814,11 @@ def new_stepco_inp(xy, name, pre, post, esds=None):
             if np.isnan(esd):
                 esd = ''
             else:
-                esd = '{:15.2f}'.format(esd)
-            print >> f, 'BGVALU    {:15f}{:15.2f}{}'.format(x, y, esd)
+                esd = '{:15.6f}'.format(esd)
+            print >> f, 'BGVALU    {:15f}{:15.6f}{}'.format(x, y, esd)
     else:
         for x, y in xy.T:
-            print >> f, 'BGVALU    {:15f}{:15.2f}'.format(x, y)
+            print >> f, 'BGVALU    {:15f}{:15.6f}'.format(x, y)
 
     for line in post:
         print >> f, line,
@@ -1374,7 +1374,7 @@ class Background():
         else:
             fout = open(fout, 'w')
             for x, y in self.xy.transpose():
-                print >> fout, '%15.6f%15.2f' % (x, y)
+                print >> fout, '%15.6f%15.6f' % (x, y)
 
 
 class Lines(object):
