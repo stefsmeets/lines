@@ -58,7 +58,8 @@ In brackets are known working versions from conda.
 3. Install using:
     
 ```bash
-    conda create env -f environment.yml
+    conda env create -f environment.yml
+    conda activate lines
     python setup.py develop
 ```
 
