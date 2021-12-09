@@ -12,11 +12,11 @@ setup(
 
     author="Stef Smeets",
     author_email="s.smeets@esciencecenter.nl",
-    license="GPL",
     url="https://github.com/stefsmeets/lines",
 
     classifiers=[
         'Programming Language :: Python :: 2.7',
+        'License :: OSI Approved :: MIT License',
     ],
 
     packages=["lines", "zeolite_database"],
