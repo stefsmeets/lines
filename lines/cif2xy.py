@@ -18,6 +18,7 @@
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 from __future__ import print_function
+from builtins import next
 import subprocess as sp
 import sys
 import os

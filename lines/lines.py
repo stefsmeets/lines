@@ -19,6 +19,13 @@
 
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import str
+from builtins import input
+from builtins import next
+from builtins import map
+from builtins import zip
+from builtins import range
+from builtins import object
 import sys
 import os
 import argparse
@@ -206,7 +213,7 @@ def parse_xrdml(fn):
 
     counts = xmldoc.getElementsByTagName('intensities')[0]  # grab element
     # get first node + convert to float
-    counts = map(float, counts.firstChild.wholeText.split())
+    counts = list(map(float, counts.firstChild.wholeText.split()))
 
     for rangenode in xmldoc.getElementsByTagName('positions'):
         if rangenode.getAttribute('axis') == '2Theta':
@@ -765,7 +772,7 @@ def f_bg_correct_out(d, bg_xy, kind='linear', offset='ask', suffix_bg='_bg', suf
     bg_yvals = interpolate(bg_xy, xvals, kind=kind)
 
     if offset == 'ask':
-        offset = raw_input(
+        offset = input(
             "What y offset should I add to the data? (x=exit)\n >> [0] ") or 0
         offset = int(offset)
 
@@ -982,7 +989,7 @@ def savitzky_golay(y, window_size=11, order=2, deriv=0):
         raise TypeError("window_size size must be a positive odd number")
     if window_size < order + 2:
         raise TypeError("window_size is too small for the polynomials order")
-    order_range = range(order+1)
+    order_range = list(range(order+1))
 
     half_window = (window_size - 1) // 2
     # precompute coefficients
@@ -1168,7 +1175,7 @@ class Data(object):
         ax.plot(self.x, self.y)
 
 
-class Background():
+class Background(object):
     sensitivity = 8
 
     def __init__(self, fig, d=None, outfunc=None, bg_correct=False, quiet=False, out=None, npick=-1, topas_bg=False, xrs=None):
@@ -1788,8 +1795,8 @@ def fix_sls_data(data, quiet=False):
     if not isinstance(data, list):
         data = list((data,))
 
-    scl = raw_input('\nScale (leave blank for picking procedure) \n >> ')
-    npats = raw_input('\nNumber of raw patterns \n >> [16]') or 16
+    scl = input('\nScale (leave blank for picking procedure) \n >> ')
+    npats = input('\nNumber of raw patterns \n >> [16]') or 16
     # scl = 1.3
     npats = float(npats)**0.5
 
@@ -1926,7 +1933,7 @@ def plot_reciprocal_space(fnobs, fncalc=None, orthogonal_view=True):
 
         label = fnobs[i]
 
-        h, k, l = zip(*data)
+        h, k, l = list(zip(*data))
         ax.plot(h, k, l, 'b.', label=label+' observed', ms=2.50)
 
         # # Feeble attempt at getting heatmaps to work
@@ -1943,11 +1950,11 @@ def plot_reciprocal_space(fnobs, fncalc=None, orthogonal_view=True):
         # ax.contour(lm[0],lm[1],lhm, zdir='z',offset=min(l))
 
         if fncalc:
-            h, k, l = zip(*diff)
+            h, k, l = list(zip(*diff))
             ax.plot(
                 h, k, l, 'ro', label=label+' missing', mfc='None', mec='red')
             if len(absent) > 0:
-                h, k, l = zip(*absent)
+                h, k, l = list(zip(*absent))
                 ax.plot(h, k, l, 'r+', label=label+' sys. absent')
                 # ax.plot(h,k,l,'b.',label = label+' observed', ms=2.50)
             else:
@@ -2174,7 +2181,7 @@ def run_script(gui_options=None):
     options = parser.parse_args()
 
     if gui_options:
-        for k,v in gui_options.items():
+        for k,v in list(gui_options.items()):
             # print k,v
             setattr(options, k, v)
 
