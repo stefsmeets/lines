@@ -52,12 +52,12 @@ In brackets are known working versions.
 ## Installation
 
 ```bash
-pip install xrdlines
+pip install xpdlines
 ```
 
 Or, to install the latest version from this repository:
 
 
 ```bash
-pip install git+https://github.com/ecederstrand/exchangelib
+pip install git+https://github.com/stefsmeets/lines
 ```
