@@ -42,7 +42,7 @@ from scipy.interpolate import interp1d
 
 import math
 
-__version__ = '2018-10-03'
+__version__ = '2023-01-16'
 
 params = {'legend.fontsize': 10,
           'legend.labelspacing': 0.1}
@@ -1195,15 +1195,10 @@ class Background(object):
         self.npick = npick
 
         self.out = out
-        self.ax = fig.add_subplot(111)
+
+        self.ax = fig.axes[0]
         self.topas_bg = topas_bg
         self.xrs = xrs
-
-        # if xy is None:
-        #   self.xy = np.array([],dtype=float).reshape(2,0)
-        # else:
-        #   idx = xy[0,:].argsort()
-        #   self.xy = xy[:,idx]
 
         if d:
             self.d = d
@@ -1249,7 +1244,6 @@ class Background(object):
             # Set limited range to speed up calculations
             self.bg_range = np.arange(self.xy[0][0], self.xy[0][-1], 0.01)
             self.bg, = self.ax.plot(self.d.x, self.d.y, label='background')
-            # print self.bg_range
 
     def __call__(self, event):
         """Handles events (mouse input)"""
@@ -1358,32 +1352,32 @@ class Background(object):
             print('\nAttempting to interpolate standard deviations... for new background\n')
             esds = interpolate(self.d.xye[:, 0:3:2], self.xy[0], kind='linear')
 
-            # print esds
         else:
             esds = None
 
         return esds
 
     def printdata(self, fout=None):
-        """Prints stored data points to stdout"""  # TODO: make me a method on class Data()
+        """Prints stored data points to stdout"""
         if not self.xy.any():
             print('No stored coordinates.')
             return None
-
-        # print 'End'
 
         if not fout:
             fout = self.out
 
         esds = self.get_esds()
-        # print esds
 
         if self.xrs:
             new_stepco_inp(self.xy, *self.xrs, esds=esds)
         else:
             fout = open(fout, 'w')
             for x, y in self.xy.transpose():
+<<<<<<< Updated upstream
                 print('%15.6f%15.6f' % (x, y), file=fout)
+=======
+                print(f'{x:15.6f} {y:15.6f}', file=fout)
+>>>>>>> Stashed changes
 
 
 class Lines(object):
@@ -2328,11 +2322,6 @@ def run_script(gui_options=None):
         kind = options.compare-1
         f_compare(data, kind=kind, reference=ref)
 
-    # plt.plot(range(10),range(10))
-    # plt.show()
-    # plt.plot(range(5),range(5,10))
-    # plt.show()
-
     if options.plot_ticks_scaled:
         for fn in options.plot_ticks_scaled:
             d = read_data(fn, savenpy=False)
@@ -2377,8 +2366,12 @@ def run_script(gui_options=None):
             xyobs = read_data('x_yobs.xy')
             xycalc = read_data('x_ycalc.xy')
             xydiff = read_data('x_ydiff.xy')
+<<<<<<< Updated upstream
             # xybg   = read_data('x_ybg.xy')
         except IOError as e:
+=======
+        except OSError as e:
+>>>>>>> Stashed changes
             print(e)
             print()
             print("""Please add the following lines to the TOPAS input file to generate the needed files:
@@ -2438,9 +2431,6 @@ def run_script(gui_options=None):
         plt.show()
 
     if options.bg_correct:
-        # for d in data:
-        #   f_bg_correct_out(d=d,bg_xy=bg.xy.T,offset=options.bg_offset)
-
         f_bg_correct_out(
             d=data[0], bg_xy=bg.xy.T, kind=options.bg_correct, offset=options.bg_offset)
 
