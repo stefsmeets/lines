@@ -1,3 +1,4 @@
 include LICENCE
 include readme.md
 include setup_win.bat
+recursive-include zeolite_database/*.cif
