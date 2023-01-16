@@ -1,6 +1,0 @@
-name: lines
-dependencies:
-  - python=2.7
-  - matplotlib
-  - numpy
-  - scipy
