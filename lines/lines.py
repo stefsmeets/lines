@@ -1,22 +1,3 @@
-#!/usr/bin/env python2.7
-
-#    Lines - a python plotting program
-#    Copyright (C) 2015 Stef Smeets
-#
-#    This program is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License along
-#    with this program; if not, write to the Free Software Foundation, Inc.,
-#    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
 import sys
 import os
 import argparse
@@ -44,8 +25,6 @@ LINESDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 planck_constant = 6.62606957E-34
 elementary_charge = 1.60217656E-19
 speed_of_light = 2.99792458E8
-
-# print plt.get_backend()
 
 iza_codes = ["ABW", "ACO", "AEI", "AEL", "AEN", "AET", "AFG", "AFI", "AFN",
              "AFO", "AFR", "AFS", "AFT", "AFV", "AFX", "AFY", "AHT", "ANA",
@@ -247,6 +226,10 @@ def parse_iza_code(code):
 
 
 def run_cif2xy(cif, wl=1.0):
+    raise DeprecationWarning(
+        ("This feature has been deprecated, sorry. "
+        "The CIF library no longer works for Python 3."))
+    
     import subprocess as sp
 
     sp.call([sys.executable, os.path.join(os.path.dirname(
