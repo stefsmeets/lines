@@ -42,24 +42,22 @@ Pressing run opens an instance of lines where the background can be modified. By
 
 ## Requirements
 
-In brackets are known working versions from conda.
+In brackets are known working versions.
 
-- Python2.7
-- numpy (1.16)
-- scipy (1.2)
-- matplotlib (2.2)
+- Python 3.9+
+- numpy (1.24.1)
+- scipy (1.10.0)
+- matplotlib (3.6.3)
 
 ## Installation
 
-1. Install [miniconda](https://docs.conda.io/en/latest/miniconda.html) (pick the one suitable for your platform, Python version does not matter here).
-
-2. Download and extract: https://github.com/stefsmeets/lines/archive/master.zip
-
-3. Install using:
-    
 ```bash
-    conda env create -f environment.yml
-    conda activate lines
-    python setup.py develop
+pip install xrdlines
 ```
 
+Or, to install the latest version from this repository:
+
+
+```bash
+pip install git+https://github.com/ecederstrand/exchangelib
+```
