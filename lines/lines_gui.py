@@ -1,8 +1,5 @@
-from __future__ import print_function
-from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import str
 from tkinter import *
 from tkinter.filedialog import *
 from tkinter.ttk import *
@@ -32,12 +29,12 @@ def which(program):
     return None
 
 
-class LinesBackgroundDialog(Tk, object):
+class LinesBackgroundDialog(Tk):
 
     """Dialog that provide settings window for Lines Background correction"""
 
     def __init__(self, parent, drc='.'):
-        super(LinesBackgroundDialog, self).__init__()
+        super().__init__()
 
         self.parent = parent
 

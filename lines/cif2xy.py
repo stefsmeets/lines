@@ -17,8 +17,6 @@
 #    with this program; if not, write to the Free Software Foundation, Inc.,
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-from __future__ import print_function
-from builtins import next
 import subprocess as sp
 import sys
 import os
@@ -111,14 +109,14 @@ ProfileReferenceMax  50000
     print("End", file=focus_inp)
     focus_inp.close()
 
-    print("Generating powder pattern... (wl = {} A)".format(wl))
+    print(f"Generating powder pattern... (wl = {wl} A)")
     sp.call(
-        "focus -PowderStepScan {} > {}".format(focus_inp.name, focus_out), shell=True)
+        f"focus -PowderStepScan {focus_inp.name} > {focus_out}", shell=True)
 
     begin_switch = ">Begin stepscan"
     end_switch = "&"
 
-    focus_stepscan = open(focus_out, 'r')
+    focus_stepscan = open(focus_out)
     xye = open(xy_out, 'w')
 
     do_print = 0
@@ -139,7 +137,7 @@ ProfileReferenceMax  50000
 def main():
     description = """"""
     
-    epilog = 'Updated: {}'.format(__version__)
+    epilog = f'Updated: {__version__}'
 
     parser = argparse.ArgumentParser(description=description,
                                      epilog=epilog,

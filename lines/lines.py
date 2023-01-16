@@ -17,15 +17,6 @@
 #    with this program; if not, write to the Free Software Foundation, Inc.,
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-from __future__ import print_function
-from __future__ import absolute_import
-from builtins import str
-from builtins import input
-from builtins import next
-from builtins import map
-from builtins import zip
-from builtins import range
-from builtins import object
 import sys
 import os
 import argparse
@@ -100,8 +91,8 @@ def gen_read_files(paths):
     """opens file, returns file object for reading"""
     for path in paths:
         try:
-            f = open(path, 'r')
-        except IOError as e:
+            f = open(path)
+        except OSError as e:
             print(e)
             # print 'Cannot open {} (IOError)'.format(path,e)
             exit(0)
@@ -111,8 +102,8 @@ def gen_read_files(paths):
 def read_file(path):
     """opens file, returns file object for reading"""
     try:
-        f = open(path, 'r')
-    except IOError as e:
+        f = open(path)
+    except OSError as e:
         print(e)
         # print 'Cannot open {} (IOError)'.format(path,e)
         exit(0)
@@ -139,7 +130,7 @@ def read_data(fn, usecols=None, append_zeros=False, savenpy=False, suffix='', is
 
     try:
         inp = np.load(root+'.npy')
-    except (IOError, AssertionError):
+    except (OSError, AssertionError):
         inp = np.loadtxt(fn, usecols=usecols, ndmin=2)
     else:
         ext = '.npy'
@@ -150,7 +141,7 @@ def read_data(fn, usecols=None, append_zeros=False, savenpy=False, suffix='', is
         inp = np.hstack((inp, np.zeros((i, 1))))
 
     if inp.shape[1] > 3:
-        print('More than 3 columns read from {}, assuming x,y,esd, ignoring the rest.'.format(f.name))
+        print(f'More than 3 columns read from {f.name}, assuming x,y,esd, ignoring the rest.')
 
     d = Data(inp, name=fn+suffix, is_ticks=is_ticks)
 
@@ -163,10 +154,10 @@ def read_data(fn, usecols=None, append_zeros=False, savenpy=False, suffix='', is
 def load_tick_marks(path, col=3):
     """Checks if file exists and loads tick mark data as data class. Use column=3 default for xrs"""
     try:
-        f = open(path, 'r')
+        f = open(path)
         f.close()
-    except IOError:
-        print('-- {} not found. (IOError)'.format(path))
+    except OSError:
+        print(f'-- {path} not found. (IOError)')
         return None
 
     ticks = read_data(path, usecols=(col,), append_zeros=True, is_ticks=True)
@@ -221,7 +212,7 @@ def parse_xrdml(fn):
         else:
             rangenode = None
     if not rangenode:
-        raise IOError("Cannot find range node in xrdml file.")
+        raise OSError("Cannot find range node in xrdml file.")
 
     r_min = float(rangenode.getElementsByTagName(
         'startPosition')[0].firstChild.wholeText)
@@ -249,7 +240,7 @@ def parse_iza_code(code):
     fn = code.upper()+'0.cif'
     path = os.path.join(LINESDIR, 'zeolite_database', fn)
 
-    print('Framework code {} -> {}'.format(code, path))
+    print(f'Framework code {code} -> {path}')
     print()
 
     return path
@@ -259,7 +250,7 @@ def run_cif2xy(cif, wl=1.0):
     import subprocess as sp
 
     sp.call([sys.executable, os.path.join(os.path.dirname(
-        os.path.abspath(__file__)), "cif2xy.py"), "--wavelength={}".format(wl), cif])
+        os.path.abspath(__file__)), "cif2xy.py"), f"--wavelength={wl}", cif])
     root, ext = os.path.splitext(cif)
     basename = os.path.basename(root)
     return basename+".xy"
@@ -438,7 +429,7 @@ def f_monitor(fin, f_init, f_update, fig=None, poll_time=0.05):
     while True:
         try:
             args = f_init(fin, fig, ax)
-        except IOError:
+        except OSError:
             time.sleep(1)
         else:
             break
@@ -473,7 +464,7 @@ def f_monitor(fin, f_init, f_update, fig=None, poll_time=0.05):
                 break
 
         else:
-            print('Updated: {} -'.format(fin), time.ctime(os.stat(fin).st_mtime))
+            print(f'Updated: {fin} -', time.ctime(os.stat(fin).st_mtime))
             current_lastmod = os.stat(fin).st_mtime
             time.sleep(0.2)
             args = f_update(fin, *args)
@@ -504,7 +495,7 @@ def plot_init(fn, fig, ax):
         ax.set_ylabel(yl)
         ax.set_title(fn)
         line,  = ax.plot(
-            d.x, d.y, 'o', label='{} vs {}'.format(xl, yl), color='r', linestyle='')
+            d.x, d.y, 'o', label=f'{xl} vs {yl}', color='r', linestyle='')
         diag, =  ax.plot(
             [0, 25], [0, 25], color='b', linestyle='-', linewidth=2)
         return [line, diag]
@@ -530,8 +521,8 @@ def plot_update(fn, *args):
 
 def crplot_init(fin, fig, ax):
 
-    fcr = open('crplot.dat', 'r')
-    fhkl = open('hkl.dat', 'r')
+    fcr = open('crplot.dat')
+    fhkl = open('hkl.dat')
 
     crdata = np.array(parse_crplot_dat(fcr))
     hkldata = np.array(parse_hkl_dat(fhkl))
@@ -566,8 +557,8 @@ def crplot_init(fin, fig, ax):
 def crplot_update(fin, *args):
     pobs, pclc, pdif, pobs_zero, pdif_zero, ptcks = args
 
-    fcr = open('crplot.dat', 'r')
-    fhkl = open('hkl.dat', 'r')
+    fcr = open('crplot.dat')
+    fhkl = open('hkl.dat')
 
     crdata = np.array(parse_crplot_dat(fcr))
     hkldata = np.array(parse_hkl_dat(fhkl))
@@ -599,7 +590,7 @@ def crplot_update(fin, *args):
 def f_crplo():
     # difference data
     crplotdat = 'crplot.dat'
-    fcr = open(crplotdat, 'r')
+    fcr = open(crplotdat)
 
     crdata = np.array(parse_crplot_dat(fcr))
 
@@ -620,8 +611,8 @@ def f_crplo():
     # tick marks
     hkldat = 'hkl.dat'
     try:
-        fhkl = open(hkldat, 'r')
-    except IOError:
+        fhkl = open(hkldat)
+    except OSError:
         print('-- hkl.dat not found. (IOError)')
     else:
         hkldata = np.array(parse_hkl_dat(fhkl))
@@ -631,7 +622,7 @@ def f_crplo():
 
 
 def f_prf(fin):
-    fin = open(fin, 'r')
+    fin = open(fin)
 
     for i in range(6):
         next(fin)
@@ -650,7 +641,7 @@ def f_prf(fin):
 
 
 def f_prf_init(fin, fig, ax):
-    fin = open(fin, 'r')
+    fin = open(fin)
 
     for i in range(6):
         next(fin)
@@ -675,7 +666,7 @@ def f_prf_init(fin, fig, ax):
 def f_prf_update(fin, *args):
     pfobs, pfcal, pdiff, pzero_fobs, pzero_diff = args
 
-    fin = open(fin, 'r')
+    fin = open(fin)
 
     for i in range(6):
         next(fin)
@@ -701,9 +692,9 @@ def f_plot_stepco_special(bg_xy):
 
     crplotdat = 'crplot.dat'
     try:
-        fcr = open(crplotdat, 'r')
-    except IOError:
-        print('\n{} not found. Skipping difference plot.'.format(crplotdat))
+        fcr = open(crplotdat)
+    except OSError:
+        print(f'\n{crplotdat} not found. Skipping difference plot.')
     else:
         crdata = np.array(parse_crplot_dat(fcr))
         tt = crdata[:, 0]
@@ -719,7 +710,7 @@ def f_plot_topas_special(xyobs, xycalc, xydiff, xybg, lw=1.0):
     This is useful to compare the difference and adjust the background accordingly"""
 
     if not xybg:
-        raise IOError(
+        raise OSError(
             " ** Background data not found. Please specify with --bgin")
 
     tt = xyobs.x
@@ -779,14 +770,14 @@ def f_bg_correct_out(d, bg_xy, kind='linear', offset='ask', suffix_bg='_bg', suf
     if offset == 'x':
         return
 
-    print('\nOffset = {}'.format(offset))
+    print(f'\nOffset = {offset}')
 
     if len(bg_xy) >= 4:
         print('Writing background pattern to %s' % fn_bg)
         for x, y in zip(xvals, bg_yvals):
             if np.isnan(y):
                 continue
-            print('%15.6f%15.6f' % (x, y), file=out_bg)
+            print('{:15.6f}{:15.6f}'.format(x, y), file=out_bg)
         print('Writing corrected pattern to %s' % fn_corr)
 
         if d.has_esd:
@@ -795,12 +786,12 @@ def f_bg_correct_out(d, bg_xy, kind='linear', offset='ask', suffix_bg='_bg', suf
             for x, y, e in zip(xvals, yvals-bg_yvals+offset, err):
                 if np.isnan(y):
                     continue
-                print('%15.6f%15.6f%15.6f' % (x, y, e), file=out_corr)
+                print('{:15.6f}{:15.6f}{:15.6f}'.format(x, y, e), file=out_corr)
         else:
             for x, y in zip(xvals, yvals-bg_yvals+offset):
                 if np.isnan(y):
                     continue
-                print('%15.6f%15.6f' % (x, y), file=out_corr)
+                print('{:15.6f}{:15.6f}'.format(x, y), file=out_corr)
     else:
         raise IndexError(
             'Not enough values in background array, need at least 4 points.')
@@ -809,7 +800,7 @@ def f_bg_correct_out(d, bg_xy, kind='linear', offset='ask', suffix_bg='_bg', suf
 def new_stepco_inp(xy, name, pre, post, esds=None):
     """Function for writing stepco input files"""
 
-    print('Writing xy data to file {}'.format(name))
+    print(f'Writing xy data to file {name}')
 
     f = open(name, 'w')
 
@@ -823,11 +814,11 @@ def new_stepco_inp(xy, name, pre, post, esds=None):
             if np.isnan(esd):
                 esd = ''
             else:
-                esd = '{:15.6f}'.format(esd)
-            print('BGVALU    {:15f}{:15.6f}{}'.format(x, y, esd), file=f)
+                esd = f'{esd:15.6f}'
+            print(f'BGVALU    {x:15f}{y:15.6f}{esd}', file=f)
     else:
         for x, y in xy.T:
-            print('BGVALU    {:15f}{:15.6f}'.format(x, y), file=f)
+            print(f'BGVALU    {x:15f}{y:15.6f}', file=f)
 
     for line in post:
         print(line, end=' ', file=f)
@@ -1010,8 +1001,8 @@ def wavelength_info(wl):
 
     energy = wavelength2energy(wl)
 
-    print("wavelength: {:.5f} angstrom".format(wl))
-    print("energy:     {:.5f} kev".format(energy))
+    print(f"wavelength: {wl:.5f} angstrom")
+    print(f"energy:     {energy:.5f} kev")
 
     dvals = 10/np.linspace(1, 10, 10)
 
@@ -1020,7 +1011,7 @@ def wavelength_info(wl):
 
     print("\n         d        th2          q")
     for d, th2, q in zip(dvals, theta2, qvals):
-        print("{:10.3f} {:10.3f} {:10.3f}".format(d, th2, q))
+        print(f"{d:10.3f} {th2:10.3f} {q:10.3f}")
     print()
 
 
@@ -1042,7 +1033,7 @@ def calc_agreement(o, c, bg=0, kind='linear'):
     return rp
 
 
-class Data(object):
+class Data:
     total = 0
     plot_range = None
 
@@ -1050,7 +1041,7 @@ class Data(object):
 
     def __init__(self, arr, name=None, quiet=False, is_ticks=False):
         if not quiet:
-            print('Loading data: {}\n       shape: {}'.format(name, arr.shape))
+            print(f'Loading data: {name}\n       shape: {arr.shape}')
 
         self.is_ticks = is_ticks
 
@@ -1066,7 +1057,7 @@ class Data(object):
             self.xy = self.arr[:, 0:2]
             self.xye = self.arr[:, 0:3]
         except IndexError:
-            raise IOError("Could not load file/data: {}".format(name))
+            raise OSError(f"Could not load file/data: {name}")
 
         try:
             self.err = self.arr[:, 2]
@@ -1090,14 +1081,14 @@ class Data(object):
                 w = 1/self.err**2   # weights
             else:
                 w = 1/(np.abs(self.y)+0.1)      # weights = y^-1 if no esds
-            print('       R_exp: {:.3%}'.format(((n) / np.sum(w*self.y**2))**0.5))
+            print(f'       R_exp: {((n) / np.sum(w*self.y**2))**0.5:.3%}')
 
     def bin(self, binsize=0.01):
         x = self.x
         y = self.y
         fn = self.filename
 
-        print('Binning {} from 2th = {} - {} with a bin size of {}'.format(fn, min(x), max(x), binsize))
+        print(f'Binning {fn} from 2th = {min(x)} - {max(x)} with a bin size of {binsize}')
         print()
         print('N(x) = ', x.shape)
         print('N(y) = ', y.shape)
@@ -1129,7 +1120,7 @@ class Data(object):
         assert window in ['flat', 'hanning', 'hamming',
                           'bartlett', 'blackman', 'savitzky_golay', 'moving_avg']
 
-        print(' >> Applying filter: {}, window: {}, order {} (SG only) to {}'.format(window, window_len, order, self.filename))
+        print(f' >> Applying filter: {window}, window: {window_len}, order {order} (SG only) to {self.filename}')
 
         if window == 'savitzky_golay':
             y = savitzky_golay(self.y, window_size=window_len, order=order)
@@ -1149,7 +1140,7 @@ class Data(object):
     def convert_wavelength(self, wavelength_in, wavelength_out):
         """Converts 2theta values to a different wavelength"""
         print()
-        print(" ** Convert {} from {:.4f} ANG ({:.2f} keV) to {:.4f} ANG ({:.2f} keV)".format(self.filename, wavelength_in, wavelength2energy(wavelength_in), wavelength_out, wavelength2energy(wavelength_out)))
+        print(f" ** Convert {self.filename} from {wavelength_in:.4f} ANG ({wavelength2energy(wavelength_in):.2f} keV) to {wavelength_out:.4f} ANG ({wavelength2energy(wavelength_out):.2f} keV)")
         print()
         d = twotheta2d(self.x, wavelength_in)
         theta2 = d2twotheta(d, wavelength_out)
@@ -1169,13 +1160,13 @@ class Data(object):
             name = root + tag + ext
         np.savetxt(name, self.xye, fmt='%15.5f')
 
-        print('Pattern written to {}'.format(name))
+        print(f'Pattern written to {name}')
 
     def plot(self, ax):
         ax.plot(self.x, self.y)
 
 
-class Background(object):
+class Background:
     sensitivity = 8
 
     def __init__(self, fig, d=None, outfunc=None, bg_correct=False, quiet=False, out=None, npick=-1, topas_bg=False, xrs=None):
@@ -1295,12 +1286,12 @@ class Background(object):
                 self.xyobs, self.xycalc, self.xy, kind=self.bg_correct)
             difference = agreement - self.last_agreement
             self.last_agreement = agreement
-            string = '{:.4f} ({:+.4f})'.format(agreement, difference)
+            string = f'{agreement:.4f} ({difference:+.4f})'
         else:
             string = ""
 
         for n in range(len(ind)):
-            print('   --- {:.4f} {:.4f}          {}'.format(removed[:, n][0], removed[:, n][1], string))
+            print(f'   --- {removed[:, n][0]:.4f} {removed[:, n][1]:.4f}          {string}')
 
     def onkeypress(self, event):
         if event.key == 'x':
@@ -1325,11 +1316,11 @@ class Background(object):
                 self.xyobs, self.xycalc, self.xy, kind=self.bg_correct)
             difference = agreement - self.last_agreement
             self.last_agreement = agreement
-            string = '{:.4f} ({:+.4f})'.format(agreement, difference)
+            string = f'{agreement:.4f} ({difference:+.4f})'
         else:
             string = ""
 
-        print('+++    {:.4f} {:.4f}          {}'.format(xdata, ydata, string))
+        print(f'+++    {xdata:.4f} {ydata:.4f}          {string}')
 
     def background_update(self):
         xy = self.xy.T
@@ -1373,19 +1364,15 @@ class Background(object):
         else:
             fout = open(fout, 'w')
             for x, y in self.xy.transpose():
-<<<<<<< Updated upstream
-                print('%15.6f%15.6f' % (x, y), file=fout)
-=======
                 print(f'{x:15.6f} {y:15.6f}', file=fout)
->>>>>>> Stashed changes
 
 
-class Lines(object):
+class Lines:
 
     """docstring for Lines"""
 
     def __init__(self, fig, hide=False):
-        super(Lines, self).__init__()
+        super().__init__()
         if hide:
             self.plot = self.black_hole
             self.plot_tick_marks = self.black_hole
@@ -1415,7 +1402,7 @@ class Lines(object):
         if self.normalize:
             scale = np.trapz(data.y, data.x)
             # scale = np.max(data.y)
-            print(' >> Scaling {} by 1/{:.5f}'.format(data.filename, scale))
+            print(f' >> Scaling {data.filename} by 1/{scale:.5f}')
             data.y = data.y / scale
             # print scale
         # elif 'x_ycalc_no_sda.xy' in data.filename or 'ssz61_am_corr.xye' in data.filename:
@@ -1474,7 +1461,7 @@ class Lines(object):
         alpha = 0.6
 
         boxes = np.loadtxt(fname, unpack=True)
-        print('Loading boxes: {}\n        shape: {}'.format(fname, boxes.shape))
+        print(f'Loading boxes: {fname}\n        shape: {boxes.shape}')
 
         y1 = 0
 
@@ -1491,9 +1478,9 @@ class Lines(object):
 def plot_correlation_matrix(arr, labels=[]):
     def formatter(arr, x, y, labels):
         if labels:
-            print('{:4}{:4}{:8} {} {}'.format(x, y,  arr[x, y], labels[x], labels[y]))
+            print(f'{x:4}{y:4}{arr[x, y]:8} {labels[x]} {labels[y]}')
         else:
-            print('{:4}{:4}{:8}'.format(x, y, arr[x, y]))
+            print(f'{x:4}{y:4}{arr[x, y]:8}')
 
     def onpick(event):
         x, y = int(event.mouseevent.xdata), int(event.mouseevent.ydata)
@@ -1506,7 +1493,7 @@ def plot_correlation_matrix(arr, labels=[]):
         if y > x or x == y:
             continue
         if first:
-            print('\n Highly correlated parameters (>{}):'.format(threshold))
+            print(f'\n Highly correlated parameters (>{threshold}):')
             first = False
         formatter(arr, x, y, labels)
 
@@ -1552,7 +1539,7 @@ def f_peakdetect(d, lookahead=10, noise=5000):
     peaks, = ax.plot(xm, ym, marker='o', lw=0,
                      markeredgecolor='red', markerfacecolor='None', markersize=20)
 
-    class Okp(object):
+    class Okp:
 
         """docstring for okp"""
 
@@ -1608,7 +1595,7 @@ def f_peakdetect(d, lookahead=10, noise=5000):
 
     print('         2theta      intensity')
     for x, y in zip(xm, ym):
-        print('%15.4f%15.4f' % (x, y))
+        print('{:15.4f}{:15.4f}'.format(x, y))
     # print xm,ym
 
     return xm, ym
@@ -1664,7 +1651,7 @@ def f_identify(d, refs, criterium=0.05, lookahead=10, noise=5000):
 
     print(lst)
     for (r, rw, missing, fn) in lst:
-        print('{:6.3f} {:6.3f} using: {} refs --> {}'.format(r, wr, missing, fn))
+        print(f'{r:6.3f} {wr:6.3f} using: {missing} refs --> {fn}')
 
 
 def f_compare(data, kind=0, reference=None):
@@ -1713,10 +1700,10 @@ def f_compare(data, kind=0, reference=None):
 
     lst = []
 
-    print("Calculate agreement for {} combinations of {} patterns.".format(int(l), len(data)))
+    print(f"Calculate agreement for {int(l)} combinations of {len(data)} patterns.")
 
     for i, (d1, d2) in enumerate(pairs):
-        printer("{:2.0%}".format(i/l))
+        printer(f"{i/l:2.0%}")
 
         names = "{:<{lfill}} - {:<{rfill}}".format(
             d1.filename.split('/')[-1], d2.filename.split('/')[-1], lfill=lfill, rfill=rfill)
@@ -1745,12 +1732,12 @@ def f_compare(data, kind=0, reference=None):
 
     lst = sorted(lst, key=operator.itemgetter(kind))
 
-    print('2theta range = {:8.3f} {:8.3f}'.format(start+min_tt*step, start+max_tt*step))
-    print('Shuffle values by {}'.format([shift*step for shift in shuffle]))
+    print(f'2theta range = {start+min_tt*step:8.3f} {start+max_tt*step:8.3f}')
+    print(f'Shuffle values by {[shift*step for shift in shuffle]}')
 
     print('combined spearman     pval  kendall     pval  pearson     pval    shift -> sorted by {}'.format(['combined', 'spearman', 'kendall', 'pearson'][kind]))
     for (combined, spearmanr, kendallr, pearsonr, spearmanp, kendallp, pearsonp, shift, names) in lst:
-        print("{:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f}   ".format(combined, spearmanr, spearmanp, kendallr, kendallp, pearsonr, pearsonp, shift) + names)
+        print(f"{combined:8.3f} {spearmanr:8.3f} {spearmanp:8.3f} {kendallr:8.3f} {kendallp:8.3f} {pearsonr:8.3f} {pearsonp:8.3f} {shift:8.3f}   " + names)
 
 
 def calc_fwhm(uvw):
@@ -1822,7 +1809,7 @@ def fix_sls_data(data, quiet=False):
                 idx = find_nearest(d.x, x)
                 scl1 = d.err[idx]**2 * (npats**2 / d.y[idx])
                 avg.append(scl1)
-                print('{:10.4f}**2 * ({:d} / {:10.4f}) = {:10.4f}'.format(d.err[idx], int(npats**2), d.y[idx], scl1))
+                print(f'{d.err[idx]:10.4f}**2 * ({int(npats**2):d} / {d.y[idx]:10.4f}) = {scl1:10.4f}')
             scl = np.mean(avg)
         else:
             scl = float(scl)
@@ -1900,7 +1887,7 @@ def plot_reciprocal_space(fnobs, fncalc=None, orthogonal_view=True):
         if not isinstance(fncalc, str):
             raise TypeError
         calc = np.loadtxt(fncalc)
-        calc = set([tuple(map(int, row[0:3])) for row in calc])
+        calc = {tuple(map(int, row[0:3])) for row in calc}
 
     if isinstance(fnobs, str):
         fnobs = [fnobs]
@@ -1909,7 +1896,7 @@ def plot_reciprocal_space(fnobs, fncalc=None, orthogonal_view=True):
         obs = [np.loadtxt(fn) for fn in fnobs]
     except ValueError:
         obs = [np.genfromtxt(fn, delimiter=[4, 4, 4, 8, 8]) for fn in fnobs]
-    obs = [set([tuple(map(int, row[0:3])) for row in data]) for data in obs]
+    obs = [{tuple(map(int, row[0:3])) for row in data} for data in obs]
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
@@ -1963,7 +1950,7 @@ def run_script(gui_options=None):
 - Scipy is needed for some interpolation functions.
 """
 
-    epilog = 'Updated: {}'.format(__version__)
+    epilog = f'Updated: {__version__}'
 
     parser = argparse.ArgumentParser(description=description,
                                      epilog=epilog,
@@ -2221,7 +2208,7 @@ def run_script(gui_options=None):
         capillary = read_data(options.capillary)
         smoothed = capillary.smooth(window='hanning', window_len=101)
         for d in data:
-            print(' >> Removing contribution of {} from {}'.format(options.capillary, d.filename))
+            print(f' >> Removing contribution of {options.capillary} from {d.filename}')
             f_bg_correct_out(
                 d, smoothed.xy, kind=options.bg_correct, offset=0, suffix_corr='_rem_cap')
         exit()
@@ -2238,7 +2225,7 @@ def run_script(gui_options=None):
             wl_in, wl_out = options.convert_2theta
             data = [d.convert_wavelength(wl_in, wl_out) for d in data]
             for d in data:
-                d.print_pattern(tag='{:.2f}'.format(wl_out))
+                d.print_pattern(tag=f'{wl_out:.2f}')
         else:
             for wl in options.convert_2theta:
                 wavelength_info(wl)
@@ -2350,7 +2337,7 @@ def run_script(gui_options=None):
             xyobs = read_data('x_yobs.xy')
             xycalc = read_data('x_ycalc.xy')
             xyerr = read_data('x_yerr.xy')
-        except IOError as e:
+        except OSError as e:
             print(e)
             print()
             print("""Please add the following lines to the TOPAS input file to generate the needed files:
@@ -2366,12 +2353,7 @@ def run_script(gui_options=None):
             xyobs = read_data('x_yobs.xy')
             xycalc = read_data('x_ycalc.xy')
             xydiff = read_data('x_ydiff.xy')
-<<<<<<< Updated upstream
-            # xybg   = read_data('x_ybg.xy')
-        except IOError as e:
-=======
         except OSError as e:
->>>>>>> Stashed changes
             print(e)
             print()
             print("""Please add the following lines to the TOPAS input file to generate the needed files:

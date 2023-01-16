@@ -17,9 +17,6 @@
 #    with this program; if not, write to the Free Software Foundation, Inc.,
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-from __future__ import print_function
-from builtins import zip
-from builtins import range
 import numpy as np
 from math import pi, log
 import pylab
@@ -621,7 +618,7 @@ def _smooth(x, window_len=11, window='hanning'):
         return x
 
     if window not in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
-        raise ValueError("Window is not one of '{0}', '{1}', '{2}', '{3}', '{4}'".format(
+        raise ValueError("Window is not one of '{}', '{}', '{}', '{}', '{}'".format(
                          *('flat', 'hanning', 'hamming', 'bartlett', 'blackman')))
 
     s = np.r_[x[window_len-1:0:-1], x, x[-1:-window_len:-1]]
@@ -661,7 +658,7 @@ def zero_crossings(y_axis, window=11):
     if diff.std() / diff.mean() > 0.2:
         print(diff.std() / diff.mean())
         print(np.diff(indices))
-        raise ValueError("False zero-crossings found, indicates problem {0} or {1}".format(
+        raise ValueError("False zero-crossings found, indicates problem {} or {}".format(
                          "with smoothing window", "problem with offset"))
     # check if any zero crossings were found
     if len(zero_crossings) < 1:
