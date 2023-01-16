@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from Tkinter import *
 from tkFileDialog import *
 from ttk import *
@@ -7,7 +9,7 @@ import os
 import multiprocessing as mp
 from collections import namedtuple
 
-import lines
+from . import lines
 
 def which(program):
     def is_exe(fpath):
@@ -160,10 +162,10 @@ class LinesBackgroundDialog(Tk, object):
         return 1  # override
 
     def help(self):
-        print "Lines: background (manual)"
-        print "=========================="
+        print("Lines: background (manual)")
+        print("==========================")
 
-        print """
+        print("""
 Lines is a background correction program to interactively 
 remove the background for powder diffraction data. It respects your
 standard deviations and never overwrites the original data. 
@@ -179,37 +181,37 @@ this file exists, the original is backed up to lines.out~.
 If XXX_corr.xye is used in the rietveld refinement program, by simply 
 opening lines.out the background correction can be continued so it is then
 possible to update the background correction without modifying the original
-data."""
-        print
-        print "Observed data"
-        print "-------------"
-        print """
+data.""")
+        print()
+        print("Observed data")
+        print("-------------")
+        print("""
     Path to your observed data to perform background correction on.
     Lines can read any ascii file with 2 or 3 space-separated columns, 
     such as .xy or .xye format.
-    """
+    """)
 
-        print "Background points"
-        print "-----------------"
-        print """
+        print("Background points")
+        print("-----------------")
+        print("""
     Path to the file containing the background points to load. Lines 
     will interpolate between these points to remove the background from 
     the observed data. Lines can read any ascii file with two space-
     separated columns, such as .xy format. By default, lines stores 
     the background points to the file lines.out
-    """
+    """)
 
-        print "Tick marks"
-        print "----------"
-        print """
+        print("Tick marks")
+        print("----------")
+        print("""
     Path to file with tick marks. This can be generated n Topas using 
     the macro 'Create_2Th_Ip_file(ticks.out)'. Should be a single column
     containing the 2thetha values for the tick marks.
-    """
+    """)
 
-        print "Background correction"
-        print "---------------------"
-        print """
+        print("Background correction")
+        print("---------------------")
+        print("""
     Background order: Lines can interpolate between the 
         background points based on the order given here. The default 
         is 1 and indicates a linear background correction.
@@ -226,7 +228,7 @@ data."""
             Out_X_Yobs(x_yobs.xy)
             Out_X_Ycalc(x_ycalc.xy)
             Out_X_Difference(x_ydiff.xy)
-    """
+    """)
 
     def apply(self):
         gui_options = {

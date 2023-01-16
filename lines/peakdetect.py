@@ -17,6 +17,7 @@
 #    with this program; if not, write to the Free Software Foundation, Inc.,
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+from __future__ import print_function
 import numpy as np
 from math import pi, log
 import pylab
@@ -656,13 +657,13 @@ def zero_crossings(y_axis, window=11):
     # check if zero-crossings are valid
     diff = np.diff(indices)
     if diff.std() / diff.mean() > 0.2:
-        print diff.std() / diff.mean()
-        print np.diff(indices)
+        print(diff.std() / diff.mean())
+        print(np.diff(indices))
         raise ValueError("False zero-crossings found, indicates problem {0} or {1}".format(
                          "with smoothing window", "problem with offset"))
     # check if any zero crossings were found
     if len(zero_crossings) < 1:
-        raise(ValueError, "No zero crossings found")
+        raise ValueError
 
     return indices
 

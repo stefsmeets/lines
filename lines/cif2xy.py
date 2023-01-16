@@ -17,6 +17,7 @@
 #    with this program; if not, write to the Free Software Foundation, Inc.,
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+from __future__ import print_function
 import subprocess as sp
 import sys
 import os
@@ -48,7 +49,7 @@ def replace_extension(fn, new=".xy"):
 
 
 def cif2xy(cif, wl=1.0):
-    print "Reading CIF:", cif
+    print("Reading CIF:", cif)
 
     cell, atoms = read_cif(cif)
 
@@ -63,7 +64,7 @@ def cif2xy(cif, wl=1.0):
     focus_inp = open("focus.inp", 'w')
     focus_out = "focus.out"
 
-    print >> focus_inp, """
+    print("""
 Title  {title}
 
 SpaceGroup  {spgr}
@@ -90,7 +91,7 @@ ProfileReferenceMax  50000
            al=al,
            be=be,
            ga=ga,
-           wl=wl)
+           wl=wl), file=focus_inp)
 
     for i, atom in atoms.iterrows():
         label = atom.label
@@ -101,15 +102,15 @@ ProfileReferenceMax  50000
         occ = atom.occ
         u_iso = atom.biso / (8*np.pi**2)
 
-        print >> focus_inp, '{label:8} {element:4} {x:8.5f} {y:8.5f} {z:8.5f} {occ:.4f} {u_iso:.4f}'.format(label=label,
+        print('{label:8} {element:4} {x:8.5f} {y:8.5f} {z:8.5f} {occ:.4f} {u_iso:.4f}'.format(label=label,
                                                                                                             element=element,
                                                                                                             x=x, y=y, z=z,
                                                                                                             occ=occ,
-                                                                                                            u_iso=u_iso)
-    print >> focus_inp, "End"
+                                                                                                            u_iso=u_iso), file=focus_inp)
+    print("End", file=focus_inp)
     focus_inp.close()
 
-    print "Generating powder pattern... (wl = {} A)".format(wl)
+    print("Generating powder pattern... (wl = {} A)".format(wl))
     sp.call(
         "focus -PowderStepScan {} > {}".format(focus_inp.name, focus_out), shell=True)
 
@@ -124,10 +125,10 @@ ProfileReferenceMax  50000
         if line.startswith(end_switch):
             break
         elif do_print:
-            print >> xye, line,
+            print(line, end=' ', file=xye)
         elif line.startswith(begin_switch):
             do_print = 1
-            focus_stepscan.next()
+            next(focus_stepscan)
     focus_stepscan.close()
     xye.close()
 
@@ -174,8 +175,8 @@ def main():
 
     for arg in args:
         out = cif2xy(arg, wl=options.wavelength)
-        print "Printed powder pattern to", out
-        print
+        print("Printed powder pattern to", out)
+        print()
 
 if __name__ == '__main__':
     main()

@@ -17,6 +17,8 @@
 #    with this program; if not, write to the Free Software Foundation, Inc.,
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+from __future__ import print_function
+from __future__ import absolute_import
 import sys
 import os
 import argparse
@@ -92,8 +94,8 @@ def gen_read_files(paths):
     for path in paths:
         try:
             f = open(path, 'r')
-        except IOError, e:
-            print e
+        except IOError as e:
+            print(e)
             # print 'Cannot open {} (IOError)'.format(path,e)
             exit(0)
         yield f
@@ -103,8 +105,8 @@ def read_file(path):
     """opens file, returns file object for reading"""
     try:
         f = open(path, 'r')
-    except IOError, e:
-        print e
+    except IOError as e:
+        print(e)
         # print 'Cannot open {} (IOError)'.format(path,e)
         exit(0)
     return f
@@ -141,7 +143,7 @@ def read_data(fn, usecols=None, append_zeros=False, savenpy=False, suffix='', is
         inp = np.hstack((inp, np.zeros((i, 1))))
 
     if inp.shape[1] > 3:
-        print 'More than 3 columns read from {}, assuming x,y,esd, ignoring the rest.'.format(f.name)
+        print('More than 3 columns read from {}, assuming x,y,esd, ignoring the rest.'.format(f.name))
 
     d = Data(inp, name=fn+suffix, is_ticks=is_ticks)
 
@@ -157,7 +159,7 @@ def load_tick_marks(path, col=3):
         f = open(path, 'r')
         f.close()
     except IOError:
-        print '-- {} not found. (IOError)'.format(path)
+        print('-- {} not found. (IOError)'.format(path))
         return None
 
     ticks = read_data(path, usecols=(col,), append_zeros=True, is_ticks=True)
@@ -182,10 +184,10 @@ def get_correlation_matrix(f, topas=False):
 
     for line in f:
         if line.startswith('C_matrix_normalized'):
-            f.next()
-            f.next()
+            next(f)
+            next(f)
 
-            print 'Ignoring reflection intensities (iprm***), because they are always correlated.'
+            print('Ignoring reflection intensities (iprm***), because they are always correlated.')
             corr = np.genfromtxt(yield_corrmat(f), delimiter=4)
             corr = corr[lst_not_iprm, :][:, lst_not_iprm]
 
@@ -240,8 +242,8 @@ def parse_iza_code(code):
     fn = code.upper()+'0.cif'
     path = os.path.join(LINESDIR, 'zeolite_database', fn)
 
-    print 'Framework code {} -> {}'.format(code, path)
-    print
+    print('Framework code {} -> {}'.format(code, path))
+    print()
 
     return path
 
@@ -307,8 +309,8 @@ def parse_crplot_dat(f):
     """Parses crplot.dat file"""
 
     # skip first 2 lines
-    f.next()
-    f.next()
+    next(f)
+    next(f)
 
     ret = []
 
@@ -340,7 +342,7 @@ def plot_stdin(fig, update_time=0.2):
     import time
     TclError = matplotlib.backends.backend_tkagg.tkagg.Tk._tkinter.TclError
 
-    print 'Reading stdin.\n'
+    print('Reading stdin.\n')
 
     def nrange(n=0):
         while True:
@@ -366,7 +368,7 @@ def plot_stdin(fig, update_time=0.2):
         try:
             line = sys.stdin.readline()
         except KeyboardInterrupt as e:
-            print e
+            print(e)
             break
 
         if line == '':
@@ -374,13 +376,13 @@ def plot_stdin(fig, update_time=0.2):
                 # update figure to prevent slow responsiveness
                 fig.canvas.flush_events()
             except TclError:
-                print '-- Window closed (TclError on readline).'
+                print('-- Window closed (TclError on readline).')
                 break
 
             try:
                 time.sleep(0.05)  # prevent high cpu usage
             except KeyboardInterrupt as e:
-                print e
+                print(e)
                 break
             else:
                 continue
@@ -391,7 +393,7 @@ def plot_stdin(fig, update_time=0.2):
             y.append(float(inp[1]))
             x.append(float(inp[0]))
         except IndexError:
-            x.append(iterator.next())
+            x.append(next(iterator))
             y.append(float(inp[0]))
 
         if time.time() - t0 > update_time:
@@ -411,7 +413,7 @@ def plot_stdin(fig, update_time=0.2):
                 # update figure to prevent slow responsiveness
                 fig.canvas.flush_events()
             except TclError:
-                print '-- Window closed (TclError on update).'
+                print('-- Window closed (TclError on update).')
                 break
 
 
@@ -452,7 +454,7 @@ def f_monitor(fin, f_init, f_update, fig=None, poll_time=0.05):
             try:
                 fig.canvas.flush_events()
             except TclError:
-                print '-- Window closed (TclError).'
+                print('-- Window closed (TclError).')
                 break
 
             # low poll time is needed to keep responsiveness
@@ -460,11 +462,11 @@ def f_monitor(fin, f_init, f_update, fig=None, poll_time=0.05):
             try:
                 time.sleep(poll_time)
             except KeyboardInterrupt as e:
-                print e
+                print(e)
                 break
 
         else:
-            print 'Updated: {} -'.format(fin), time.ctime(os.stat(fin).st_mtime)
+            print('Updated: {} -'.format(fin), time.ctime(os.stat(fin).st_mtime))
             current_lastmod = os.stat(fin).st_mtime
             time.sleep(0.2)
             args = f_update(fin, *args)
@@ -613,7 +615,7 @@ def f_crplo():
     try:
         fhkl = open(hkldat, 'r')
     except IOError:
-        print '-- hkl.dat not found. (IOError)'
+        print('-- hkl.dat not found. (IOError)')
     else:
         hkldata = np.array(parse_hkl_dat(fhkl))
         tck = hkldata[:, 3]
@@ -625,7 +627,7 @@ def f_prf(fin):
     fin = open(fin, 'r')
 
     for i in range(6):
-        fin.next()
+        next(fin)
 
     tt, fobs, fcal, diff = np.genfromtxt(
         fin, usecols=(0, 1, 2, 3), unpack=True)
@@ -644,7 +646,7 @@ def f_prf_init(fin, fig, ax):
     fin = open(fin, 'r')
 
     for i in range(6):
-        fin.next()
+        next(fin)
 
     tt, fobs, fcal, diff = np.genfromtxt(
         fin, usecols=(0, 1, 2, 3), unpack=True)
@@ -669,7 +671,7 @@ def f_prf_update(fin, *args):
     fin = open(fin, 'r')
 
     for i in range(6):
-        fin.next()
+        next(fin)
 
     tt, fobs, fcal, diff = np.genfromtxt(
         fin, usecols=(0, 1, 2, 3), unpack=True)
@@ -694,7 +696,7 @@ def f_plot_stepco_special(bg_xy):
     try:
         fcr = open(crplotdat, 'r')
     except IOError:
-        print '\n{} not found. Skipping difference plot.'.format(crplotdat)
+        print('\n{} not found. Skipping difference plot.'.format(crplotdat))
     else:
         crdata = np.array(parse_crplot_dat(fcr))
         tt = crdata[:, 0]
@@ -770,15 +772,15 @@ def f_bg_correct_out(d, bg_xy, kind='linear', offset='ask', suffix_bg='_bg', suf
     if offset == 'x':
         return
 
-    print '\nOffset = {}'.format(offset)
+    print('\nOffset = {}'.format(offset))
 
     if len(bg_xy) >= 4:
-        print 'Writing background pattern to %s' % fn_bg
+        print('Writing background pattern to %s' % fn_bg)
         for x, y in zip(xvals, bg_yvals):
             if np.isnan(y):
                 continue
-            print >> out_bg, '%15.6f%15.6f' % (x, y)
-        print 'Writing corrected pattern to %s' % fn_corr
+            print('%15.6f%15.6f' % (x, y), file=out_bg)
+        print('Writing corrected pattern to %s' % fn_corr)
 
         if d.has_esd:
             err = d.err
@@ -786,12 +788,12 @@ def f_bg_correct_out(d, bg_xy, kind='linear', offset='ask', suffix_bg='_bg', suf
             for x, y, e in zip(xvals, yvals-bg_yvals+offset, err):
                 if np.isnan(y):
                     continue
-                print >> out_corr, '%15.6f%15.6f%15.6f' % (x, y, e)
+                print('%15.6f%15.6f%15.6f' % (x, y, e), file=out_corr)
         else:
             for x, y in zip(xvals, yvals-bg_yvals+offset):
                 if np.isnan(y):
                     continue
-                print >> out_corr, '%15.6f%15.6f' % (x, y)
+                print('%15.6f%15.6f' % (x, y), file=out_corr)
     else:
         raise IndexError(
             'Not enough values in background array, need at least 4 points.')
@@ -800,12 +802,12 @@ def f_bg_correct_out(d, bg_xy, kind='linear', offset='ask', suffix_bg='_bg', suf
 def new_stepco_inp(xy, name, pre, post, esds=None):
     """Function for writing stepco input files"""
 
-    print 'Writing xy data to file {}'.format(name)
+    print('Writing xy data to file {}'.format(name))
 
     f = open(name, 'w')
 
     for line in pre:
-        print >> f, line,
+        print(line, end=' ', file=f)
 
     if np.any(esds):
         esds = esds.reshape(1, -1)
@@ -815,13 +817,13 @@ def new_stepco_inp(xy, name, pre, post, esds=None):
                 esd = ''
             else:
                 esd = '{:15.6f}'.format(esd)
-            print >> f, 'BGVALU    {:15f}{:15.6f}{}'.format(x, y, esd)
+            print('BGVALU    {:15f}{:15.6f}{}'.format(x, y, esd), file=f)
     else:
         for x, y in xy.T:
-            print >> f, 'BGVALU    {:15f}{:15.6f}'.format(x, y)
+            print('BGVALU    {:15f}{:15.6f}'.format(x, y), file=f)
 
     for line in post:
-        print >> f, line,
+        print(line, end=' ', file=f)
 
     f.close()
 
@@ -1001,18 +1003,18 @@ def wavelength_info(wl):
 
     energy = wavelength2energy(wl)
 
-    print "wavelength: {:.5f} angstrom".format(wl)
-    print "energy:     {:.5f} kev".format(energy)
+    print("wavelength: {:.5f} angstrom".format(wl))
+    print("energy:     {:.5f} kev".format(energy))
 
     dvals = 10/np.linspace(1, 10, 10)
 
     theta2 = d2twotheta(dvals, wl)
     qvals = 4*(np.pi/wl) * np.sin(np.radians(theta2/2))
 
-    print "\n         d        th2          q"
+    print("\n         d        th2          q")
     for d, th2, q in zip(dvals, theta2, qvals):
-        print "{:10.3f} {:10.3f} {:10.3f}".format(d, th2, q)
-    print
+        print("{:10.3f} {:10.3f} {:10.3f}".format(d, th2, q))
+    print()
 
 
 def calc_agreement(o, c, bg=0, kind='linear'):
@@ -1041,7 +1043,7 @@ class Data(object):
 
     def __init__(self, arr, name=None, quiet=False, is_ticks=False):
         if not quiet:
-            print 'Loading data: {}\n       shape: {}'.format(name, arr.shape)
+            print('Loading data: {}\n       shape: {}'.format(name, arr.shape))
 
         self.is_ticks = is_ticks
 
@@ -1081,22 +1083,22 @@ class Data(object):
                 w = 1/self.err**2   # weights
             else:
                 w = 1/(np.abs(self.y)+0.1)      # weights = y^-1 if no esds
-            print '       R_exp: {:.3%}'.format(((n) / np.sum(w*self.y**2))**0.5)
+            print('       R_exp: {:.3%}'.format(((n) / np.sum(w*self.y**2))**0.5))
 
     def bin(self, binsize=0.01):
         x = self.x
         y = self.y
         fn = self.filename
 
-        print 'Binning {} from 2th = {} - {} with a bin size of {}'.format(fn, min(x), max(x), binsize)
-        print
-        print 'N(x) = ', x.shape
-        print 'N(y) = ', y.shape
+        print('Binning {} from 2th = {} - {} with a bin size of {}'.format(fn, min(x), max(x), binsize))
+        print()
+        print('N(x) = ', x.shape)
+        print('N(y) = ', y.shape)
 
         bins = np.arange(min(x), max(x), binsize)
 
-        print 'N(bins) =', bins.shape
-        print
+        print('N(bins) =', bins.shape)
+        print()
 
         digi = np.digitize(x, bins)
 
@@ -1120,7 +1122,7 @@ class Data(object):
         assert window in ['flat', 'hanning', 'hamming',
                           'bartlett', 'blackman', 'savitzky_golay', 'moving_avg']
 
-        print ' >> Applying filter: {}, window: {}, order {} (SG only) to {}'.format(window, window_len, order, self.filename)
+        print(' >> Applying filter: {}, window: {}, order {} (SG only) to {}'.format(window, window_len, order, self.filename))
 
         if window == 'savitzky_golay':
             y = savitzky_golay(self.y, window_size=window_len, order=order)
@@ -1139,9 +1141,9 @@ class Data(object):
 
     def convert_wavelength(self, wavelength_in, wavelength_out):
         """Converts 2theta values to a different wavelength"""
-        print
-        print " ** Convert {} from {:.4f} ANG ({:.2f} keV) to {:.4f} ANG ({:.2f} keV)".format(self.filename, wavelength_in, wavelength2energy(wavelength_in), wavelength_out, wavelength2energy(wavelength_out))
-        print
+        print()
+        print(" ** Convert {} from {:.4f} ANG ({:.2f} keV) to {:.4f} ANG ({:.2f} keV)".format(self.filename, wavelength_in, wavelength2energy(wavelength_in), wavelength_out, wavelength2energy(wavelength_out)))
+        print()
         d = twotheta2d(self.x, wavelength_in)
         theta2 = d2twotheta(d, wavelength_out)
         arr = self.arr
@@ -1160,7 +1162,7 @@ class Data(object):
             name = root + tag + ext
         np.savetxt(name, self.xye, fmt='%15.5f')
 
-        print 'Pattern written to {}'.format(name)
+        print('Pattern written to {}'.format(name))
 
     def plot(self, ax):
         ax.plot(self.x, self.y)
@@ -1227,13 +1229,13 @@ class Background():
         if self.topas_bg:
             self.last_agreement = 0
 
-        print
-        print 'Left mouse button: add point'
-        print 'Right mouse button: remove point'
-        print 'Middle mouse button or press "a": print points to file/stdout'
-        print
-        print 'Note: Adding/Removing points disabled while using drag/zoom functions.'
-        print
+        print()
+        print('Left mouse button: add point')
+        print('Right mouse button: remove point')
+        print('Middle mouse button or press "a": print points to file/stdout')
+        print()
+        print('Note: Adding/Removing points disabled while using drag/zoom functions.')
+        print()
 
         self.bg_correct = bg_correct
         if self.bg_correct:
@@ -1272,7 +1274,7 @@ class Background():
         self.line.figure.canvas.draw()
 
         if len(self.xy.T) == self.npick:
-            print '\nClosing window...'
+            print('\nClosing window...')
             import time
             time.sleep(1)
             plt.close()
@@ -1297,17 +1299,17 @@ class Background():
             string = ""
 
         for n in range(len(ind)):
-            print '   --- {:.4f} {:.4f}          {}'.format(removed[:, n][0], removed[:, n][1], string)
+            print('   --- {:.4f} {:.4f}          {}'.format(removed[:, n][0], removed[:, n][1], string))
 
     def onkeypress(self, event):
         if event.key == 'x':
-            print 'x pressed'
+            print('x pressed')
         if event.key == 'y':
-            print 'y pressed'
+            print('y pressed')
         if event.key == 'z':
-            print 'z pressed'
+            print('z pressed')
         if event.key == 'a':
-            print '\na pressed'
+            print('\na pressed')
             self.printdata()
 
     def add_point(self, x, y, xdata, ydata):
@@ -1326,7 +1328,7 @@ class Background():
         else:
             string = ""
 
-        print '+++    {:.4f} {:.4f}          {}'.format(xdata, ydata, string)
+        print('+++    {:.4f} {:.4f}          {}'.format(xdata, ydata, string))
 
     def background_update(self):
         xy = self.xy.T
@@ -1346,7 +1348,7 @@ class Background():
             return None
 
         if self.d.has_esd:
-            print '\nAttempting to interpolate standard deviations... for new background\n'
+            print('\nAttempting to interpolate standard deviations... for new background\n')
             esds = interpolate(self.d.xye[:, 0:3:2], self.xy[0], kind='linear')
 
             # print esds
@@ -1358,7 +1360,7 @@ class Background():
     def printdata(self, fout=None):
         """Prints stored data points to stdout"""  # TODO: make me a method on class Data()
         if not self.xy.any():
-            print 'No stored coordinates.'
+            print('No stored coordinates.')
             return None
 
         # print 'End'
@@ -1374,7 +1376,7 @@ class Background():
         else:
             fout = open(fout, 'w')
             for x, y in self.xy.transpose():
-                print >> fout, '%15.6f%15.6f' % (x, y)
+                print('%15.6f%15.6f' % (x, y), file=fout)
 
 
 class Lines(object):
@@ -1412,7 +1414,7 @@ class Lines(object):
         if self.normalize:
             scale = np.trapz(data.y, data.x)
             # scale = np.max(data.y)
-            print ' >> Scaling {} by 1/{:.5f}'.format(data.filename, scale)
+            print(' >> Scaling {} by 1/{:.5f}'.format(data.filename, scale))
             data.y = data.y / scale
             # print scale
         # elif 'x_ycalc_no_sda.xy' in data.filename or 'ssz61_am_corr.xye' in data.filename:
@@ -1471,7 +1473,7 @@ class Lines(object):
         alpha = 0.6
 
         boxes = np.loadtxt(fname, unpack=True)
-        print 'Loading boxes: {}\n        shape: {}'.format(fname, boxes.shape)
+        print('Loading boxes: {}\n        shape: {}'.format(fname, boxes.shape))
 
         y1 = 0
 
@@ -1488,9 +1490,9 @@ class Lines(object):
 def plot_correlation_matrix(arr, labels=[]):
     def formatter(arr, x, y, labels):
         if labels:
-            print '{:4}{:4}{:8} {} {}'.format(x, y,  arr[x, y], labels[x], labels[y])
+            print('{:4}{:4}{:8} {} {}'.format(x, y,  arr[x, y], labels[x], labels[y]))
         else:
-            print '{:4}{:4}{:8}'.format(x, y, arr[x, y])
+            print('{:4}{:4}{:8}'.format(x, y, arr[x, y]))
 
     def onpick(event):
         x, y = int(event.mouseevent.xdata), int(event.mouseevent.ydata)
@@ -1503,7 +1505,7 @@ def plot_correlation_matrix(arr, labels=[]):
         if y > x or x == y:
             continue
         if first:
-            print '\n Highly correlated parameters (>{}):'.format(threshold)
+            print('\n Highly correlated parameters (>{}):'.format(threshold))
             first = False
         formatter(arr, x, y, labels)
 
@@ -1518,8 +1520,8 @@ def plot_correlation_matrix(arr, labels=[]):
 
 
 def setup_interpolate_background(d, name='bg (--correct)'):
-    print 'Interpolation mode for background correction\n'
-    print 'The highest and lowest values are added by default for convenience. In the case that they are removed, only the values in the background range will be printed.\n'
+    print('Interpolation mode for background correction\n')
+    print('The highest and lowest values are added by default for convenience. In the case that they are removed, only the values in the background range will be printed.\n')
 
     x1 = d.x[0]
     x2 = d.x[-1]
@@ -1533,7 +1535,7 @@ def setup_interpolate_background(d, name='bg (--correct)'):
 
 
 def f_peakdetect(d, lookahead=10, noise=5000):
-    import peakdetect as pd
+    from . import peakdetect as pd
     # from functools import partial
 
     _max, _min = pd.peakdetect(d.y, d.x, lookahead=lookahead, delta=noise)
@@ -1559,8 +1561,8 @@ def f_peakdetect(d, lookahead=10, noise=5000):
             self.noisestep = 0
             self.lookaheadstep = 0
 
-            print '1,2,3 = lookahead +/-/step'
-            print '1,2,3 = noise +/-/step'
+            print('1,2,3 = lookahead +/-/step')
+            print('1,2,3 = noise +/-/step')
 
             printer('lookahead  = {}({}), noiselevel = {}({})'.format(self.lookahead, [
                     1, 10, 100][self.lookaheadstep % 3], self.noise, [1, 10, 100][self.noisestep % 3]))
@@ -1601,11 +1603,11 @@ def f_peakdetect(d, lookahead=10, noise=5000):
     plt.show()
 
     xm, ym = peaks.get_data()
-    print
+    print()
 
-    print '         2theta      intensity'
+    print('         2theta      intensity')
     for x, y in zip(xm, ym):
-        print '%15.4f%15.4f' % (x, y)
+        print('%15.4f%15.4f' % (x, y))
     # print xm,ym
 
     return xm, ym
@@ -1614,16 +1616,16 @@ def f_peakdetect(d, lookahead=10, noise=5000):
 def f_identify(d, refs, criterium=0.05, lookahead=10, noise=5000):
     import operator
 
-    print d.filename
+    print(d.filename)
 
-    print lookahead, noise
+    print(lookahead, noise)
 
     if lookahead and noise:
-        import peakdetect as pd
+        from . import peakdetect as pd
         _max, _min = pd.peakdetect(d.y, d.x, lookahead=lookahead, delta=noise)
         xm = [p[0] for p in _max]
         ym = [p[1] for p in _max]
-        print 'rawr'
+        print('rawr')
     else:
         xm, ym = f_peakdetect(d)
 
@@ -1659,9 +1661,9 @@ def f_identify(d, refs, criterium=0.05, lookahead=10, noise=5000):
 
     lst = sorted(lst, key=operator.itemgetter(2), reverse=True)
 
-    print lst
+    print(lst)
     for (r, rw, missing, fn) in lst:
-        print '{:6.3f} {:6.3f} using: {} refs --> {}'.format(r, wr, missing, fn)
+        print('{:6.3f} {:6.3f} using: {} refs --> {}'.format(r, wr, missing, fn))
 
 
 def f_compare(data, kind=0, reference=None):
@@ -1710,7 +1712,7 @@ def f_compare(data, kind=0, reference=None):
 
     lst = []
 
-    print "Calculate agreement for {} combinations of {} patterns.".format(int(l), len(data))
+    print("Calculate agreement for {} combinations of {} patterns.".format(int(l), len(data)))
 
     for i, (d1, d2) in enumerate(pairs):
         printer("{:2.0%}".format(i/l))
@@ -1738,16 +1740,16 @@ def f_compare(data, kind=0, reference=None):
                         spearmanp, kendallp, pearsonp, shift*step, names))
 
     printer("")
-    print
+    print()
 
     lst = sorted(lst, key=operator.itemgetter(kind))
 
-    print '2theta range = {:8.3f} {:8.3f}'.format(start+min_tt*step, start+max_tt*step)
-    print 'Shuffle values by {}'.format([shift*step for shift in shuffle])
+    print('2theta range = {:8.3f} {:8.3f}'.format(start+min_tt*step, start+max_tt*step))
+    print('Shuffle values by {}'.format([shift*step for shift in shuffle]))
 
-    print'combined spearman     pval  kendall     pval  pearson     pval    shift -> sorted by {}'.format(['combined', 'spearman', 'kendall', 'pearson'][kind])
+    print('combined spearman     pval  kendall     pval  pearson     pval    shift -> sorted by {}'.format(['combined', 'spearman', 'kendall', 'pearson'][kind]))
     for (combined, spearmanr, kendallr, pearsonr, spearmanp, kendallp, pearsonp, shift, names) in lst:
-        print "{:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f}   ".format(combined, spearmanr, spearmanp, kendallr, kendallp, pearsonr, pearsonp, shift) + names
+        print("{:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f} {:8.3f}   ".format(combined, spearmanr, spearmanp, kendallr, kendallp, pearsonr, pearsonp, shift) + names)
 
 
 def calc_fwhm(uvw):
@@ -1766,22 +1768,22 @@ def fix_sls_data(data, quiet=False):
     """Input list of Data objects, all of them will be processed and written to:
     filename_fixed.xye"""
 
-    print
-    print '------------'
-    print 'FIX SLS DATA'
-    print '------------'
-    print
-    print 'esds are calculated as:'
-    print 'esd = sqrt(Yobs/scale) * sqrt(1/N) * scale'
-    print
-    print 'Yobs:  input pattern'
-    print 'scale: scale factor between raw counts (.raw) and corrected data (.dat)'
-    print 'N:     number of raw patterns merged'
-    print
-    print 'Estimated scale by rearranging above formula:'
-    print '(assuming background is correct)'
-    print
-    print 'scale = (N/Yobs) * esd^2'
+    print()
+    print('------------')
+    print('FIX SLS DATA')
+    print('------------')
+    print()
+    print('esds are calculated as:')
+    print('esd = sqrt(Yobs/scale) * sqrt(1/N) * scale')
+    print()
+    print('Yobs:  input pattern')
+    print('scale: scale factor between raw counts (.raw) and corrected data (.dat)')
+    print('N:     number of raw patterns merged')
+    print()
+    print('Estimated scale by rearranging above formula:')
+    print('(assuming background is correct)')
+    print()
+    print('scale = (N/Yobs) * esd^2')
 
     if not isinstance(data, list):
         data = list((data,))
@@ -1801,9 +1803,9 @@ def fix_sls_data(data, quiet=False):
             d.filename)
 
         if not scl:
-            print '\nPick 3 background points'
-            print 'These will be used to estimate the scale factor'
-            print
+            print('\nPick 3 background points')
+            print('These will be used to estimate the scale factor')
+            print()
 
             fig = plt.figure()
             bg = Background(fig, d=None, quiet=quiet, npick=3)
@@ -1819,15 +1821,15 @@ def fix_sls_data(data, quiet=False):
                 idx = find_nearest(d.x, x)
                 scl1 = d.err[idx]**2 * (npats**2 / d.y[idx])
                 avg.append(scl1)
-                print '{:10.4f}**2 * ({:d} / {:10.4f}) = {:10.4f}'.format(d.err[idx], int(npats**2), d.y[idx], scl1)
+                print('{:10.4f}**2 * ({:d} / {:10.4f}) = {:10.4f}'.format(d.err[idx], int(npats**2), d.y[idx], scl1))
             scl = np.mean(avg)
         else:
             scl = float(scl)
 
-        print
-        print 'Npats =', int(npats**2)
-        print 'Scale =', scl
-        print
+        print()
+        print('Npats =', int(npats**2))
+        print('Scale =', scl)
+        print()
 
         err = scl*(1/npats)*(d.y/scl)**0.5
         d2 = np.copy(d.xye)
@@ -1878,7 +1880,7 @@ def plot_reciprocal_space(fnobs, fncalc=None, orthogonal_view=True):
                              [0, 1, 0, 0],
                              [0, 0, a, b],
                              [0, 0, 0, zback]])
-        print " >> Orthogonal view at least breaks automatic placement of axis labels."
+        print(" >> Orthogonal view at least breaks automatic placement of axis labels.")
 
         proj3d.persp_transformation = orthogonal_proj
 
@@ -1914,7 +1916,7 @@ def plot_reciprocal_space(fnobs, fncalc=None, orthogonal_view=True):
     ax.set_ylabel('k')
     ax.set_zlabel('l')
     fig.canvas.mpl_connect('key_press_event', onkeypress)
-    print ' >> Press x,y,z to align view along specified axis.'
+    print(' >> Press x,y,z to align view along specified axis.')
 
     for i, data in enumerate(obs):
         if fncalc:
@@ -1949,7 +1951,7 @@ def plot_reciprocal_space(fnobs, fncalc=None, orthogonal_view=True):
                 ax.plot(h, k, l, 'r+', label=label+' sys. absent')
                 # ax.plot(h,k,l,'b.',label = label+' observed', ms=2.50)
             else:
-                print ' >> 0 systematic absences'
+                print(' >> 0 systematic absences')
     plt.legend()
     plt.show()
 
@@ -1965,7 +1967,7 @@ def run_script(gui_options=None):
     parser = argparse.ArgumentParser(description=description,
                                      epilog=epilog,
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     version=__version__)
+                                     )
 
     def parse_wl(string):
         wavelengths = {"cra1": 2.28970, "cra2": 2.29361, "cr": 2.2909,
@@ -2198,7 +2200,7 @@ def run_script(gui_options=None):
         prf, spc = None, None
 
     if options.rec3d:
-        print options.rec3d, type(options.rec3d)
+        print(options.rec3d, type(options.rec3d))
         if options.rec3d == 'args':
             plot_reciprocal_space(fnobs=args, fncalc=None)
         elif len(options.rec3d) == 1:
@@ -2218,7 +2220,7 @@ def run_script(gui_options=None):
         capillary = read_data(options.capillary)
         smoothed = capillary.smooth(window='hanning', window_len=101)
         for d in data:
-            print ' >> Removing contribution of {} from {}'.format(options.capillary, d.filename)
+            print(' >> Removing contribution of {} from {}'.format(options.capillary, d.filename))
             f_bg_correct_out(
                 d, smoothed.xy, kind=options.bg_correct, offset=0, suffix_corr='_rem_cap')
         exit()
@@ -2352,14 +2354,14 @@ def run_script(gui_options=None):
             xyobs = read_data('x_yobs.xy')
             xycalc = read_data('x_ycalc.xy')
             xyerr = read_data('x_yerr.xy')
-        except IOError, e:
-            print e
-            print
-            print """Please add the following lines to the TOPAS input file to generate the needed files:
+        except IOError as e:
+            print(e)
+            print()
+            print("""Please add the following lines to the TOPAS input file to generate the needed files:
     Out_X_Yobs(x_yobs.xy)
     Out_X_Ycalc(x_ycalc.xy)
     Out_X_Yerr(x_yerr.xy)
-            """
+            """)
             exit(0)
         f_plot_weighted_difference(xyobs, xycalc, xyerr, lw=options.linewidth)
 
@@ -2369,14 +2371,14 @@ def run_script(gui_options=None):
             xycalc = read_data('x_ycalc.xy')
             xydiff = read_data('x_ydiff.xy')
             # xybg   = read_data('x_ybg.xy')
-        except IOError, e:
-            print e
-            print
-            print """Please add the following lines to the TOPAS input file to generate the needed files:
+        except IOError as e:
+            print(e)
+            print()
+            print("""Please add the following lines to the TOPAS input file to generate the needed files:
     Out_X_Yobs(x_yobs.xy)
     Out_X_Ycalc(x_ycalc.xy)
     Out_X_Difference(x_ydiff.xy)
-            """
+            """)
             exit(0)
 
         f_plot_topas_special(
@@ -2444,7 +2446,7 @@ def run_script(gui_options=None):
 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == "gui":
-        import lines_gui
+        from . import lines_gui
         lines_gui.run()
     else:
         run_script()
