@@ -1,4 +1,7 @@
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/xpdlines)](https://pypi.org/project/xpdlines/)
+[![PyPI](https://img.shields.io/pypi/v/xpdlines.svg?style=flat)](https://pypi.org/project/xpdlines/)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4715880.svg)](https://doi.org/10.5281/zenodo.4715880)
+
 
 # Lines
 
