@@ -14,7 +14,7 @@ from scipy.interpolate import interp1d
 
 import math
 
-__version__ = '2023-01-16'
+__version__ = '2.0.0'
 
 params = {'legend.fontsize': 10,
           'legend.labelspacing': 0.1}
