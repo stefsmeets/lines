@@ -34,7 +34,7 @@ y = (0.3*np.sin(x) + np.sin(1.3 * x) + 0.9 * np.sin(4.2 * x) + 0.06 *
 
 def _datacheck_peakdetect(x_axis, y_axis):
     if x_axis is None:
-        x_axis = range(len(y_axis))
+        x_axis = list(range(len(y_axis)))
 
     if len(y_axis) != len(x_axis):
         raise ValueError(
@@ -340,10 +340,10 @@ def peakdetect_parabole(y_axis, x_axis, points=9):
     max_ = _peakdetect_parabole_fitter(max_raw, x_axis, y_axis, points)
     min_ = _peakdetect_parabole_fitter(min_raw, x_axis, y_axis, points)
 
-    max_peaks = map(lambda x: [x[0], x[1]], max_)
-    max_fitted = map(lambda x: x[-1], max_)
-    min_peaks = map(lambda x: [x[0], x[1]], min_)
-    min_fitted = map(lambda x: x[-1], min_)
+    max_peaks = [[x[0], x[1]] for x in max_]
+    max_fitted = [x[-1] for x in max_]
+    min_peaks = [[x[0], x[1]] for x in min_]
+    min_fitted = [x[-1] for x in min_]
 
     # pylab.plot(x_axis, y_axis)
     # pylab.hold(True)
@@ -469,10 +469,10 @@ def peakdetect_sine(y_axis, x_axis, points=9, lock_frequency=False):
         fitted_peaks.append(peak_data)
 
     # structure date for output
-    max_peaks = map(lambda x: [x[0], x[1]], fitted_peaks[0])
-    max_fitted = map(lambda x: x[-1], fitted_peaks[0])
-    min_peaks = map(lambda x: [x[0], x[1]], fitted_peaks[1])
-    min_fitted = map(lambda x: x[-1], fitted_peaks[1])
+    max_peaks = [[x[0], x[1]] for x in fitted_peaks[0]]
+    max_fitted = [x[-1] for x in fitted_peaks[0]]
+    min_peaks = [[x[0], x[1]] for x in fitted_peaks[1]]
+    min_fitted = [x[-1] for x in fitted_peaks[1]]
 
     # pylab.plot(x_axis, y_axis)
     # pylab.hold(True)
@@ -618,7 +618,7 @@ def _smooth(x, window_len=11, window='hanning'):
         return x
 
     if window not in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
-        raise ValueError("Window is not one of '{0}', '{1}', '{2}', '{3}', '{4}'".format(
+        raise ValueError("Window is not one of '{}', '{}', '{}', '{}', '{}'".format(
                          *('flat', 'hanning', 'hamming', 'bartlett', 'blackman')))
 
     s = np.r_[x[window_len-1:0:-1], x, x[-1:-window_len:-1]]
@@ -646,7 +646,7 @@ def zero_crossings(y_axis, window=11):
     """
     # smooth the curve
     length = len(y_axis)
-    x_axis = np.asarray(range(length), int)
+    x_axis = np.asarray(list(range(length)), int)
 
     # discard tail of smoothed signal
     y_axis = _smooth(y_axis, window)[:length]
@@ -656,13 +656,13 @@ def zero_crossings(y_axis, window=11):
     # check if zero-crossings are valid
     diff = np.diff(indices)
     if diff.std() / diff.mean() > 0.2:
-        print diff.std() / diff.mean()
-        print np.diff(indices)
-        raise ValueError("False zero-crossings found, indicates problem {0} or {1}".format(
+        print(diff.std() / diff.mean())
+        print(np.diff(indices))
+        raise ValueError("False zero-crossings found, indicates problem {} or {}".format(
                          "with smoothing window", "problem with offset"))
     # check if any zero crossings were found
     if len(zero_crossings) < 1:
-        raise(ValueError, "No zero crossings found")
+        raise ValueError
 
     return indices
 
@@ -681,7 +681,7 @@ def _test_graph():
     y = (0.3*np.sin(x) + np.sin(1.3 * x) + 0.9 * np.sin(4.2 * x) + 0.06 *
          np.random.randn(i))
     y *= -1
-    x = range(i)
+    x = list(range(i))
 
     _max, _min = peakdetect(y, x, 750, 0.30)
     xm = [p[0] for p in _max]
